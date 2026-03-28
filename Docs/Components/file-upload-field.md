@@ -141,7 +141,14 @@ Canonical compiled example for File upload field. Use File upload field when a d
 // Canonical example for File upload field
 let environment = DesignSystemEnvironment.preview(.dark)
 
-FileUploadField(environment: environment, title: "Attach release notes", subtitle: "Presentation belongs to the system.", items: [
-    .init(title: "release-notes.md", detail: "18 KB", status: .success)
-], onPick: {})
+FileUploadField(environment: environment, title: "Attach release notes", subtitle: "Drop handling and item updates stay with the consumer.", dropTitle: "Drop release notes", dropDetail: "Accept Markdown, PDF, and image files.", items: [
+    .init(title: "release-notes.md", detail: "18 KB", status: .success, message: "Uploaded successfully.", symbol: "doc.text"),
+    .init(title: "hero.png", detail: "4.2 MB", status: .error, message: "The file exceeds the current size limit.", symbol: "photo", canRetry: true)
+], acceptedContentTypes: [.plainText, .pdf, .image], isTargeted: .constant(false), onDropURLs: { urls in
+    print(urls.count)
+}, onPick: {}, onRetry: { item in
+    print(item.id)
+}, onRemove: { item in
+    print(item.id)
+})
 ```

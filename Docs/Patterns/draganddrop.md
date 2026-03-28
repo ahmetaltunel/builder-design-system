@@ -120,5 +120,22 @@ Canonical compiled pattern example for Drag-and-drop. Use Drag-and-drop when fil
 // Canonical example for Drag-and-drop
 let environment = DesignSystemEnvironment.preview(.dark)
 
-FileUploadField(environment: environment, title: "Drop release notes", subtitle: "Or browse from disk.", onPick: {})
+VStack(alignment: .leading, spacing: 16) {
+    FileUploadField(environment: environment, title: "Drop release notes", subtitle: "Provide a visible target, item state, and keyboard fallback.", items: [
+        .init(title: "release-notes.md", detail: "18 KB", status: .success, message: "Uploaded successfully.", symbol: "doc.text")
+    ], onPick: {})
+    HStack(alignment: .top, spacing: 16) {
+        Board(environment: environment, columns: [
+            .init(id: "incoming", title: "Incoming", items: [.init(id: "review-docs", title: "Review docs", detail: "Match snippets to the real API.", status: "Review", statusColor: environment.theme.color(.warning))]),
+            .init(id: "ready", title: "Ready", items: [.init(title: "Publish catalog", detail: "Regenerate docs and examples.", status: "Queued", statusColor: environment.theme.color(.info))])
+        ], selectedItemID: .constant("review-docs"), onMoveItem: { itemID, destinationColumnID, destinationIndex in
+            print(itemID, destinationColumnID, destinationIndex)
+        })
+        ItemsPalette(environment: environment, items: [.init(id: "metric-card", title: "Metric card", detail: "Reusable dashboard tile.")], insertDestinations: [
+            .init(title: "Insert into Incoming", columnID: "incoming", columnTitle: "Incoming", index: 1)
+        ], onInsertItem: { item, destinationColumnID, destinationIndex in
+            print(item.id, destinationColumnID, destinationIndex)
+        })
+    }
+}
 ```

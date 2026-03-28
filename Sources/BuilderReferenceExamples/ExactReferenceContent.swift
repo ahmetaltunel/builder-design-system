@@ -175,15 +175,23 @@ enum ExactReferenceContent {
             return code([
                 "Board(environment: environment, columns: [",
                 "    .init(id: \"queued\", title: \"Queued\", items: [",
-                "        .init(title: \"Review tokens\", detail: \"Validation and docs\", status: \"Review\", statusColor: environment.theme.color(.warning)),",
-                "        .init(title: \"Verify docs\", detail: \"Generated references\", status: \"Ready\", statusColor: environment.theme.color(.success))",
+                "        .init(id: \"review-tokens\", title: \"Review tokens\", detail: \"Validation and docs\", status: \"Review\", statusColor: environment.theme.color(.warning)),",
+                "        .init(id: \"verify-docs\", title: \"Verify docs\", detail: \"Generated references\", status: \"Ready\", statusColor: environment.theme.color(.success))",
                 "    ]),",
                 "    .init(id: \"done\", title: \"Done\", cards: [\"Ship foundations\"])",
+                "], selectedItemID: .constant(\"review-tokens\"), onActivateItem: { item in",
+                "    print(item.title)",
+                "}, onMoveItem: { itemID, destinationColumnID, destinationIndex in",
+                "    print(itemID, destinationColumnID, destinationIndex)",
                 "])"
             ])
         case "board-item":
             return code([
-                "BoardItemView(environment: environment, item: .init(title: \"Review tokens\", detail: \"Validation and docs\", status: \"Review\", statusColor: environment.theme.color(.warning)))"
+                "BoardItemView(environment: environment, item: .init(title: \"Review tokens\", detail: \"Validation and docs\", status: \"Review\", statusColor: environment.theme.color(.warning)), isSelected: true, moveDestinations: [",
+                "    .init(title: \"Move to Done\", columnID: \"done\", columnTitle: \"Done\", index: 0)",
+                "], onMove: { destination in",
+                "    print(destination.columnID)",
+                "})"
             ])
         case "box":
             return code([
@@ -337,19 +345,39 @@ enum ExactReferenceContent {
         case "file-token-group":
             return code([
                 "FileTokenGroup(environment: environment, items: [",
-                "    .init(title: \"release-notes.md\", detail: \"18 KB\", status: .success),",
-                "    .init(title: \"screenshots.zip\", detail: \"2 files\", status: .warning)",
-                "])"
+                "    .init(title: \"release-notes.md\", detail: \"18 KB\", status: .success, message: \"Uploaded successfully.\", symbol: \"doc.text\"),",
+                "    .init(title: \"screenshots.zip\", detail: \"2 files\", status: .uploading, progress: 0.64, message: \"Uploading archive...\", symbol: \"archivebox\"),",
+                "    .init(title: \"hero.png\", detail: \"4.2 MB\", status: .error, message: \"The file exceeds the current size limit.\", symbol: \"photo\", canRetry: true)",
+                "], onRetry: { item in",
+                "    print(item.id)",
+                "}, onRemove: { item in",
+                "    print(item.id)",
+                "})"
             ])
         case "file-upload-field":
             return code([
-                "FileUploadField(environment: environment, title: \"Attach release notes\", subtitle: \"Presentation belongs to the system.\", items: [",
-                "    .init(title: \"release-notes.md\", detail: \"18 KB\", status: .success)",
-                "], onPick: {})"
+                "FileUploadField(environment: environment, title: \"Attach release notes\", subtitle: \"Drop handling and item updates stay with the consumer.\", dropTitle: \"Drop release notes\", dropDetail: \"Accept Markdown, PDF, and image files.\", items: [",
+                "    .init(title: \"release-notes.md\", detail: \"18 KB\", status: .success, message: \"Uploaded successfully.\", symbol: \"doc.text\"),",
+                "    .init(title: \"hero.png\", detail: \"4.2 MB\", status: .error, message: \"The file exceeds the current size limit.\", symbol: \"photo\", canRetry: true)",
+                "], acceptedContentTypes: [.plainText, .pdf, .image], isTargeted: .constant(false), onDropURLs: { urls in",
+                "    print(urls.count)",
+                "}, onPick: {}, onRetry: { item in",
+                "    print(item.id)",
+                "}, onRemove: { item in",
+                "    print(item.id)",
+                "})"
             ])
         case "file-uploading-components":
             return code([
-                "FileUploadField(environment: environment, title: \"Drop release notes\", subtitle: \"Or browse from disk.\", onPick: {})"
+                "VStack(spacing: 12) {",
+                "    FileDropZone(environment: environment, title: \"Drop release notes\", detail: \"Accept Markdown, PDF, and image files.\", acceptedContentTypes: [.plainText, .pdf, .image], isTargeted: .constant(true), onDropURLs: { urls in",
+                "        print(urls.count)",
+                "    }, actionTitle: \"Browse\") {}",
+                "    FileTokenGroup(environment: environment, items: [",
+                "        .init(title: \"release-notes.md\", detail: \"18 KB\", status: .success, message: \"Uploaded successfully.\", symbol: \"doc.text\"),",
+                "        .init(title: \"hero.png\", detail: \"4.2 MB\", status: .error, message: \"The file exceeds the current size limit.\", symbol: \"photo\", canRetry: true)",
+                "    ])",
+                "}"
             ])
         case "notice-stack":
             return code([
@@ -417,10 +445,16 @@ enum ExactReferenceContent {
             ])
         case "items-palette":
             return code([
-                "ItemsPalette(environment: environment, items: [",
-                "    .init(title: \"Metric card\", detail: \"Reusable dashboard tile.\"),",
-                "    .init(title: \"Status list\", detail: \"Dense collection summary.\")",
-                "])"
+                "ItemsPalette(environment: environment, title: \"Insert items\", items: [",
+                "    .init(id: \"metric-card\", title: \"Metric card\", detail: \"Reusable dashboard tile.\"),",
+                "    .init(id: \"status-list\", title: \"Status list\", detail: \"Dense collection summary.\")",
+                "], selectedItemID: .constant(\"metric-card\"), insertDestinations: [",
+                "    .init(title: \"Insert into Queued\", columnID: \"queued\", columnTitle: \"Queued\", index: 2)",
+                "], onActivateItem: { item in",
+                "    print(item.title)",
+                "}, onInsertItem: { item, destinationColumnID, destinationIndex in",
+                "    print(item.id, destinationColumnID, destinationIndex)",
+                "})"
             ])
         case "keyvalue-pairs":
             return code([
@@ -750,7 +784,24 @@ enum ExactReferenceContent {
             ])
         case "draganddrop":
             return code([
-                "FileUploadField(environment: environment, title: \"Drop release notes\", subtitle: \"Or browse from disk.\", onPick: {})"
+                "VStack(alignment: .leading, spacing: 16) {",
+                "    FileUploadField(environment: environment, title: \"Drop release notes\", subtitle: \"Provide a visible target, item state, and keyboard fallback.\", items: [",
+                "        .init(title: \"release-notes.md\", detail: \"18 KB\", status: .success, message: \"Uploaded successfully.\", symbol: \"doc.text\")",
+                "    ], onPick: {})",
+                "    HStack(alignment: .top, spacing: 16) {",
+                "        Board(environment: environment, columns: [",
+                "            .init(id: \"incoming\", title: \"Incoming\", items: [.init(id: \"review-docs\", title: \"Review docs\", detail: \"Match snippets to the real API.\", status: \"Review\", statusColor: environment.theme.color(.warning))]),",
+                "            .init(id: \"ready\", title: \"Ready\", items: [.init(title: \"Publish catalog\", detail: \"Regenerate docs and examples.\", status: \"Queued\", statusColor: environment.theme.color(.info))])",
+                "        ], selectedItemID: .constant(\"review-docs\"), onMoveItem: { itemID, destinationColumnID, destinationIndex in",
+                "            print(itemID, destinationColumnID, destinationIndex)",
+                "        })",
+                "        ItemsPalette(environment: environment, items: [.init(id: \"metric-card\", title: \"Metric card\", detail: \"Reusable dashboard tile.\")], insertDestinations: [",
+                "            .init(title: \"Insert into Incoming\", columnID: \"incoming\", columnTitle: \"Incoming\", index: 1)",
+                "        ], onInsertItem: { item, destinationColumnID, destinationIndex in",
+                "            print(item.id, destinationColumnID, destinationIndex)",
+                "        })",
+                "    }",
+                "}"
             ])
         case "errors":
             return code([

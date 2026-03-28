@@ -142,8 +142,14 @@ Canonical compiled example for Items palette. Use Items palette to organize cont
 // Canonical example for Items palette
 let environment = DesignSystemEnvironment.preview(.dark)
 
-ItemsPalette(environment: environment, items: [
-    .init(title: "Metric card", detail: "Reusable dashboard tile."),
-    .init(title: "Status list", detail: "Dense collection summary.")
-])
+ItemsPalette(environment: environment, title: "Insert items", items: [
+    .init(id: "metric-card", title: "Metric card", detail: "Reusable dashboard tile."),
+    .init(id: "status-list", title: "Status list", detail: "Dense collection summary.")
+], selectedItemID: .constant("metric-card"), insertDestinations: [
+    .init(title: "Insert into Queued", columnID: "queued", columnTitle: "Queued", index: 2)
+], onActivateItem: { item in
+    print(item.title)
+}, onInsertItem: { item, destinationColumnID, destinationIndex in
+    print(item.id, destinationColumnID, destinationIndex)
+})
 ```

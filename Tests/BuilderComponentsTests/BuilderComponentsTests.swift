@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import XCTest
 import BuilderFoundation
 @testable import BuilderComponents
@@ -638,6 +639,152 @@ final class BuilderComponentsTests: XCTestCase {
         XCTAssertEqual(tutorialPanel.state, .error(.init(title: "Unable to load steps", message: "Retry after restoring the checklist source.")))
     }
 
+    func testCollectionWorkflowComponentsInstantiate() {
+        var isTargeted = false
+        var selectedBoardItemID: String? = "review-docs"
+        var selectedPaletteItemID: String? = "metric-card"
+
+        let dropTargetBinding = Binding(
+            get: { isTargeted },
+            set: { isTargeted = $0 }
+        )
+        let selectedBoardBinding = Binding(
+            get: { selectedBoardItemID },
+            set: { selectedBoardItemID = $0 }
+        )
+        let selectedPaletteBinding = Binding(
+            get: { selectedPaletteItemID },
+            set: { selectedPaletteItemID = $0 }
+        )
+
+        let retryableItem = FileUploadItem(
+            id: "hero-image",
+            title: "hero.png",
+            detail: "4.2 MB",
+            status: .error,
+            progress: nil,
+            message: "The file exceeds the current size limit.",
+            symbol: "photo",
+            canRetry: true
+        )
+        let uploadingItem = FileUploadItem(
+            id: "screenshots",
+            title: "screenshots.zip",
+            detail: "2 files",
+            status: .uploading,
+            progress: 0.64,
+            message: "Uploading archive...",
+            symbol: "archivebox",
+            canRetry: false
+        )
+
+        let dropZone = FileDropZone(
+            environment: environment,
+            title: "Drop release notes",
+            detail: "Accept Markdown, PDF, and image files.",
+            state: .ready,
+            acceptedContentTypes: [.plainText, .pdf, .image],
+            isTargeted: dropTargetBinding,
+            onDropURLs: { _ in },
+            actionTitle: "Browse",
+            action: {}
+        )
+        let fileTokens = FileTokenGroup(
+            environment: environment,
+            items: [uploadingItem, retryableItem],
+            onRetry: { _ in },
+            onRemove: { _ in }
+        )
+        let fileUpload = FileUploadField(
+            environment: environment,
+            title: "Attach release notes",
+            subtitle: "Drop handling and item updates stay with the consumer.",
+            dropTitle: "Drop release notes",
+            dropDetail: "Accept Markdown, PDF, and image files.",
+            items: [uploadingItem, retryableItem],
+            state: .ready,
+            acceptedContentTypes: [.plainText, .pdf, .image],
+            isTargeted: dropTargetBinding,
+            onDropURLs: { _ in },
+            onPick: {},
+            onRetry: { _ in },
+            onRemove: { _ in }
+        )
+
+        let moveDestination = Board.Destination(
+            title: "Move to Ready",
+            columnID: "ready",
+            columnTitle: "Ready",
+            index: 0
+        )
+        let insertDestination = Board.Destination(
+            title: "Insert into Incoming",
+            columnID: "incoming",
+            columnTitle: "Incoming",
+            index: 1
+        )
+        let board = Board(
+            environment: environment,
+            columns: [
+                .init(id: "incoming", title: "Incoming", items: [
+                    .init(id: "review-docs", title: "Review docs", detail: "Match snippets to the real API.", status: "Review", statusColor: .orange),
+                    .init(id: "sync-snapshots", title: "Sync snapshots", detail: "Record the new collection states.", status: "Ready", statusColor: .green)
+                ]),
+                .init(id: "ready", title: "Ready", items: [
+                    .init(id: "publish-catalog", title: "Publish catalog", detail: "Regenerate docs and examples.", status: "Queued", statusColor: .blue)
+                ])
+            ],
+            selectedItemID: selectedBoardBinding,
+            onActivateItem: { _ in },
+            onMoveItem: { _, _, _ in }
+        )
+        let boardItem = BoardItemView(
+            environment: environment,
+            item: .init(id: "review-docs", title: "Review docs", detail: "Match snippets to the real API.", status: "Review", statusColor: .orange),
+            isSelected: true,
+            onActivate: {},
+            moveDestinations: [moveDestination],
+            onMove: { _ in },
+            insertDestinations: [insertDestination],
+            onInsert: { _ in }
+        )
+        let itemsPalette = ItemsPalette(
+            environment: environment,
+            title: "Insert items",
+            subtitle: "Use explicit insertion targets before drag orchestration.",
+            items: [
+                .init(id: "metric-card", title: "Metric card", detail: "Reusable dashboard tile.", status: "Ready", statusColor: .green),
+                .init(id: "status-list", title: "Status list", detail: "Dense collection summary.", status: "Review", statusColor: .orange)
+            ],
+            selectedItemID: selectedPaletteBinding,
+            insertDestinations: [insertDestination],
+            onActivateItem: { _ in },
+            onInsertItem: { _, _, _ in }
+        )
+
+        XCTAssertEqual(dropZone.state, .ready)
+        XCTAssertEqual(dropZone.acceptedContentTypes, [.plainText, .pdf, .image])
+        XCTAssertEqual(dropZone.isTargeted?.wrappedValue, false)
+        XCTAssertEqual(fileTokens.items.count, 2)
+        XCTAssertNotNil(fileTokens.onRetry)
+        XCTAssertEqual(fileUpload.items.count, 2)
+        XCTAssertEqual(fileUpload.state, .ready)
+        XCTAssertEqual(fileUpload.acceptedContentTypes, [.plainText, .pdf, .image])
+        XCTAssertEqual(fileUpload.isTargeted?.wrappedValue, false)
+        XCTAssertNotNil(fileUpload.onRetry)
+        XCTAssertEqual(board.columns.count, 2)
+        XCTAssertEqual(board.selectedItemID?.wrappedValue, "review-docs")
+        XCTAssertNotNil(board.onActivateItem)
+        XCTAssertNotNil(board.onMoveItem)
+        XCTAssertTrue(boardItem.isSelected)
+        XCTAssertEqual(boardItem.moveDestinations.count, 1)
+        XCTAssertEqual(boardItem.insertDestinations.count, 1)
+        XCTAssertEqual(itemsPalette.items.count, 2)
+        XCTAssertEqual(itemsPalette.selectedItemID?.wrappedValue, "metric-card")
+        XCTAssertEqual(itemsPalette.insertDestinations.count, 1)
+        XCTAssertNotNil(itemsPalette.onInsertItem)
+    }
+
     func testAsyncContentStateAndMetricSelectionModels() {
         let loadingState = AsyncContentState.loading(.init(label: "Refreshing metrics", detail: "Layout should remain stable."))
         let emptyState = AsyncContentState.empty(.init(title: "No visible series", message: "Choose a legend item to restore the chart."))
@@ -651,6 +798,21 @@ final class BuilderComponentsTests: XCTestCase {
             value: 82,
             formattedValue: "82%"
         )
+        let fileUploadItem = FileUploadItem(
+            title: "preview.png",
+            detail: "640 KB",
+            status: .uploading,
+            progress: 1.4,
+            message: "Uploading preview...",
+            symbol: "photo",
+            canRetry: true
+        )
+        let clampedLowProgressItem = FileUploadItem(
+            title: "notes.md",
+            detail: "12 KB",
+            status: .uploading,
+            progress: -0.2
+        )
 
         XCTAssertEqual(loadingState, .loading(.init(label: "Refreshing metrics", detail: "Layout should remain stable.")))
         XCTAssertEqual(emptyState, .empty(.init(title: "No visible series", message: "Choose a legend item to restore the chart.")))
@@ -659,6 +821,20 @@ final class BuilderComponentsTests: XCTestCase {
         XCTAssertEqual(selection.id, "Coverage::Tokens")
         XCTAssertEqual(selection.seriesTitle, "Coverage")
         XCTAssertEqual(selection.formattedValue, "82%")
+        XCTAssertEqual(fileUploadItem.progress, 1)
+        XCTAssertEqual(clampedLowProgressItem.progress, 0)
+        XCTAssertEqual(fileUploadItem.symbol, "photo")
+        XCTAssertTrue(fileUploadItem.canRetry)
+    }
+
+    func testFileDropTypeMatchingHonorsAcceptedContentTypes() {
+        let markdownURL = URL(fileURLWithPath: "/tmp/release-notes.md")
+        let imageURL = URL(fileURLWithPath: "/tmp/preview.png")
+
+        XCTAssertTrue(matchesAcceptedContentType(markdownURL, acceptedContentTypes: [.plainText, .pdf]))
+        XCTAssertFalse(matchesAcceptedContentType(imageURL, acceptedContentTypes: [.plainText, .pdf]))
+        XCTAssertTrue(matchesAcceptedContentType(imageURL, acceptedContentTypes: [.fileURL]))
+        XCTAssertTrue(matchesAcceptedContentType(imageURL, acceptedContentTypes: []))
     }
 
     func testNativeNavigationViewsDisableDefaultFocusRingAndTranslateReturn() throws {

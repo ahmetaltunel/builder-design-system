@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import XCTest
 import BuilderFoundation
 import BuilderComponents
@@ -140,6 +141,32 @@ final class BuilderSnapshotTests: XCTestCase {
             size: CGSize(width: 1400, height: 760)
         )
     }
+
+    func testCollectionBehaviorSnapshots() {
+        let darkEnvironment = DesignSystemEnvironment.preview(
+            .dark,
+            density: .compact,
+            visualContext: .editorComposer,
+            reduceMotion: true
+        )
+        let lightEnvironment = DesignSystemEnvironment.preview(
+            .light,
+            density: .default,
+            visualContext: .editorComposer,
+            reduceMotion: true
+        )
+
+        SnapshotTestSupport.assertSnapshot(
+            matching: CollectionBehaviorGallery(environment: darkEnvironment),
+            named: "component-collection-behavior-dark",
+            size: CGSize(width: 1400, height: 900)
+        )
+        SnapshotTestSupport.assertSnapshot(
+            matching: CollectionBehaviorGallery(environment: lightEnvironment),
+            named: "component-collection-behavior-light",
+            size: CGSize(width: 1400, height: 900)
+        )
+    }
 }
 
 private struct ComponentStateGallery: View {
@@ -209,6 +236,9 @@ private struct ComponentStateGallery: View {
 private struct AdvancedComponentGallery: View {
     let environment: DesignSystemEnvironment
     @State private var prompt = "Summarize the latest system changes."
+    @State private var selectedBoardItemID: String? = "alert"
+    @State private var selectedPaletteItemID: String? = "metric-card"
+    @State private var isUploadTargeted = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -299,38 +329,44 @@ private struct AdvancedComponentGallery: View {
                 FileUploadField(
                     environment: environment,
                     title: "Attach release notes",
-                    subtitle: "Presentation belongs to the system; picking stays with the consumer.",
+                    subtitle: "Presentation belongs to the system; drop handling and item state stay with the consumer.",
                     dropTitle: "Drop release notes",
-                    dropDetail: "Or browse from disk.",
-                    items: [
-                        .init(title: "release-notes.md", detail: "18 KB", status: .success),
-                        .init(title: "screenshots.zip", detail: "2 files", status: .warning)
-                    ],
-                    onPick: {}
-                ) { _ in
-                }
+                    dropDetail: "Accept Markdown, PDF, and image files.",
+                    items: collectionUploadItems,
+                    acceptedContentTypes: [.plainText, .pdf, .image],
+                    isTargeted: $isUploadTargeted,
+                    onDropURLs: { _ in },
+                    onPick: {},
+                    onRetry: { _ in }
+                ) { _ in }
                 .frame(maxWidth: .infinity)
             }
 
             HStack(alignment: .top, spacing: 18) {
                 Board(
                     environment: environment,
-                    columns: [
-                        .init(title: "Backlog", items: [
-                            .init(title: "Alert", detail: "Feedback work", status: "Review", statusColor: environment.theme.color(.warning)),
-                            .init(title: "Charts", detail: "Metrics work", status: "Ready", statusColor: environment.theme.color(.success))
-                        ]),
-                        .init(title: "Done", cards: ["Foundations", "Tokens"])
-                    ]
+                    columns: advancedBoardColumns(environment: environment),
+                    selectedItemID: $selectedBoardItemID,
+                    onActivateItem: { item in
+                        selectedBoardItemID = item.id
+                    },
+                    onMoveItem: { itemID, _, _ in
+                        selectedBoardItemID = itemID
+                    }
                 )
                 .frame(maxWidth: .infinity)
 
                 ItemsPalette(
                     environment: environment,
-                    items: [
-                        .init(title: "Metric card", detail: "Reusable dashboard tile.", status: "Ready", statusColor: environment.theme.color(.success), symbol: "chart.bar"),
-                        .init(title: "Status list", detail: "Dense collection summary.", status: "Review", statusColor: environment.theme.color(.warning), symbol: "list.bullet.rectangle")
-                    ]
+                    items: collectionPaletteItems(environment: environment),
+                    selectedItemID: $selectedPaletteItemID,
+                    insertDestinations: advancedInsertDestinations(environment: environment),
+                    onActivateItem: { item in
+                        selectedPaletteItemID = item.id
+                    },
+                    onInsertItem: { item, _, _ in
+                        selectedPaletteItemID = item.id
+                    }
                 )
                 .frame(width: 320)
             }
@@ -367,6 +403,83 @@ private struct AdvancedComponentGallery: View {
                         .foregroundStyle(environment.theme.color(.textSecondary))
                 }
                 .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(environment.theme.color(.workspaceBackground))
+    }
+}
+
+private struct CollectionBehaviorGallery: View {
+    let environment: DesignSystemEnvironment
+    @State private var isTargeted = true
+    @State private var selectedBoardItemID: String? = "review-docs"
+    @State private var selectedPaletteItemID: String? = "metric-card"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top, spacing: 18) {
+                FileDropZone(
+                    environment: environment,
+                    title: "Drop release notes",
+                    detail: "Accept Markdown, PDF, and image files.",
+                    state: .ready,
+                    acceptedContentTypes: [.plainText, .pdf, .image],
+                    isTargeted: $isTargeted,
+                    onDropURLs: { _ in },
+                    actionTitle: "Browse",
+                    action: {}
+                )
+                .frame(maxWidth: .infinity)
+
+                FileUploadField(
+                    environment: environment,
+                    title: "Attach release notes",
+                    subtitle: "Keep upload logic in the consumer while the system presents status, retry, and removal states.",
+                    dropTitle: "Drop release notes",
+                    dropDetail: "Or browse from disk.",
+                    items: collectionUploadItems,
+                    state: .ready,
+                    acceptedContentTypes: [.plainText, .pdf, .image],
+                    isTargeted: .constant(false),
+                    onDropURLs: { _ in },
+                    onPick: {},
+                    onRetry: { _ in },
+                    onRemove: { _ in }
+                )
+                .frame(maxWidth: .infinity)
+            }
+
+            HStack(alignment: .top, spacing: 18) {
+                Board(
+                    environment: environment,
+                    columns: collectionBoardColumns(environment: environment),
+                    selectedItemID: $selectedBoardItemID,
+                    onActivateItem: { item in
+                        selectedBoardItemID = item.id
+                    },
+                    onMoveItem: { itemID, _, _ in
+                        selectedBoardItemID = itemID
+                    }
+                )
+                .frame(maxWidth: .infinity)
+
+                ItemsPalette(
+                    environment: environment,
+                    title: "Insert items",
+                    subtitle: "Explicit insert actions avoid hidden drag-only workflows.",
+                    items: collectionPaletteItems(environment: environment),
+                    selectedItemID: $selectedPaletteItemID,
+                    insertDestinations: collectionInsertDestinations(environment: environment),
+                    onActivateItem: { item in
+                        selectedPaletteItemID = item.id
+                    },
+                    onInsertItem: { item, _, _ in
+                        selectedPaletteItemID = item.id
+                    }
+                )
+                .frame(width: 320)
             }
         }
         .padding(24)
@@ -488,5 +601,65 @@ private struct ChartBehaviorGallery: View {
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(environment.theme.color(.workspaceBackground))
+    }
+}
+
+private let collectionUploadItems: [FileUploadItem] = [
+    .init(id: "release-notes", title: "release-notes.md", detail: "18 KB", status: .success, message: "Uploaded successfully.", symbol: "doc.text"),
+    .init(id: "screenshots", title: "screenshots.zip", detail: "2 files", status: .uploading, progress: 0.64, message: "Uploading archive...", symbol: "archivebox"),
+    .init(id: "hero-image", title: "hero.png", detail: "4.2 MB", status: .error, message: "The file exceeds the current size limit.", symbol: "photo", canRetry: true)
+]
+
+private func collectionBoardColumns(environment: DesignSystemEnvironment) -> [Board.Column] {
+    [
+        .init(id: "incoming", title: "Incoming", items: [
+            .init(id: "review-docs", title: "Review docs", detail: "Match snippets to the real API.", status: "Review", statusColor: environment.theme.color(.warning), symbol: "doc.badge.magnifyingglass"),
+            .init(id: "sync-snapshots", title: "Sync snapshots", detail: "Record the new collection states.", status: "Ready", statusColor: environment.theme.color(.success), symbol: "photo.on.rectangle")
+        ]),
+        .init(id: "ready", title: "Ready", items: [
+            .init(id: "publish-catalog", title: "Publish catalog", detail: "Regenerate docs and examples.", status: "Queued", statusColor: environment.theme.color(.info), symbol: "square.stack.3d.up")
+        ])
+    ]
+}
+
+private func advancedBoardColumns(environment: DesignSystemEnvironment) -> [Board.Column] {
+    [
+        .init(id: "backlog", title: "Backlog", items: [
+            .init(id: "alert", title: "Alert", detail: "Feedback work", status: "Review", statusColor: environment.theme.color(.warning), symbol: "exclamationmark.triangle"),
+            .init(id: "charts", title: "Charts", detail: "Metrics work", status: "Ready", statusColor: environment.theme.color(.success), symbol: "chart.bar")
+        ]),
+        .init(id: "done", title: "Done", items: [
+            .init(id: "foundations", title: "Foundations", detail: "Token exports", status: "Done", statusColor: environment.theme.color(.success), symbol: "shippingbox")
+        ])
+    ]
+}
+
+private func collectionPaletteItems(environment: DesignSystemEnvironment) -> [Board.Item] {
+    [
+        .init(id: "metric-card", title: "Metric card", detail: "Reusable dashboard tile.", status: "Ready", statusColor: environment.theme.color(.success), symbol: "chart.bar"),
+        .init(id: "status-list", title: "Status list", detail: "Dense collection summary.", status: "Review", statusColor: environment.theme.color(.warning), symbol: "list.bullet.rectangle"),
+        .init(id: "release-note", title: "Release note", detail: "Attach guidance to a workflow column.", status: "Info", statusColor: environment.theme.color(.info), symbol: "paperclip")
+    ]
+}
+
+private func collectionInsertDestinations(environment: DesignSystemEnvironment) -> [Board.Destination] {
+    collectionBoardColumns(environment: environment).map { column in
+        .init(
+            title: "Insert into \(column.title)",
+            columnID: column.id,
+            columnTitle: column.title,
+            index: column.items.count
+        )
+    }
+}
+
+private func advancedInsertDestinations(environment: DesignSystemEnvironment) -> [Board.Destination] {
+    advancedBoardColumns(environment: environment).map { column in
+        .init(
+            title: "Insert into \(column.title)",
+            columnID: column.id,
+            columnTitle: column.title,
+            index: column.items.count
+        )
     }
 }

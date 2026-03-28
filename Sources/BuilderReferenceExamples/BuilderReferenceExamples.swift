@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import BuilderDesignSystem
 
 package enum BuilderReferenceExamples {
@@ -1068,6 +1069,16 @@ private struct ContentReferenceExample: View {
     let environment: DesignSystemEnvironment
     @State private var tab = "overview"
     @State private var isExpanded = true
+    @State private var selectedBoardItemID: String?
+    @State private var selectedPaletteItemID: String?
+    @State private var boardColumns: [Board.Column]
+
+    init(environment: DesignSystemEnvironment) {
+        self.environment = environment
+        _selectedBoardItemID = State(initialValue: "review-tokens")
+        _selectedPaletteItemID = State(initialValue: "metric-card")
+        _boardColumns = State(initialValue: contentBoardColumns(environment: environment))
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -1096,13 +1107,52 @@ private struct ContentReferenceExample: View {
                             .foregroundStyle(environment.theme.color(.textSecondary))
                     }
 
-                    ItemsPalette(
-                        environment: environment,
-                        items: [
-                            .init(title: "Metric card", detail: "Reusable dashboard tile.", status: "Ready", statusColor: environment.theme.color(.success), symbol: "chart.bar"),
-                            .init(title: "Status list", detail: "Dense collection summary.", status: "Review", statusColor: environment.theme.color(.warning), symbol: "list.bullet.rectangle")
-                        ]
-                    )
+                    HStack(alignment: .top, spacing: 16) {
+                        Board(
+                            environment: environment,
+                            columns: boardColumns,
+                            selectedItemID: $selectedBoardItemID,
+                            onActivateItem: { item in
+                                selectedBoardItemID = item.id
+                            },
+                            onMoveItem: { itemID, destinationColumnID, destinationIndex in
+                                boardColumns = moveBoardItem(
+                                    in: boardColumns,
+                                    itemID: itemID,
+                                    destinationColumnID: destinationColumnID,
+                                    destinationIndex: destinationIndex
+                                )
+                                selectedBoardItemID = itemID
+                            }
+                        )
+                        .frame(maxWidth: .infinity)
+
+                        ItemsPalette(
+                            environment: environment,
+                            title: "Add content",
+                            subtitle: "Select a reusable tile or insert it into the board.",
+                            items: contentPaletteItems(environment: environment),
+                            selectedItemID: $selectedPaletteItemID,
+                            insertDestinations: boardInsertDestinations(from: boardColumns),
+                            onActivateItem: { item in
+                                selectedPaletteItemID = item.id
+                            },
+                            onInsertItem: { item, destinationColumnID, destinationIndex in
+                                boardColumns = insertBoardItem(
+                                    item,
+                                    into: boardColumns,
+                                    destinationColumnID: destinationColumnID,
+                                    destinationIndex: destinationIndex
+                                )
+                                selectedPaletteItemID = item.id
+                            }
+                        )
+                        .frame(width: 320)
+                    }
+
+                    Text("Selection, move, and insert callbacks stay with the consumer while the system owns the presentation contract.")
+                        .font(environment.theme.typography(.caption).font)
+                        .foregroundStyle(environment.theme.color(.textSecondary))
                 }
             } else {
                 CodeView(environment: environment, code: "let system = BuilderDesignSystem()")
@@ -1326,6 +1376,8 @@ private struct UtilityReferenceExample: View {
 
 private struct SpecializedReferenceExample: View {
     let environment: DesignSystemEnvironment
+    @State private var uploadItems = specializedUploadItems
+    @State private var isDropTargeted = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -1345,17 +1397,71 @@ private struct SpecializedReferenceExample: View {
             FileUploadField(
                 environment: environment,
                 title: "Attach release notes",
-                subtitle: "Presentation belongs to the system; picking and upload logic stays with the consumer.",
+                subtitle: "Presentation belongs to the system; drop handling and item updates stay with the consumer.",
                 dropTitle: "Drop release notes",
-                dropDetail: "Or browse from disk.",
-                items: [
-                    .init(title: "release-notes.md", detail: "18 KB", status: .success),
-                    .init(title: "screenshots.zip", detail: "2 files", status: .warning)
-                ],
-                onPick: {}
-            ) { _ in
+                dropDetail: "Accept Markdown, PDF, image, and archive files from Finder.",
+                items: uploadItems,
+                acceptedContentTypes: [.plainText, .pdf, .image, .archive],
+                isTargeted: $isDropTargeted,
+                onDropURLs: appendDroppedUploads,
+                onPick: simulatePickedUpload,
+                onRetry: retryUpload
+            ) { item in
+                removeUpload(item)
             }
         }
+    }
+
+    private func simulatePickedUpload() {
+        uploadItems.insert(
+            .init(
+                id: "design-review-pdf",
+                title: "design-review.pdf",
+                detail: "42 KB",
+                status: .ready,
+                message: "Queued for upload.",
+                symbol: "doc.richtext"
+            ),
+            at: 0
+        )
+    }
+
+    private func appendDroppedUploads(_ urls: [URL]) {
+        uploadItems.append(contentsOf: urls.enumerated().map { index, url in
+            .init(
+                id: "\(url.lastPathComponent)-\(index)",
+                title: url.lastPathComponent,
+                detail: "Dropped from Finder",
+                status: .ready,
+                message: "Ready to upload.",
+                symbol: "doc"
+            )
+        })
+        isDropTargeted = false
+    }
+
+    private func retryUpload(_ item: FileUploadItem) {
+        updateUploadItem(id: item.id) { current in
+            .init(
+                id: current.id,
+                title: current.title,
+                detail: current.detail,
+                status: .uploading,
+                progress: 0.35,
+                message: "Retrying upload...",
+                symbol: current.symbol,
+                canRetry: false
+            )
+        }
+    }
+
+    private func removeUpload(_ item: FileUploadItem) {
+        uploadItems.removeAll { $0.id == item.id }
+    }
+
+    private func updateUploadItem(id: String, transform: (FileUploadItem) -> FileUploadItem) {
+        guard let index = uploadItems.firstIndex(where: { $0.id == id }) else { return }
+        uploadItems[index] = transform(uploadItems[index])
     }
 }
 
@@ -1529,16 +1635,115 @@ private struct StateHandlingPatternExample: View {
 
 private struct DragAndDropPatternExample: View {
     let environment: DesignSystemEnvironment
+    @State private var uploadItems = dragAndDropUploadItems
+    @State private var isDropTargeted = false
+    @State private var selectedBoardItemID: String?
+    @State private var selectedPaletteItemID: String?
+    @State private var columns: [Board.Column]
+
+    init(environment: DesignSystemEnvironment) {
+        self.environment = environment
+        _selectedBoardItemID = State(initialValue: "review-docs")
+        _selectedPaletteItemID = State(initialValue: "metric-card")
+        _columns = State(initialValue: dragAndDropBoardColumns(environment: environment))
+    }
 
     var body: some View {
-        FileUploadField(
-            environment: environment,
-            title: "Drop files",
-            subtitle: "Provide a visible target and a keyboard alternative.",
-            dropTitle: "Drop release notes here",
-            dropDetail: "Or use Browse to upload from disk.",
-            onPick: {}
-        )
+        VStack(alignment: .leading, spacing: 16) {
+            FileUploadField(
+                environment: environment,
+                title: "Drop files",
+                subtitle: "Provide a visible target, status feedback, and a keyboard alternative.",
+                dropTitle: "Drop release notes here",
+                dropDetail: "Or use Browse to upload from disk.",
+                items: uploadItems,
+                acceptedContentTypes: [.plainText, .pdf, .image],
+                isTargeted: $isDropTargeted,
+                onDropURLs: { urls in
+                    uploadItems.append(contentsOf: urls.enumerated().map { index, url in
+                        .init(
+                            id: "dropped-\(index)-\(url.lastPathComponent)",
+                            title: url.lastPathComponent,
+                            detail: "Dropped from Finder",
+                            status: .ready,
+                            message: "Ready to insert into the workflow.",
+                            symbol: "doc"
+                        )
+                    })
+                },
+                onPick: {
+                    uploadItems.insert(
+                        .init(
+                            id: "browse-release-notes",
+                            title: "release-notes.md",
+                            detail: "18 KB",
+                            status: .ready,
+                            message: "Ready to upload.",
+                            symbol: "doc.text"
+                        ),
+                        at: 0
+                    )
+                },
+                onRetry: { item in
+                    guard let index = uploadItems.firstIndex(where: { $0.id == item.id }) else { return }
+                    uploadItems[index] = .init(
+                        id: item.id,
+                        title: item.title,
+                        detail: item.detail,
+                        status: .uploading,
+                        progress: 0.25,
+                        message: "Retrying upload...",
+                        symbol: item.symbol,
+                        canRetry: false
+                    )
+                }
+            ) { item in
+                uploadItems.removeAll { $0.id == item.id }
+            }
+
+            HStack(alignment: .top, spacing: 16) {
+                Board(
+                    environment: environment,
+                    columns: columns,
+                    selectedItemID: $selectedBoardItemID,
+                    onActivateItem: { item in
+                        selectedBoardItemID = item.id
+                    },
+                    onMoveItem: { itemID, destinationColumnID, destinationIndex in
+                        columns = moveBoardItem(
+                            in: columns,
+                            itemID: itemID,
+                            destinationColumnID: destinationColumnID,
+                            destinationIndex: destinationIndex
+                        )
+                        selectedBoardItemID = itemID
+                    }
+                )
+                .frame(maxWidth: .infinity)
+
+                ItemsPalette(
+                    environment: environment,
+                    title: "Insert items",
+                    subtitle: "Use explicit insertion targets before reaching for drag orchestration.",
+                    items: contentPaletteItems(environment: environment),
+                    selectedItemID: $selectedPaletteItemID,
+                    insertDestinations: boardInsertDestinations(from: columns),
+                    onActivateItem: { item in
+                        selectedPaletteItemID = item.id
+                    },
+                    onInsertItem: { item, destinationColumnID, destinationIndex in
+                        columns = insertBoardItem(
+                            item,
+                            into: columns,
+                            destinationColumnID: destinationColumnID,
+                            destinationIndex: destinationIndex
+                        )
+                        selectedPaletteItemID = item.id
+                    }
+                )
+                .frame(width: 320)
+            }
+        }
     }
 }
 
@@ -1750,6 +1955,123 @@ private func coverageSelection(label: String) -> MetricSelection {
         value: resolvedValue,
         formattedValue: percentMetricValue(resolvedValue)
     )
+}
+
+private func contentBoardColumns(environment: DesignSystemEnvironment) -> [Board.Column] {
+    [
+        .init(id: "queued", title: "Queued", items: [
+            .init(id: "review-tokens", title: "Review tokens", detail: "Validation and docs", status: "Review", statusColor: environment.theme.color(.warning), symbol: "checklist"),
+            .init(id: "verify-docs", title: "Verify docs", detail: "Generated references", status: "Ready", statusColor: environment.theme.color(.success), symbol: "doc.text.magnifyingglass")
+        ]),
+        .init(id: "done", title: "Done", items: [
+            .init(id: "ship-foundations", title: "Ship foundations", detail: "Token exports and handbook", status: "Done", statusColor: environment.theme.color(.success), symbol: "shippingbox")
+        ])
+    ]
+}
+
+private func dragAndDropBoardColumns(environment: DesignSystemEnvironment) -> [Board.Column] {
+    [
+        .init(id: "incoming", title: "Incoming", items: [
+            .init(id: "review-docs", title: "Review docs", detail: "Match snippets to the real API.", status: "Review", statusColor: environment.theme.color(.warning), symbol: "doc.badge.magnifyingglass"),
+            .init(id: "sync-snapshots", title: "Sync snapshots", detail: "Record the new collection states.", status: "Ready", statusColor: environment.theme.color(.success), symbol: "photo.on.rectangle")
+        ]),
+        .init(id: "ready", title: "Ready", items: [
+            .init(id: "publish-catalog", title: "Publish catalog", detail: "Regenerate docs and examples.", status: "Queued", statusColor: environment.theme.color(.info), symbol: "square.stack.3d.up")
+        ])
+    ]
+}
+
+private func contentPaletteItems(environment: DesignSystemEnvironment) -> [Board.Item] {
+    [
+        .init(id: "metric-card", title: "Metric card", detail: "Reusable dashboard tile.", status: "Ready", statusColor: environment.theme.color(.success), symbol: "chart.bar"),
+        .init(id: "status-list", title: "Status list", detail: "Dense collection summary.", status: "Review", statusColor: environment.theme.color(.warning), symbol: "list.bullet.rectangle"),
+        .init(id: "release-note", title: "Release note", detail: "Attach guidance to a workflow column.", status: "Info", statusColor: environment.theme.color(.info), symbol: "paperclip")
+    ]
+}
+
+private let specializedUploadItems: [FileUploadItem] = [
+    .init(id: "release-notes", title: "release-notes.md", detail: "18 KB", status: .success, message: "Uploaded successfully.", symbol: "doc.text"),
+    .init(id: "screenshots", title: "screenshots.zip", detail: "2 files", status: .uploading, progress: 0.64, message: "Uploading archive...", symbol: "archivebox"),
+    .init(id: "hero-image", title: "hero.png", detail: "4.2 MB", status: .error, message: "The file exceeds the current size limit.", symbol: "photo", canRetry: true)
+]
+
+private let dragAndDropUploadItems: [FileUploadItem] = [
+    .init(id: "checklist", title: "checklist.md", detail: "12 KB", status: .success, message: "Uploaded successfully.", symbol: "checklist"),
+    .init(id: "preview", title: "preview.png", detail: "640 KB", status: .warning, message: "Review the generated preview before publishing.", symbol: "photo", canRetry: true)
+]
+
+private func boardInsertDestinations(from columns: [Board.Column]) -> [Board.Destination] {
+    columns.map { column in
+        .init(
+            title: "Insert into \(column.title)",
+            columnID: column.id,
+            columnTitle: column.title,
+            index: column.items.count
+        )
+    }
+}
+
+private func moveBoardItem(
+    in columns: [Board.Column],
+    itemID: String,
+    destinationColumnID: String,
+    destinationIndex: Int
+) -> [Board.Column] {
+    var mutableColumns = columns
+    var movingItem: Board.Item?
+
+    for columnIndex in mutableColumns.indices {
+        if let itemIndex = mutableColumns[columnIndex].items.firstIndex(where: { $0.id == itemID }) {
+            movingItem = mutableColumns[columnIndex].items[itemIndex]
+            var items = mutableColumns[columnIndex].items
+            items.remove(at: itemIndex)
+            mutableColumns[columnIndex] = .init(
+                id: mutableColumns[columnIndex].id,
+                title: mutableColumns[columnIndex].title,
+                items: items
+            )
+            break
+        }
+    }
+
+    guard let movingItem else { return columns }
+
+    for columnIndex in mutableColumns.indices where mutableColumns[columnIndex].id == destinationColumnID {
+        var items = mutableColumns[columnIndex].items
+        let boundedIndex = min(max(destinationIndex, 0), items.count)
+        items.insert(movingItem, at: boundedIndex)
+        mutableColumns[columnIndex] = .init(
+            id: mutableColumns[columnIndex].id,
+            title: mutableColumns[columnIndex].title,
+            items: items
+        )
+        return mutableColumns
+    }
+
+    return columns
+}
+
+private func insertBoardItem(
+    _ item: Board.Item,
+    into columns: [Board.Column],
+    destinationColumnID: String,
+    destinationIndex: Int
+) -> [Board.Column] {
+    var mutableColumns = columns
+
+    for columnIndex in mutableColumns.indices where mutableColumns[columnIndex].id == destinationColumnID {
+        var items = mutableColumns[columnIndex].items
+        let boundedIndex = min(max(destinationIndex, 0), items.count)
+        items.insert(item, at: boundedIndex)
+        mutableColumns[columnIndex] = .init(
+            id: mutableColumns[columnIndex].id,
+            title: mutableColumns[columnIndex].title,
+            items: items
+        )
+        return mutableColumns
+    }
+
+    return columns
 }
 
 private struct ContentCard: Identifiable {

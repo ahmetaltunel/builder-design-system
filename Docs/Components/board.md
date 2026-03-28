@@ -144,9 +144,13 @@ let environment = DesignSystemEnvironment.preview(.dark)
 
 Board(environment: environment, columns: [
     .init(id: "queued", title: "Queued", items: [
-        .init(title: "Review tokens", detail: "Validation and docs", status: "Review", statusColor: environment.theme.color(.warning)),
-        .init(title: "Verify docs", detail: "Generated references", status: "Ready", statusColor: environment.theme.color(.success))
+        .init(id: "review-tokens", title: "Review tokens", detail: "Validation and docs", status: "Review", statusColor: environment.theme.color(.warning)),
+        .init(id: "verify-docs", title: "Verify docs", detail: "Generated references", status: "Ready", statusColor: environment.theme.color(.success))
     ]),
     .init(id: "done", title: "Done", cards: ["Ship foundations"])
+], selectedItemID: .constant("review-tokens"), onActivateItem: { item in
+    print(item.title)
+}, onMoveItem: { itemID, destinationColumnID, destinationIndex in
+    print(itemID, destinationColumnID, destinationIndex)
 ])
 ```

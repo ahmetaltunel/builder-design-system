@@ -141,5 +141,13 @@ Canonical compiled example for File uploading components. Use File uploading com
 // Canonical example for File uploading components
 let environment = DesignSystemEnvironment.preview(.dark)
 
-FileUploadField(environment: environment, title: "Drop release notes", subtitle: "Or browse from disk.", onPick: {})
+VStack(spacing: 12) {
+    FileDropZone(environment: environment, title: "Drop release notes", detail: "Accept Markdown, PDF, and image files.", acceptedContentTypes: [.plainText, .pdf, .image], isTargeted: .constant(true), onDropURLs: { urls in
+        print(urls.count)
+    }, actionTitle: "Browse") {}
+    FileTokenGroup(environment: environment, items: [
+        .init(title: "release-notes.md", detail: "18 KB", status: .success, message: "Uploaded successfully.", symbol: "doc.text"),
+        .init(title: "hero.png", detail: "4.2 MB", status: .error, message: "The file exceeds the current size limit.", symbol: "photo", canRetry: true)
+    ])
+}
 ```

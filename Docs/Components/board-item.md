@@ -142,5 +142,9 @@ Canonical compiled example for Board item. Use Board item to organize content be
 // Canonical example for Board item
 let environment = DesignSystemEnvironment.preview(.dark)
 
-BoardItemView(environment: environment, item: .init(title: "Review tokens", detail: "Validation and docs", status: "Review", statusColor: environment.theme.color(.warning)))
+BoardItemView(environment: environment, item: .init(title: "Review tokens", detail: "Validation and docs", status: "Review", statusColor: environment.theme.color(.warning)), isSelected: true, moveDestinations: [
+    .init(title: "Move to Done", columnID: "done", columnTitle: "Done", index: 0)
+], onMove: { destination in
+    print(destination.columnID)
+})
 ```

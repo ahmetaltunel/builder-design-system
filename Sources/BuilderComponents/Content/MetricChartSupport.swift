@@ -1,4 +1,3 @@
-import AppKit
 import Charts
 import Foundation
 import SwiftUI
@@ -152,7 +151,7 @@ struct MetricChartContainer<Content: View>: View {
                 }
 
                 if let liveAnnouncement, !liveAnnouncement.isEmpty {
-                    MetricAnnouncementRegion(message: liveAnnouncement)
+                    AccessibilityAnnouncementRegion(message: liveAnnouncement)
                 }
             }
         }
@@ -285,18 +284,6 @@ private struct MetricAnnotationLabel: View {
             RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous)
                 .stroke(color.opacity(environment.mode == .dark ? 0.7 : 0.55), lineWidth: 1)
         )
-    }
-}
-
-private struct MetricAnnouncementRegion: View {
-    let message: String
-
-    var body: some View {
-        Text(message)
-            .font(.system(size: 1))
-            .foregroundStyle(.clear)
-            .frame(height: 1)
-            .accessibilityLabel(message)
     }
 }
 
@@ -1035,19 +1022,6 @@ struct DonutMetricChartPanel: View {
 
         return selectionForSlice(visibleSlices[visibleSlices.count - 1])
     }
-}
-
-@MainActor
-private func postAccessibilityAnnouncement(_ message: String) {
-    let userInfo: [NSAccessibility.NotificationUserInfoKey: Any] = [
-        .announcement: message,
-        .priority: NSAccessibilityPriorityLevel.medium.rawValue
-    ]
-    NSAccessibility.post(
-        element: NSApp as Any,
-        notification: .announcementRequested,
-        userInfo: userInfo
-    )
 }
 
 public func defaultMetricValueFormatter(_ value: Double) -> String {
