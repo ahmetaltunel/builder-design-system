@@ -1,0 +1,21 @@
+# Swift Package Manager
+.build/
+.swiftpm/
+
+# Xcode / Apple toolchain local state
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+*.xcuserstate
+
+# macOS Finder noise
+.DS_Store
+
+# Editor / shell noise
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Snapshot failure artifacts
+Tests/BuilderIntegrationTests/__Snapshots__/*.failure.png

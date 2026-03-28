@@ -1,0 +1,28 @@
+# Patterns
+
+Generated pattern reference pages sourced from `BuilderCatalog`.
+
+- [General](general.md)
+- [Actions](actions.md)
+- [Announcing new features](announcing-new-features.md)
+- [Announcing beta and preview features](announcing-beta-and-preview-features.md)
+- [Communicating unsaved changes](communicating-unsaved-changes.md)
+- [Data visualization](data-visualization.md)
+- [Density settings](density-settings.md)
+- [Disabled and read-only states](disabled-and-readonly-states.md)
+- [Drag-and-drop](draganddrop.md)
+- [Errors](errors.md)
+- [Empty states](empty-states.md)
+- [Feedback mechanisms](feedback-mechanisms.md)
+- [Filtering patterns](filtering-patterns.md)
+- [Hero header](hero-header.md)
+- [Help system](help-system.md)
+- [Image magnifier](image-magnifier.md)
+- [Loading and refreshing](loading-and-refreshing.md)
+- [Onboarding](onboarding.md)
+- [Selection in forms](selection-in-forms.md)
+- [Workspace navigation](workspace-navigation.md)
+- [Workspace dashboard](workspace-dashboard.md)
+- [Secondary panels](secondary-panels.md)
+- [Timestamps](timestamps.md)
+- [User feedback](user-feedback.md)

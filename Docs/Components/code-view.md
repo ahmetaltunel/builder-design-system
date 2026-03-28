@@ -1,0 +1,145 @@
+# Code view
+
+Code view is calibrated for the design-system shell with restrained surfaces, semantic tokens, and consistent light and dark behavior.
+
+## When To Use
+
+- **Primary usage:** Use code view when the interaction benefits from the design-system shell language instead of standalone card styling.
+- **Composition:** Prefer grouping code view inside long-form panels, structured lists, or shell regions so it inherits the product hierarchy.
+- **Copy tone:** Keep labels and helper text practical and operational rather than promotional.
+
+## Anatomy
+
+- Primary utility surface
+- Context label
+- Focused interaction
+- Supporting metadata
+
+## Variants
+
+- Default
+- Compact
+- Expanded
+- Disabled where applicable
+
+## States
+
+- Normal
+- Hover
+- Focused
+- Selected
+- Disabled
+- Read-only when applicable
+
+## Density Behavior
+
+Density affects rows, metadata spacing, and pagination rhythm while maintaining scanability.
+
+## Accessibility
+
+- Visible focus treatment must use the system focus token rather than a local highlight.
+- VoiceOver labels should prefer the catalog name plus current value or state.
+- Text and icons must keep contrast in both light and dark themes.
+
+## Accessibility Acceptance
+
+- Semantics: Pass
+- Keyboard: Pass
+- Contrast: Pass
+- Motion: Pass
+- Messaging: Pass
+
+## Content Guidance
+
+- Prefer direct labels and short supporting text.
+- Keep action labels verb-led and specific.
+- Use calm, operational language that matches a desktop work environment.
+
+### Action labels
+
+- Prefer direct labels that describe the user outcome for code view rather than implementation jargon.
+- Use verb-led labels when code view performs work and noun-led labels only when it is a destination or mode.
+
+### Helper text
+
+- Use helper text to explain what code view affects before the user makes a mistake.
+- Keep helper text short enough to scan in compact density.
+
+### Validation copy
+
+- Tie validation to the specific code view state that needs to change.
+- Name the fix directly instead of describing a generic failure.
+
+### Error copy
+
+- State what blocked code view and what the user can do next.
+- Avoid vague errors that do not name the affected surface or field.
+
+### Confirmations
+
+- Confirm the outcome of code view with factual language such as Saved, Applied, or Updated.
+- Include a next step only when the user still needs to act.
+
+### Destructive actions
+
+- Use destructive wording only when code view can remove, reset, or disconnect real data or state.
+- Name the consequence explicitly.
+
+### Empty states
+
+- If code view can render empty, explain why nothing is shown and offer one clear next step.
+- Keep the title short and operational.
+
+### Announcements
+
+- Announcements involving code view should say what changed, who it affects, and what action is available.
+- Keep live status concise enough for repeated exposure.
+
+### Localization
+
+- Avoid idioms and unstable shorthand in code view labels and supporting copy.
+- Keep status language easy to localize.
+
+### Terminology
+
+- Use one canonical term for the main code view concept across the docs, code examples, and showcase.
+- Do not switch between overlapping nouns unless the product meaning changes.
+
+### AI and generated content
+
+- If code view presents machine-generated output, distinguish prompt, generated content, and next-step actions clearly.
+- Do not imply certainty when content is draft or model-generated.
+
+## Tokens
+
+- `surface.grouped`
+- `surface.input`
+- `text.primary`
+- `text.secondary`
+- `radius.large`
+
+## Platform Notes
+
+- Use monospaced and metadata treatments sparingly so utility surfaces feel native to the shell rather than like imported inspectors.
+
+## Do
+
+- Do let spacing and hierarchy communicate structure before adding more containers.
+- Do keep the component visually tied to the calibrated shell.
+
+## Don't
+
+- Don't wrap code view in redundant cards.
+- Don't drift away from the calibrated neutral palette.
+
+## SwiftUI Example
+
+**Code view example**  
+Canonical compiled example for Code view. Use Code view for quiet supporting actions that still need system-level clarity.
+
+```swift
+// Canonical example for Code view
+let environment = DesignSystemEnvironment.preview(.dark)
+
+CodeView(environment: environment, code: sampleCode, language: "swift")
+```

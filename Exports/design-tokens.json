@@ -1,0 +1,1180 @@
+{
+  "elevations" : {
+    "flat" : "flat",
+    "floating" : "floating",
+    "raised" : "raised",
+    "subtle" : "subtle"
+  },
+  "grids" : {
+    "browser" : {
+      "columns" : 1,
+      "description" : "Component and recipe browser columns with compact list density.",
+      "gutter" : 16,
+      "margin" : 22,
+      "maxWidth" : 294
+    },
+    "content" : {
+      "columns" : 12,
+      "description" : "Main working canvas for product content and live examples.",
+      "gutter" : 20,
+      "margin" : 28,
+      "maxWidth" : 1280
+    },
+    "dashboard" : {
+      "columns" : 12,
+      "description" : "Status and data dense dashboards that stay calm and desktop-native.",
+      "gutter" : 16,
+      "margin" : 24,
+      "maxWidth" : 1320
+    },
+    "editor" : {
+      "columns" : 12,
+      "description" : "Editor and composer surfaces with a dominant work region and optional secondary context.",
+      "gutter" : 18,
+      "margin" : 24,
+      "maxWidth" : 1180
+    },
+    "inspector" : {
+      "columns" : 1,
+      "description" : "Contextual inspector with tokens, accessibility, and usage guidance.",
+      "gutter" : 16,
+      "margin" : 22,
+      "maxWidth" : 330
+    },
+    "settings" : {
+      "columns" : 8,
+      "description" : "Long-form settings pages with grouped rows and right-aligned controls.",
+      "gutter" : 16,
+      "margin" : 24,
+      "maxWidth" : 960
+    },
+    "sidebar" : {
+      "columns" : 1,
+      "description" : "Primary navigation rail with integrated search and utility controls.",
+      "gutter" : 16,
+      "margin" : 16,
+      "maxWidth" : 272
+    }
+  },
+  "icons" : {
+    "accentAction" : {
+      "pointSize" : 15,
+      "semanticRole" : "Primary accent-led calls to action and advanced builder actions.",
+      "symbol" : "sparkles",
+      "weight" : "semibold"
+    },
+    "contentStructure" : {
+      "pointSize" : 15,
+      "semanticRole" : "Content grouping, foundations, and layered system concepts.",
+      "symbol" : "square.stack.3d.up",
+      "weight" : "medium"
+    },
+    "dataSeries" : {
+      "pointSize" : 14,
+      "semanticRole" : "Data, charting, and analytical content.",
+      "symbol" : "chart.xyaxis.line",
+      "weight" : "medium"
+    },
+    "navigationPrimary" : {
+      "pointSize" : 16,
+      "semanticRole" : "Primary navigation and route entry points.",
+      "symbol" : "square.grid.2x2",
+      "weight" : "semibold"
+    },
+    "navigationSecondary" : {
+      "pointSize" : 15,
+      "semanticRole" : "Secondary navigation, breadcrumbs, and anchor lists.",
+      "symbol" : "sidebar.left",
+      "weight" : "regular"
+    },
+    "statusDanger" : {
+      "pointSize" : 14,
+      "semanticRole" : "Error and destructive states.",
+      "symbol" : "xmark.octagon",
+      "weight" : "semibold"
+    },
+    "statusInfo" : {
+      "pointSize" : 14,
+      "semanticRole" : "Informational state communication.",
+      "symbol" : "info.circle",
+      "weight" : "semibold"
+    },
+    "statusSuccess" : {
+      "pointSize" : 14,
+      "semanticRole" : "Positive completion and safe success states.",
+      "symbol" : "checkmark.circle",
+      "weight" : "semibold"
+    },
+    "statusWarning" : {
+      "pointSize" : 14,
+      "semanticRole" : "Warning and caution states.",
+      "symbol" : "exclamationmark.triangle",
+      "weight" : "semibold"
+    },
+    "utility" : {
+      "pointSize" : 14,
+      "semanticRole" : "Utility actions and settings affordances.",
+      "symbol" : "slider.horizontal.3",
+      "weight" : "regular"
+    }
+  },
+  "materials" : {
+    "card" : {
+      "border" : "border.subtle",
+      "elevation" : "subtle",
+      "fill" : "surface.raised",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "code" : {
+      "border" : "border.strong",
+      "elevation" : "flat",
+      "fill" : "surface.inset",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "drawer" : {
+      "border" : "border.subtle",
+      "elevation" : "raised",
+      "fill" : "surface.overlay",
+      "interactive" : false,
+      "opacity" : 0.98999999999999999,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "grouped" : {
+      "border" : "border.subtle",
+      "elevation" : "subtle",
+      "fill" : "surface.grouped",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "hover" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "surface.hover",
+      "interactive" : true,
+      "opacity" : 1,
+      "radius" : "medium",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "input" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "surface.input",
+      "interactive" : true,
+      "opacity" : 1,
+      "radius" : "medium",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "inset" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "surface.inset",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "menu" : {
+      "border" : "border.subtle",
+      "elevation" : "raised",
+      "fill" : "surface.overlay",
+      "interactive" : true,
+      "opacity" : 0.97999999999999998,
+      "radius" : "medium",
+      "translucent" : {
+        "dark" : false,
+        "light" : true
+      }
+    },
+    "modal" : {
+      "border" : "border.subtle",
+      "elevation" : "floating",
+      "fill" : "surface.overlay",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "extraLarge",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "notice" : {
+      "border" : "border.strong",
+      "elevation" : "subtle",
+      "fill" : "surface.raised",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "overlay" : {
+      "border" : "border.subtle",
+      "elevation" : "floating",
+      "fill" : "surface.overlay",
+      "interactive" : false,
+      "opacity" : 0.98999999999999999,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "panel" : {
+      "border" : "border.subtle",
+      "elevation" : "subtle",
+      "fill" : "surface.grouped",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "popover" : {
+      "border" : "border.subtle",
+      "elevation" : "floating",
+      "fill" : "surface.overlay",
+      "interactive" : false,
+      "opacity" : 0.97999999999999998,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : true
+      }
+    },
+    "pressed" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "surface.pressed",
+      "interactive" : true,
+      "opacity" : 1,
+      "radius" : "medium",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "raised" : {
+      "border" : "border.subtle",
+      "elevation" : "raised",
+      "fill" : "surface.raised",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "scrim" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "surface.scrim",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "small",
+      "translucent" : {
+        "dark" : true,
+        "light" : true
+      }
+    },
+    "selected" : {
+      "border" : "border.strong",
+      "elevation" : "flat",
+      "fill" : "surface.selected",
+      "interactive" : true,
+      "opacity" : 1,
+      "radius" : "medium",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "shell" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "bg.app",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "sidebar" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "bg.sidebar",
+      "interactive" : false,
+      "opacity" : 0.97999999999999998,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : true
+      }
+    },
+    "tableHeader" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "surface.inset",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "medium",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "tableRow" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "surface.grouped",
+      "interactive" : true,
+      "opacity" : 1,
+      "radius" : "medium",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    },
+    "titlebar" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "bg.titlebar",
+      "interactive" : false,
+      "opacity" : 0.97999999999999998,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : true,
+        "light" : true
+      }
+    },
+    "toolbar" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "bg.toolbar",
+      "interactive" : false,
+      "opacity" : 0.97999999999999998,
+      "radius" : "medium",
+      "translucent" : {
+        "dark" : false,
+        "light" : true
+      }
+    },
+    "workspace" : {
+      "border" : "border.subtle",
+      "elevation" : "flat",
+      "fill" : "bg.workspace",
+      "interactive" : false,
+      "opacity" : 1,
+      "radius" : "large",
+      "translucent" : {
+        "dark" : false,
+        "light" : false
+      }
+    }
+  },
+  "motion" : {
+    "emphasis" : 0.28000000000000003,
+    "hover" : 0.10000000000000001,
+    "modalPresence" : 0.22,
+    "quick" : 0.12,
+    "regular" : 0.17999999999999999,
+    "selection" : 0.16
+  },
+  "motionCurves" : {
+    "emphasized" : {
+      "name" : "Emphasized ease",
+      "notes" : "Use when an important state change needs extra presence without becoming playful.",
+      "points" : [
+        0.20000000000000001,
+        0,
+        0,
+        1.0800000000000001
+      ]
+    },
+    "modal" : {
+      "name" : "Modal presence",
+      "notes" : "Overlay and modal entry\/exit timing.",
+      "points" : [
+        0.23999999999999999,
+        0,
+        0,
+        1
+      ]
+    },
+    "reduced" : {
+      "name" : "Reduced motion",
+      "notes" : "Fallback curve when reduced motion is active.",
+      "points" : [
+        0,
+        0,
+        1,
+        1
+      ]
+    },
+    "settle" : {
+      "name" : "Settle ease",
+      "notes" : "Best for larger panels that should arrive calmly.",
+      "points" : [
+        0.17999999999999999,
+        0,
+        0.080000000000000002,
+        1
+      ]
+    },
+    "snappy" : {
+      "name" : "Snappy ease",
+      "notes" : "Useful for compact toggles and segmented-control movement.",
+      "points" : [
+        0.28000000000000003,
+        0,
+        0.12,
+        1
+      ]
+    },
+    "standard" : {
+      "name" : "Standard ease",
+      "notes" : "Default control, hover, and row transitions.",
+      "points" : [
+        0.20000000000000001,
+        0,
+        0,
+        1
+      ]
+    }
+  },
+  "radius" : {
+    "extraLarge" : 26,
+    "large" : 18,
+    "medium" : 12,
+    "pill" : 999,
+    "small" : 8
+  },
+  "shadows" : {
+    "flat" : {
+      "dark" : {
+        "color" : "#00000000",
+        "radius" : 0,
+        "x" : 0,
+        "y" : 0
+      },
+      "description" : "No visible shadow.",
+      "light" : {
+        "color" : "#00000000",
+        "radius" : 0,
+        "x" : 0,
+        "y" : 0
+      }
+    },
+    "floating" : {
+      "dark" : {
+        "color" : "#00000033",
+        "radius" : 18,
+        "x" : 0,
+        "y" : 12
+      },
+      "description" : "Floating overlays, popovers, and modals.",
+      "light" : {
+        "color" : "#00000026",
+        "radius" : 18,
+        "x" : 0,
+        "y" : 12
+      }
+    },
+    "focus" : {
+      "dark" : {
+        "color" : "#81C5FF55",
+        "radius" : 0,
+        "x" : 0,
+        "y" : 0
+      },
+      "description" : "Supplementary focus glow for highly interactive surfaces.",
+      "light" : {
+        "color" : "#5AA8FF55",
+        "radius" : 0,
+        "x" : 0,
+        "y" : 0
+      }
+    },
+    "hairline" : {
+      "dark" : {
+        "color" : "#00000014",
+        "radius" : 1,
+        "x" : 0,
+        "y" : 0.5
+      },
+      "description" : "Hairline separation for crisp low-elevation surfaces.",
+      "light" : {
+        "color" : "#00000008",
+        "radius" : 1,
+        "x" : 0,
+        "y" : 0.5
+      }
+    },
+    "raised" : {
+      "dark" : {
+        "color" : "#00000029",
+        "radius" : 10,
+        "x" : 0,
+        "y" : 4
+      },
+      "description" : "Raised cards, menus, and sheet-like regions.",
+      "light" : {
+        "color" : "#0000001F",
+        "radius" : 10,
+        "x" : 0,
+        "y" : 4
+      }
+    },
+    "subtle" : {
+      "dark" : {
+        "color" : "#0000001A",
+        "radius" : 3,
+        "x" : 0,
+        "y" : 1
+      },
+      "description" : "Small grouped panels and table headers.",
+      "light" : {
+        "color" : "#00000014",
+        "radius" : 3,
+        "x" : 0,
+        "y" : 1
+      }
+    }
+  },
+  "spacing" : {
+    "composerPadding" : 22,
+    "contentGutter" : 28,
+    "lg" : 20,
+    "md" : 16,
+    "panelPadding" : 18,
+    "rowGap" : 14,
+    "sidebarInset" : 18,
+    "sm" : 12,
+    "toolbarHeight" : 52,
+    "xl" : 28,
+    "xs" : 8,
+    "xxl" : 40,
+    "xxs" : 4,
+    "xxxs" : 2
+  },
+  "themes" : {
+    "dark" : {
+      "accent.hover" : "#5BB1FF",
+      "accent.pressed" : "#1F7FD8",
+      "accent.primary" : "#2F92F0",
+      "bg.app" : "#161616",
+      "bg.sidebar" : "#262626",
+      "bg.sidebarSelection" : "#303437",
+      "bg.titlebar" : "#171717",
+      "bg.toolbar" : "#1B1B1B",
+      "bg.workspace" : "#1A1A1A",
+      "border.strong" : "#505050",
+      "border.subtle" : "#3A3A3A",
+      "chart.amber" : "#FFBE5C",
+      "chart.blue" : "#339CFF",
+      "chart.green" : "#79D28E",
+      "chart.neutral" : "#9B9B9B",
+      "chart.purple" : "#A48BFF",
+      "chart.red" : "#F47E7E",
+      "chart.teal" : "#4FD4C8",
+      "focus.ring" : "#81C5FF",
+      "state.danger" : "#FF7D7D",
+      "state.dangerSurface" : "#3C1E1E",
+      "state.info" : "#74B6FF",
+      "state.infoSurface" : "#172B3F",
+      "state.success" : "#39C18F",
+      "state.successSurface" : "#143428",
+      "state.warning" : "#FFB84D",
+      "state.warningSurface" : "#3B2C17",
+      "surface.grouped" : "#242424",
+      "surface.hover" : "#2D2D2D",
+      "surface.input" : "#262626",
+      "surface.inset" : "#202020",
+      "surface.overlay" : "#303030",
+      "surface.pressed" : "#202326",
+      "surface.raised" : "#2B2B2B",
+      "surface.scrim" : "#00000099",
+      "surface.selected" : "#30353A",
+      "text.disabled" : "#5D5D5D",
+      "text.muted" : "#707070",
+      "text.onAccent" : "#FFFFFF",
+      "text.primary" : "#F5F5F5",
+      "text.secondary" : "#A8A8A8"
+    },
+    "light" : {
+      "accent.hover" : "#0C7BE4",
+      "accent.pressed" : "#0053A3",
+      "accent.primary" : "#0169CC",
+      "bg.app" : "#F6F5F2",
+      "bg.sidebar" : "#ECEAE6",
+      "bg.sidebarSelection" : "#DEDDD8",
+      "bg.titlebar" : "#F2F0EC",
+      "bg.toolbar" : "#F7F6F4",
+      "bg.workspace" : "#FFFFFF",
+      "border.strong" : "#CDC9C2",
+      "border.subtle" : "#E2E0DB",
+      "chart.amber" : "#C2821D",
+      "chart.blue" : "#0169CC",
+      "chart.green" : "#358A4A",
+      "chart.neutral" : "#6A6A6A",
+      "chart.purple" : "#7359D9",
+      "chart.red" : "#CC5454",
+      "chart.teal" : "#0D9F97",
+      "focus.ring" : "#5AA8FF",
+      "state.danger" : "#B53C3C",
+      "state.dangerSurface" : "#F8E6E6",
+      "state.info" : "#0A73D9",
+      "state.infoSurface" : "#E5F1FB",
+      "state.success" : "#1F8A63",
+      "state.successSurface" : "#E4F3EC",
+      "state.warning" : "#A56B12",
+      "state.warningSurface" : "#F8EEDC",
+      "surface.grouped" : "#FFFFFF",
+      "surface.hover" : "#ECE8E1",
+      "surface.input" : "#F1F0EC",
+      "surface.inset" : "#EAE7E2",
+      "surface.overlay" : "#FFFFFF",
+      "surface.pressed" : "#DFDBD4",
+      "surface.raised" : "#FBFAF8",
+      "surface.scrim" : "#0000001A",
+      "surface.selected" : "#E3DED7",
+      "text.disabled" : "#A2A09B",
+      "text.muted" : "#7D8894",
+      "text.onAccent" : "#FFFFFF",
+      "text.primary" : "#0D0D0D",
+      "text.secondary" : "#586474"
+    }
+  },
+  "tokens" : {
+    "color" : [
+      {
+        "case" : "appBackground",
+        "raw" : "bg.app"
+      },
+      {
+        "case" : "sidebarBackground",
+        "raw" : "bg.sidebar"
+      },
+      {
+        "case" : "sidebarSelection",
+        "raw" : "bg.sidebarSelection"
+      },
+      {
+        "case" : "toolbarBackground",
+        "raw" : "bg.toolbar"
+      },
+      {
+        "case" : "titlebarBackground",
+        "raw" : "bg.titlebar"
+      },
+      {
+        "case" : "workspaceBackground",
+        "raw" : "bg.workspace"
+      },
+      {
+        "case" : "groupedSurface",
+        "raw" : "surface.grouped"
+      },
+      {
+        "case" : "raisedSurface",
+        "raw" : "surface.raised"
+      },
+      {
+        "case" : "inputSurface",
+        "raw" : "surface.input"
+      },
+      {
+        "case" : "insetSurface",
+        "raw" : "surface.inset"
+      },
+      {
+        "case" : "hoverSurface",
+        "raw" : "surface.hover"
+      },
+      {
+        "case" : "pressedSurface",
+        "raw" : "surface.pressed"
+      },
+      {
+        "case" : "selectedSurface",
+        "raw" : "surface.selected"
+      },
+      {
+        "case" : "overlaySurface",
+        "raw" : "surface.overlay"
+      },
+      {
+        "case" : "scrimSurface",
+        "raw" : "surface.scrim"
+      },
+      {
+        "case" : "subtleBorder",
+        "raw" : "border.subtle"
+      },
+      {
+        "case" : "strongBorder",
+        "raw" : "border.strong"
+      },
+      {
+        "case" : "textPrimary",
+        "raw" : "text.primary"
+      },
+      {
+        "case" : "textSecondary",
+        "raw" : "text.secondary"
+      },
+      {
+        "case" : "textMuted",
+        "raw" : "text.muted"
+      },
+      {
+        "case" : "textDisabled",
+        "raw" : "text.disabled"
+      },
+      {
+        "case" : "textOnAccent",
+        "raw" : "text.onAccent"
+      },
+      {
+        "case" : "accentPrimary",
+        "raw" : "accent.primary"
+      },
+      {
+        "case" : "accentHover",
+        "raw" : "accent.hover"
+      },
+      {
+        "case" : "accentPressed",
+        "raw" : "accent.pressed"
+      },
+      {
+        "case" : "focusRing",
+        "raw" : "focus.ring"
+      },
+      {
+        "case" : "success",
+        "raw" : "state.success"
+      },
+      {
+        "case" : "warning",
+        "raw" : "state.warning"
+      },
+      {
+        "case" : "danger",
+        "raw" : "state.danger"
+      },
+      {
+        "case" : "info",
+        "raw" : "state.info"
+      },
+      {
+        "case" : "successSurface",
+        "raw" : "state.successSurface"
+      },
+      {
+        "case" : "warningSurface",
+        "raw" : "state.warningSurface"
+      },
+      {
+        "case" : "dangerSurface",
+        "raw" : "state.dangerSurface"
+      },
+      {
+        "case" : "infoSurface",
+        "raw" : "state.infoSurface"
+      },
+      {
+        "case" : "chartBlue",
+        "raw" : "chart.blue"
+      },
+      {
+        "case" : "chartTeal",
+        "raw" : "chart.teal"
+      },
+      {
+        "case" : "chartAmber",
+        "raw" : "chart.amber"
+      },
+      {
+        "case" : "chartRed",
+        "raw" : "chart.red"
+      },
+      {
+        "case" : "chartPurple",
+        "raw" : "chart.purple"
+      },
+      {
+        "case" : "chartGreen",
+        "raw" : "chart.green"
+      },
+      {
+        "case" : "chartNeutral",
+        "raw" : "chart.neutral"
+      }
+    ],
+    "elevation" : [
+      "flat",
+      "subtle",
+      "raised",
+      "floating"
+    ],
+    "grid" : [
+      "sidebar",
+      "browser",
+      "content",
+      "inspector",
+      "settings",
+      "dashboard",
+      "editor"
+    ],
+    "icon" : [
+      "navigationPrimary",
+      "navigationSecondary",
+      "utility",
+      "statusInfo",
+      "statusSuccess",
+      "statusWarning",
+      "statusDanger",
+      "accentAction",
+      "contentStructure",
+      "dataSeries"
+    ],
+    "material" : [
+      "shell",
+      "sidebar",
+      "titlebar",
+      "toolbar",
+      "workspace",
+      "grouped",
+      "raised",
+      "panel",
+      "card",
+      "inset",
+      "input",
+      "code",
+      "menu",
+      "hover",
+      "pressed",
+      "selected",
+      "notice",
+      "tableHeader",
+      "tableRow",
+      "popover",
+      "modal",
+      "drawer",
+      "overlay",
+      "scrim"
+    ],
+    "motion" : [
+      "quick",
+      "regular",
+      "emphasis",
+      "hover",
+      "selection",
+      "modalPresence"
+    ],
+    "motionCurve" : [
+      "standard",
+      "emphasized",
+      "snappy",
+      "settle",
+      "modal",
+      "reduced"
+    ],
+    "radius" : [
+      "small",
+      "medium",
+      "large",
+      "extraLarge",
+      "pill"
+    ],
+    "shadow" : [
+      "flat",
+      "hairline",
+      "subtle",
+      "raised",
+      "floating",
+      "focus"
+    ],
+    "spacing" : [
+      "xxxs",
+      "xxs",
+      "xs",
+      "sm",
+      "md",
+      "lg",
+      "xl",
+      "xxl",
+      "sidebarInset",
+      "rowGap",
+      "panelPadding",
+      "composerPadding",
+      "toolbarHeight",
+      "contentGutter"
+    ],
+    "typography" : [
+      "displayLarge",
+      "display",
+      "displaySmall",
+      "hero",
+      "pageTitle",
+      "title",
+      "titleCompact",
+      "sectionTitle",
+      "sectionSubtitle",
+      "eyebrow",
+      "bodyLarge",
+      "body",
+      "bodyStrong",
+      "bodySmall",
+      "bodySmallStrong",
+      "label",
+      "labelStrong",
+      "caption",
+      "captionStrong",
+      "helper",
+      "buttonLarge",
+      "button",
+      "buttonSmall",
+      "mono",
+      "monoSmall",
+      "monoCaption",
+      "numeric",
+      "tableMeta"
+    ]
+  },
+  "typography" : {
+    "body" : {
+      "lineHeight" : 22,
+      "monospaced" : false,
+      "size" : 15,
+      "tracking" : -0.10000000000000001,
+      "weight" : "regular"
+    },
+    "bodyLarge" : {
+      "lineHeight" : 24,
+      "monospaced" : false,
+      "size" : 17,
+      "tracking" : -0.20000000000000001,
+      "weight" : "regular"
+    },
+    "bodySmall" : {
+      "lineHeight" : 20,
+      "monospaced" : false,
+      "size" : 14,
+      "tracking" : -0.050000000000000003,
+      "weight" : "regular"
+    },
+    "bodySmallStrong" : {
+      "lineHeight" : 20,
+      "monospaced" : false,
+      "size" : 14,
+      "tracking" : -0.050000000000000003,
+      "weight" : "semibold"
+    },
+    "bodyStrong" : {
+      "lineHeight" : 22,
+      "monospaced" : false,
+      "size" : 15,
+      "tracking" : -0.10000000000000001,
+      "weight" : "semibold"
+    },
+    "button" : {
+      "lineHeight" : 18,
+      "monospaced" : false,
+      "size" : 15,
+      "tracking" : -0.10000000000000001,
+      "weight" : "medium"
+    },
+    "buttonLarge" : {
+      "lineHeight" : 20,
+      "monospaced" : false,
+      "size" : 16,
+      "tracking" : -0.14999999999999999,
+      "weight" : "semibold"
+    },
+    "buttonSmall" : {
+      "lineHeight" : 16,
+      "monospaced" : false,
+      "size" : 13,
+      "tracking" : -0.050000000000000003,
+      "weight" : "medium"
+    },
+    "caption" : {
+      "lineHeight" : 16,
+      "monospaced" : false,
+      "size" : 12,
+      "tracking" : 0,
+      "weight" : "regular"
+    },
+    "captionStrong" : {
+      "lineHeight" : 16,
+      "monospaced" : false,
+      "size" : 12,
+      "tracking" : 0,
+      "weight" : "semibold"
+    },
+    "display" : {
+      "lineHeight" : 50,
+      "monospaced" : false,
+      "size" : 44,
+      "tracking" : -0.90000000000000002,
+      "weight" : "bold"
+    },
+    "displayLarge" : {
+      "lineHeight" : 62,
+      "monospaced" : false,
+      "size" : 56,
+      "tracking" : -1.1000000000000001,
+      "weight" : "bold"
+    },
+    "displaySmall" : {
+      "lineHeight" : 46,
+      "monospaced" : false,
+      "size" : 40,
+      "tracking" : -0.80000000000000004,
+      "weight" : "semibold"
+    },
+    "eyebrow" : {
+      "lineHeight" : 14,
+      "monospaced" : false,
+      "size" : 11,
+      "tracking" : 0.90000000000000002,
+      "weight" : "semibold"
+    },
+    "helper" : {
+      "lineHeight" : 18,
+      "monospaced" : false,
+      "size" : 13,
+      "tracking" : 0,
+      "weight" : "regular"
+    },
+    "hero" : {
+      "lineHeight" : 42,
+      "monospaced" : false,
+      "size" : 36,
+      "tracking" : -0.80000000000000004,
+      "weight" : "bold"
+    },
+    "label" : {
+      "lineHeight" : 18,
+      "monospaced" : false,
+      "size" : 13,
+      "tracking" : 0,
+      "weight" : "semibold"
+    },
+    "labelStrong" : {
+      "lineHeight" : 18,
+      "monospaced" : false,
+      "size" : 13,
+      "tracking" : 0.050000000000000003,
+      "weight" : "bold"
+    },
+    "mono" : {
+      "lineHeight" : 19,
+      "monospaced" : true,
+      "size" : 13,
+      "tracking" : 0,
+      "weight" : "regular"
+    },
+    "monoCaption" : {
+      "lineHeight" : 16,
+      "monospaced" : true,
+      "size" : 12,
+      "tracking" : 0,
+      "weight" : "regular"
+    },
+    "monoSmall" : {
+      "lineHeight" : 17,
+      "monospaced" : true,
+      "size" : 12,
+      "tracking" : 0,
+      "weight" : "regular"
+    },
+    "numeric" : {
+      "lineHeight" : 20,
+      "monospaced" : true,
+      "size" : 16,
+      "tracking" : -0.10000000000000001,
+      "weight" : "semibold"
+    },
+    "pageTitle" : {
+      "lineHeight" : 36,
+      "monospaced" : false,
+      "size" : 30,
+      "tracking" : -0.5,
+      "weight" : "bold"
+    },
+    "sectionSubtitle" : {
+      "lineHeight" : 23,
+      "monospaced" : false,
+      "size" : 17,
+      "tracking" : -0.20000000000000001,
+      "weight" : "regular"
+    },
+    "sectionTitle" : {
+      "lineHeight" : 28,
+      "monospaced" : false,
+      "size" : 22,
+      "tracking" : -0.29999999999999999,
+      "weight" : "semibold"
+    },
+    "tableMeta" : {
+      "lineHeight" : 16,
+      "monospaced" : false,
+      "size" : 12,
+      "tracking" : 0.20000000000000001,
+      "weight" : "medium"
+    },
+    "title" : {
+      "lineHeight" : 31,
+      "monospaced" : false,
+      "size" : 26,
+      "tracking" : -0.40000000000000002,
+      "weight" : "semibold"
+    },
+    "titleCompact" : {
+      "lineHeight" : 29,
+      "monospaced" : false,
+      "size" : 24,
+      "tracking" : -0.29999999999999999,
+      "weight" : "semibold"
+    }
+  }
+}
