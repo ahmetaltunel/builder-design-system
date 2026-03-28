@@ -54,5 +54,9 @@ public struct ProgressBar: View {
                         .stroke(environment.theme.color(.subtleBorder), lineWidth: 1)
                 )
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label ?? "Progress")
+        .accessibilityValue("\(Int(value * 100)) percent")
+        .accessibilityHint("Determinate progress bar")
     }
 }

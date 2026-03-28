@@ -57,7 +57,7 @@ public struct ModalSurface<Content: View, Footer: View>: View {
 
             footer
         }
-        .padding(22)
+        .padding(environment.theme.spacing(.panelPadding, density: environment.density))
         .frame(maxWidth: width, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: environment.theme.radius(material.radius), style: .continuous)

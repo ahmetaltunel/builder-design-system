@@ -23,6 +23,9 @@ public struct ToolbarButton: View {
     }
 
     public var body: some View {
+        let resolvedHeight = max(28, 32 + environment.density.controlHeightOffset)
+        let cornerRadius = environment.theme.radius(.medium)
+
         Button(action: action) {
             HStack(spacing: 8) {
                 if let symbol {
@@ -35,17 +38,19 @@ public struct ToolbarButton: View {
             }
             .foregroundStyle(emphasized ? environment.theme.color(.textOnAccent) : environment.theme.color(.textPrimary))
             .padding(.horizontal, 12)
-            .frame(height: 32)
+            .frame(height: resolvedHeight)
             .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(emphasized ? environment.theme.color(.accentPrimary) : environment.theme.color(.inputSurface))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .stroke(emphasized ? .clear : environment.theme.color(.subtleBorder), lineWidth: 1)
             )
-            .contentShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityHint(emphasized ? "Primary toolbar action" : "Toolbar action")
     }
 }

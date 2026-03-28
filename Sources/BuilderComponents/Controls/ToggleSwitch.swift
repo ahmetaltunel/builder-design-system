@@ -61,7 +61,7 @@ public struct ToggleSwitch: View {
                         )
                         .overlay(alignment: isOn ? .trailing : .leading) {
                             Circle()
-                                .fill(environment.mode == .dark ? Color.white.opacity(0.96) : Color.white)
+                                .fill(environment.theme.color(.textOnAccent).opacity(environment.mode == .dark ? 0.96 : 1))
                                 .frame(width: 22, height: 22)
                                 .padding(3)
                         }

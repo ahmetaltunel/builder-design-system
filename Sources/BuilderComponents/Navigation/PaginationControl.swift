@@ -32,11 +32,11 @@ public struct PaginationControl: View {
                             .foregroundStyle(item == page ? environment.theme.color(.textOnAccent) : environment.theme.color(.textPrimary))
                             .frame(width: 32, height: 32)
                             .background(
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous)
                                     .fill(item == page ? environment.theme.color(.accentPrimary) : environment.theme.color(.inputSurface))
                             )
                             .overlay(
-                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous)
                                     .stroke(item == page ? .clear : environment.theme.color(.subtleBorder), lineWidth: 1)
                             )
                     }

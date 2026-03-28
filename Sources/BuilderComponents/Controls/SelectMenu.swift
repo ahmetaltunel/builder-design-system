@@ -86,6 +86,9 @@ public struct SelectMenu<Selection: Hashable>: View {
         }
         .menuStyle(.borderlessButton)
         .disabled(!isEnabled)
+        .accessibilityLabel(placeholder)
+        .accessibilityValue(currentLabel)
+        .accessibilityHint(isEnabled ? "Opens a selection menu" : "Disabled selection menu")
     }
 
     private var currentLabel: String {

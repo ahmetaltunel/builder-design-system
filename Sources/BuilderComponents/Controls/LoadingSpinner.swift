@@ -28,5 +28,8 @@ public struct LoadingSpinner: View {
                     .foregroundStyle(environment.theme.color(.textSecondary))
             }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label ?? "Loading")
+        .accessibilityHint("Activity in progress")
     }
 }

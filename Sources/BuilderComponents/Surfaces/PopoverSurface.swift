@@ -28,7 +28,7 @@ public struct PopoverSurface<Content: View>: View {
 
             content
         }
-        .padding(16)
+        .padding(environment.theme.spacing(.md, density: environment.density))
         .background(
             RoundedRectangle(cornerRadius: environment.theme.radius(material.radius), style: .continuous)
                 .fill(material.fill.opacity(material.fillOpacity))

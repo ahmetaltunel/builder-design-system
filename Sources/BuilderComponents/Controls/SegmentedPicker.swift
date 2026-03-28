@@ -43,6 +43,9 @@ public struct SegmentedPicker<Selection: Hashable>: View {
                 }
                 .buttonStyle(.plain)
                 .contentShape(RoundedRectangle(cornerRadius: innerRadius, style: .continuous))
+                .accessibilityLabel(option.label)
+                .accessibilityValue(isSelected ? "Selected" : "Not selected")
+                .accessibilityHint("Segment option")
             }
         }
         .padding(3)
@@ -72,7 +75,7 @@ public struct SegmentedPicker<Selection: Hashable>: View {
 
         switch style {
         case .accent:
-            return .white
+            return environment.theme.color(.textOnAccent)
         case .neutral:
             return environment.theme.color(.textPrimary)
         }

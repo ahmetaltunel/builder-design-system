@@ -34,5 +34,7 @@ public struct TokenBadge: View {
             Capsule(style: .continuous)
                 .stroke(environment.theme.color(.subtleBorder), lineWidth: 1)
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
     }
 }

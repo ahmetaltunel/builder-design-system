@@ -45,6 +45,9 @@ public struct Tabs<Selection: Hashable>: View {
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(item.title)
+                .accessibilityValue(selected ? "Selected" : "Not selected")
+                .accessibilityHint("Tab")
             }
 
             Spacer(minLength: 0)

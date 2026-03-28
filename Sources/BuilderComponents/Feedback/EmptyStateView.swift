@@ -44,7 +44,7 @@ public struct EmptyStateView: View {
                 SystemButton(environment: environment, title: actionTitle, tone: .secondary, action: action)
             }
         }
-        .padding(18)
+        .padding(environment.theme.spacing(.panelPadding, density: environment.density))
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: environment.theme.radius(.large), style: .continuous)

@@ -22,5 +22,8 @@ public struct StatusBadge: View {
                 Capsule(style: .continuous)
                     .fill(color.opacity(environment.mode == .dark ? 0.16 : 0.12))
             )
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(label)
+            .accessibilityHint("Status badge")
     }
 }

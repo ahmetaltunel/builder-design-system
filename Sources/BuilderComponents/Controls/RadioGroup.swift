@@ -81,6 +81,10 @@ public struct RadioGroup<Selection: Hashable>: View {
                     .contentShape(RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous))
                 }
                 .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(option.label)
+                .accessibilityValue(option.value == selection ? "Selected" : "Not selected")
+                .accessibilityHint(option.isEnabled ? "Radio option" : "Disabled radio option")
             }
         }
     }

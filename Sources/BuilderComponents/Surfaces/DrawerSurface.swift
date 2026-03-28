@@ -38,7 +38,7 @@ public struct DrawerSurface<Content: View>: View {
 
             content
         }
-        .padding(20)
+        .padding(environment.theme.spacing(.panelPadding, density: environment.density))
         .frame(width: width, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: environment.theme.radius(material.radius), style: .continuous)

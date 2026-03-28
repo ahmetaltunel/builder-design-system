@@ -71,5 +71,8 @@ public struct LoadingBar: View {
             }
             .frame(height: max(8, height))
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(label ?? "Loading")
+        .accessibilityHint(detail ?? "Indeterminate progress")
     }
 }

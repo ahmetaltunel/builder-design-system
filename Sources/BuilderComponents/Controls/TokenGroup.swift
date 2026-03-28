@@ -16,5 +16,7 @@ public struct TokenGroup: View {
                 TokenBadge(environment: environment, title: title)
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Token group with \(titles.count) items")
     }
 }

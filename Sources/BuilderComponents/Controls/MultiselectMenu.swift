@@ -36,6 +36,8 @@ public struct MultiselectMenu<Selection: Hashable>: View {
     }
 
     public var body: some View {
+        let resolvedHeight = max(34, 38 + environment.density.controlHeightOffset)
+
         Menu {
             ForEach(Array(options.enumerated()), id: \.offset) { _, option in
                 Button {
@@ -66,7 +68,7 @@ public struct MultiselectMenu<Selection: Hashable>: View {
                     .foregroundStyle(environment.theme.color(.textSecondary))
             }
             .padding(.horizontal, 14)
-            .frame(width: width, height: 38)
+            .frame(width: width, height: resolvedHeight)
             .frame(maxWidth: width == nil ? .infinity : nil, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous)
@@ -80,6 +82,9 @@ public struct MultiselectMenu<Selection: Hashable>: View {
         }
         .menuStyle(.borderlessButton)
         .disabled(!isEnabled)
+        .accessibilityLabel(placeholder)
+        .accessibilityValue(summaryLabel)
+        .accessibilityHint(isEnabled ? "Opens a multiselect menu" : "Disabled multiselect menu")
     }
 
     private var summaryLabel: String {

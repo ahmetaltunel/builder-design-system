@@ -34,8 +34,8 @@ public struct SettingsRow<Control: View>: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
+        .padding(.horizontal, environment.theme.spacing(.md, density: environment.density))
+        .padding(.vertical, environment.theme.spacing(.rowGap, density: environment.density))
     }
 
     private var labelBlock: some View {

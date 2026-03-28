@@ -36,6 +36,8 @@ public struct ButtonDropdown: View {
     }
 
     public var body: some View {
+        let resolvedHeight = max(34, 38 + environment.density.controlHeightOffset)
+
         Menu {
             ForEach(items) { item in
                 Button(action: item.action) {
@@ -55,7 +57,7 @@ public struct ButtonDropdown: View {
             }
             .foregroundStyle(tone == .primary ? environment.theme.color(.textOnAccent) : environment.theme.color(.textPrimary))
             .padding(.horizontal, 16)
-            .frame(height: 38)
+            .frame(height: resolvedHeight)
             .background(
                 RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous)
                     .fill(tone == .primary ? environment.theme.color(.accentPrimary) : environment.theme.color(.inputSurface))
@@ -66,5 +68,7 @@ public struct ButtonDropdown: View {
             )
         }
         .menuStyle(.borderlessButton)
+        .accessibilityLabel(title)
+        .accessibilityHint("Opens a menu with \(items.count) options")
     }
 }

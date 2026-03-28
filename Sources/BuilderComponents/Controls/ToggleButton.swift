@@ -37,5 +37,9 @@ public struct ToggleButton: View {
             .contentShape(RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous))
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
+        .accessibilityValue(isOn ? "On" : "Off")
+        .accessibilityHint("Toggle option")
     }
 }

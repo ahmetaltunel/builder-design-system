@@ -40,5 +40,9 @@ public struct SidebarRow: View {
                 .stroke(isSelected ? environment.theme.color(.strongBorder).opacity(environment.mode == .dark ? 0.5 : 0.75) : .clear, lineWidth: 1)
         )
         .contentShape(RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
+        .accessibilityValue(isSelected ? "Selected" : "")
+        .accessibilityHint("Sidebar navigation item")
     }
 }

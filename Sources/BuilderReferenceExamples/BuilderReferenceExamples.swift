@@ -1250,8 +1250,15 @@ private struct DataReferenceExample: View {
                 DonutChartPanel(
                     environment: environment,
                     title: "Status mix",
-                    state: .empty(.init(title: "No status mix", message: "Broaden the current filter to restore the distribution.", symbol: "chart.pie")),
-                    slices: [],
+                    state: .ready,
+                    slices: [
+                        .init(title: "Ready", value: 18, color: environment.theme.color(.chartGreen)),
+                        .init(title: "Review", value: 7, color: environment.theme.color(.chartAmber)),
+                        .init(title: "Blocked", value: 3, color: environment.theme.color(.chartRed))
+                    ],
+                    selection: .constant(nil),
+                    visibleSeriesIDs: .constant(["Ready", "Review", "Blocked"]),
+                    valueFormatter: { value in "\(Int(value)) items" },
                     height: 180
                 )
                 .frame(maxWidth: .infinity)

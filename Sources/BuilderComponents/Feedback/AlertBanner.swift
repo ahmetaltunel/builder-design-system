@@ -75,7 +75,7 @@ public struct AlertBanner: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(14)
+        .padding(environment.theme.spacing(.rowGap, density: environment.density))
         .background(
             RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous)
                 .fill(backgroundColor)

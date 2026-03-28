@@ -28,6 +28,8 @@ public struct SliderField: View {
 
             Slider(value: $value, in: range)
                 .tint(environment.theme.color(.accentPrimary))
+                .accessibilityLabel(title)
+                .accessibilityValue("\(Int(value))")
         }
     }
 }

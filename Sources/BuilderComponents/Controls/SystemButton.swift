@@ -71,7 +71,7 @@ public struct SystemButton: View {
         }
         .accessibilityLabel(title)
         .accessibilityHint(isLoading ? "Action in progress" : "Button")
-        .accessibilityAddTraits(tone == .primary ? .isButton : .isButton)
+        .accessibilityAddTraits(.isButton)
     }
 
     private var foreground: Color {

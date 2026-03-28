@@ -66,6 +66,10 @@ public struct TilePicker<Selection: Hashable>: View {
                     .contentShape(RoundedRectangle(cornerRadius: environment.theme.radius(.large), style: .continuous))
                 }
                 .buttonStyle(.plain)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(option.label)
+                .accessibilityValue(option.value == selection ? "Selected" : "Not selected")
+                .accessibilityHint(option.detail ?? "Tile option")
             }
         }
     }

@@ -42,7 +42,7 @@ public struct ValidationSummary: View {
                 }
             }
         }
-        .padding(14)
+        .padding(environment.theme.spacing(.rowGap, density: environment.density))
         .background(
             RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous)
                 .fill(environment.theme.color(.groupedSurface))
