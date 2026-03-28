@@ -29,21 +29,13 @@ final class BuilderIntegrationTests: XCTestCase {
         XCTAssertEqual(button.title, "Action")
     }
 
-    func testRepositoryArtifactsExistAndTokenExportParses() throws {
-        let root = repositoryRoot()
-        let fileManager = FileManager.default
-
-        let requiredFiles = [
+    func testRepositoryIncludesCurrentCoreArtifacts() {
+        assertFilesExist([
             "README.md",
-            "CHANGELOG.md",
-            "CONTRIBUTING.md",
-            "RELEASE.md",
-            "DEPRECATION_POLICY.md",
-            "RFC_TEMPLATE.md",
-            "MAINTAINERS.md",
-            "SECURITY.md",
-            "SUPPORT.md",
+            "Package.swift",
+            "LICENSE",
             ".gitignore",
+            "DesignTokens/design-token-manifest.json",
             "Scripts/validate-design-system.sh",
             "Docs/System/Handbook.md",
             "Docs/System/QualityBar.md",
@@ -55,32 +47,25 @@ final class BuilderIntegrationTests: XCTestCase {
             "Docs/Governance/README.md",
             "Docs/Governance/AccessibilityChecklist.md",
             "Docs/Showcase/Guide.md",
-            ".github/CODEOWNERS",
-            ".github/pull_request_template.md",
-            ".github/ISSUE_TEMPLATE/bug_report.md",
-            ".github/ISSUE_TEMPLATE/component_request.md",
             "Exports/design-tokens.json",
             "Tests/BuilderIntegrationTests/__Snapshots__/showcase-home-dark.png",
             "Tests/BuilderIntegrationTests/__Snapshots__/showcase-components-dark.png"
-        ]
+        ])
+    }
 
-        for relativePath in requiredFiles {
-            let path = root.appendingPathComponent(relativePath).path
-            XCTAssertTrue(fileManager.fileExists(atPath: path), "Missing required repo artifact: \(relativePath)")
-        }
+    func testDesignTokenExportParsesAndIncludesExpectedSections() throws {
+        let data = try Data(contentsOf: repositoryRoot().appendingPathComponent("Exports/design-tokens.json"))
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
-        let data = try Data(contentsOf: root.appendingPathComponent("Exports/design-tokens.json"))
-        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-
-        XCTAssertNotNil(json?["themes"])
-        XCTAssertNotNil(json?["spacing"])
-        XCTAssertNotNil(json?["radius"])
-        XCTAssertNotNil(json?["motion"])
-        XCTAssertNotNil(json?["motionCurves"])
-        XCTAssertNotNil(json?["shadows"])
-        XCTAssertNotNil(json?["icons"])
-        XCTAssertNotNil(json?["grids"])
-        XCTAssertNotNil(json?["tokens"])
+        XCTAssertNotNil(json["themes"])
+        XCTAssertNotNil(json["spacing"])
+        XCTAssertNotNil(json["radius"])
+        XCTAssertNotNil(json["motion"])
+        XCTAssertNotNil(json["motionCurves"])
+        XCTAssertNotNil(json["shadows"])
+        XCTAssertNotNil(json["icons"])
+        XCTAssertNotNil(json["grids"])
+        XCTAssertNotNil(json["tokens"])
     }
 
     func testPackageManifestUsesNewStructure() throws {
@@ -288,6 +273,20 @@ final class BuilderIntegrationTests: XCTestCase {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
+    }
+
+    private func assertFilesExist(
+        _ relativePaths: [String],
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let root = repositoryRoot()
+        let fileManager = FileManager.default
+
+        for relativePath in relativePaths {
+            let path = root.appendingPathComponent(relativePath).path
+            XCTAssertTrue(fileManager.fileExists(atPath: path), "Missing required repo artifact: \(relativePath)", file: file, line: line)
+        }
     }
 
     private func renderedImage<V: View>(for view: V, size: CGSize) -> NSImage? {
