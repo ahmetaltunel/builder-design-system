@@ -268,10 +268,11 @@ package enum BuilderReferenceExamples {
                 id: id,
                 title: "AI review surface",
                 summary: "Prompt, output, and follow-up actions should stay explicit and reviewable.",
-                supportedStates: ["Prompting", "Generated", "Review"],
+                supportedStates: ["Composing", "Submitting", "Streaming", "Retry"],
                 accessibilityNotes: [
                     "Generated output should be clearly differentiated from authored input.",
-                    "Follow-up actions should remain explicit instead of implied."
+                    "Follow-up actions should remain explicit instead of implied.",
+                    "Submit shortcuts should be explained in persistent text."
                 ],
                 code: """
                 let environment = DesignSystemEnvironment.preview(.dark)
@@ -288,7 +289,7 @@ package enum BuilderReferenceExamples {
                 id: id,
                 title: "Guided flow",
                 summary: "Tutorial and onboarding surfaces should keep progress visible inside the same shell language.",
-                supportedStates: ["Start", "In progress", "Complete"],
+                supportedStates: ["Current", "Complete", "Warning", "Optional"],
                 accessibilityNotes: [
                     "Step progression should stay understandable without motion.",
                     "Progress updates should be announced with clear current-step wording."
@@ -1278,7 +1279,9 @@ private struct DataReferenceExample: View {
 
 private struct AIReferenceExample: View {
     let environment: DesignSystemEnvironment
-    @State private var prompt = "Summarize the component contract."
+    @State private var prompt = "Summarize the component contract and call out any review risks."
+    @State private var selectedPromptID = "summarize"
+    @State private var isSubmitting = true
 
     var body: some View {
         PanelSurface(environment: environment, title: "Generative workflow", subtitle: "Keep prompt, output, and review actions explicit.") {
@@ -1287,18 +1290,39 @@ private struct AIReferenceExample: View {
                 TokenBadge(environment: environment, title: "Review required", tint: nil)
             }
 
-            PromptInput(environment: environment, prompt: $prompt, actionTitle: "Draft") {}
+            PromptInput(
+                environment: environment,
+                prompt: $prompt,
+                actionTitle: "Draft",
+                supportingText: "Command-Return submits. Keep authored input visible while the draft is generating.",
+                isEnabled: true,
+                isSubmitting: isSubmitting,
+                isMultiline: true,
+                minHeight: 110,
+                submitShortcutBehavior: .commandReturn,
+                secondaryActionTitle: "Clear",
+                secondaryActionSymbol: "xmark",
+                onSecondaryAction: {
+                    prompt = ""
+                    selectedPromptID = ""
+                    isSubmitting = false
+                }
+            ) {
+                isSubmitting = true
+            }
 
             SupportPromptGroup(
                 environment: environment,
                 title: "Suggested prompts",
                 prompts: [
-                    .init(title: "Summarize", detail: "Condense the latest changes."),
-                    .init(title: "Find gaps", detail: "Inspect missing inventory."),
-                    .init(title: "Explain tradeoffs", detail: "Compare candidate APIs.")
+                    .init(id: "summarize", title: "Summarize", detail: "Condense the latest changes.", isSelected: selectedPromptID == "summarize", isRecommended: true),
+                    .init(id: "find-gaps", title: "Find gaps", detail: "Inspect missing inventory.", isSelected: selectedPromptID == "find-gaps"),
+                    .init(id: "compare", title: "Explain tradeoffs", detail: "Compare candidate APIs.", isEnabled: false, isSelected: selectedPromptID == "compare")
                 ]
             ) { selected in
                 prompt = selected.title
+                selectedPromptID = selected.id
+                isSubmitting = false
             }
 
             ChatBubble(environment: environment, role: .user, author: "Builder", message: prompt)
@@ -1306,8 +1330,29 @@ private struct AIReferenceExample: View {
                 environment: environment,
                 role: .assistant,
                 author: "Builder assistant",
-                message: "BuilderDesignSystem now ships compiled reference examples, generated docs, and reusable search, chart, and status primitives.",
-                detail: "Draft output"
+                message: "BuilderDesignSystem now ships compiled reference examples, generated docs, and reusable search, chart, status, collection, and guided-flow primitives.",
+                detail: "Draft output is still streaming into the review surface.",
+                state: .streaming,
+                footerMetadata: [
+                    .init(label: "Model", value: "Builder review"),
+                    .init(label: "Updated", value: "Now")
+                ],
+                showsCopyAction: true
+            )
+            ChatBubble(
+                environment: environment,
+                role: .assistant,
+                author: "Builder assistant",
+                message: "The last draft could not load the token export summary.",
+                detail: "Retry after the export job finishes.",
+                state: .error,
+                footerMetadata: [
+                    .init(label: "Source", value: "Token export"),
+                    .init(label: "Status", value: "Unavailable")
+                ],
+                onRetry: {
+                    isSubmitting = true
+                }
             )
         }
     }
@@ -1315,6 +1360,8 @@ private struct AIReferenceExample: View {
 
 private struct TutorialReferenceExample: View {
     let environment: DesignSystemEnvironment
+    @State private var currentStepID = "build"
+    @State private var completedStepIDs: Set<String> = ["audit"]
 
     var body: some View {
         WizardLayout(
@@ -1334,14 +1381,50 @@ private struct TutorialReferenceExample: View {
                 steps: [
                     .init(id: "audit", title: "Audit", detail: "Review API shape."),
                     .init(id: "build", title: "Build", detail: "Add reusable surfaces."),
-                    .init(id: "verify", title: "Verify", detail: "Run validation.")
+                    .init(id: "verify", title: "Verify", detail: "Run validation before release.", status: .warning, isOptional: true)
                 ],
-                currentStepID: "build"
+                currentStepID: $currentStepID,
+                completedStepIDs: completedStepIDs,
+                stepChangeAnnouncement: { step, index, total in
+                    "Tutorial progress updated. Step \(index) of \(total): \(step.title)."
+                }
             ) {
                 Text("Tutorial flows should guide builders without leaving the shared shell language.")
                     .font(environment.theme.typography(.body).font)
                     .foregroundStyle(environment.theme.color(.textSecondary))
+            } primaryActions: {
+                SystemButton(environment: environment, title: "Continue", tone: .primary) {
+                    advanceTutorial()
+                }
+            } secondaryActions: {
+                SystemButton(environment: environment, title: "Back", tone: .secondary) {
+                    retreatTutorial()
+                }
             }
+        }
+    }
+
+    private func advanceTutorial() {
+        switch currentStepID {
+        case "audit":
+            completedStepIDs.insert("audit")
+            currentStepID = "build"
+        case "build":
+            completedStepIDs.insert("build")
+            currentStepID = "verify"
+        default:
+            break
+        }
+    }
+
+    private func retreatTutorial() {
+        switch currentStepID {
+        case "verify":
+            currentStepID = "build"
+        case "build":
+            currentStepID = "audit"
+        default:
+            break
         }
     }
 }
@@ -1786,15 +1869,37 @@ private struct HeroPatternExample: View {
 
 private struct SupportPatternExample: View {
     let environment: DesignSystemEnvironment
+    @State private var selectedTopicID: String? = "context"
 
     var body: some View {
-        HelpPanel(environment: environment, title: "Guidance", subtitle: "Keep help adjacent to work instead of interrupting the current task.") {
+        HelpPanel(
+            environment: environment,
+            title: "Guidance",
+            subtitle: "Keep help adjacent to work instead of interrupting the current task.",
+            topics: [
+                .init(id: "context", title: "Current context", detail: "Tie guidance to the active workflow.", symbol: "scope"),
+                .init(id: "recovery", title: "Recovery", detail: "Name the next safe action.", symbol: "arrow.uturn.backward"),
+                .init(id: "handoff", title: "Handoff", detail: "Explain what changes next.", symbol: "square.and.arrow.up")
+            ],
+            selectedTopicID: $selectedTopicID
+        ) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Link support guidance to the active decision and preserve the user’s place in the workflow.")
+                Text(helpTopicMessage)
                     .font(environment.theme.typography(.body).font)
                     .foregroundStyle(environment.theme.color(.textSecondary))
                 ValidationMessage(environment: environment, status: .normal, message: "Use the same calm shell language as the main workspace.")
             }
+        }
+    }
+
+    private var helpTopicMessage: String {
+        switch selectedTopicID {
+        case "recovery":
+            "Recovery guidance should name the failed step and the safest next move without forcing the user out of the current panel."
+        case "handoff":
+            "Handoff guidance should confirm what changed, what still needs review, and who owns the next action."
+        default:
+            "Link support guidance to the active decision and preserve the user’s place in the workflow."
         }
     }
 }
@@ -1814,6 +1919,8 @@ private struct LoadingPatternExample: View {
 
 private struct OnboardingPatternExample: View {
     let environment: DesignSystemEnvironment
+    @State private var currentStepID = "Tune"
+    @State private var completedStepIDs: Set<String> = ["Choose"]
 
     var body: some View {
         WizardLayout(
@@ -1833,13 +1940,27 @@ private struct OnboardingPatternExample: View {
                 steps: [
                     .init(id: "Choose", title: "Choose"),
                     .init(id: "Tune", title: "Tune"),
-                    .init(id: "Validate", title: "Validate")
+                    .init(id: "Validate", title: "Validate", status: .warning, isOptional: true)
                 ],
-                currentStepID: "Tune"
+                currentStepID: $currentStepID,
+                completedStepIDs: completedStepIDs
             ) {
                 Text("Guide teams into the system without changing the shell language.")
                     .font(environment.theme.typography(.body).font)
                     .foregroundStyle(environment.theme.color(.textSecondary))
+            } primaryActions: {
+                SystemButton(environment: environment, title: "Continue", tone: .primary) {
+                    if currentStepID == "Tune" {
+                        completedStepIDs.insert("Tune")
+                        currentStepID = "Validate"
+                    }
+                }
+            } secondaryActions: {
+                SystemButton(environment: environment, title: "Back", tone: .secondary) {
+                    if currentStepID == "Validate" {
+                        currentStepID = "Tune"
+                    }
+                }
             }
         }
     }

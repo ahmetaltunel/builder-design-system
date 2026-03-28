@@ -167,6 +167,32 @@ final class BuilderSnapshotTests: XCTestCase {
             size: CGSize(width: 1400, height: 900)
         )
     }
+
+    func testGuidedBehaviorSnapshots() {
+        let darkEnvironment = DesignSystemEnvironment.preview(
+            .dark,
+            density: .compact,
+            visualContext: .editorComposer,
+            reduceMotion: true
+        )
+        let lightEnvironment = DesignSystemEnvironment.preview(
+            .light,
+            density: .default,
+            visualContext: .editorComposer,
+            reduceMotion: true
+        )
+
+        SnapshotTestSupport.assertSnapshot(
+            matching: GuidedBehaviorGallery(environment: darkEnvironment),
+            named: "component-guided-behavior-dark",
+            size: CGSize(width: 1400, height: 920)
+        )
+        SnapshotTestSupport.assertSnapshot(
+            matching: GuidedBehaviorGallery(environment: lightEnvironment),
+            named: "component-guided-behavior-light",
+            size: CGSize(width: 1400, height: 920)
+        )
+    }
 }
 
 private struct ComponentStateGallery: View {
@@ -236,6 +262,8 @@ private struct ComponentStateGallery: View {
 private struct AdvancedComponentGallery: View {
     let environment: DesignSystemEnvironment
     @State private var prompt = "Summarize the latest system changes."
+    @State private var selectedHelpTopicID: String? = "context"
+    @State private var currentTutorialStepID = "build"
     @State private var selectedBoardItemID: String? = "alert"
     @State private var selectedPaletteItemID: String? = "metric-card"
     @State private var isUploadTargeted = false
@@ -306,12 +334,16 @@ private struct AdvancedComponentGallery: View {
 
             HStack(alignment: .top, spacing: 18) {
                 VStack(alignment: .leading, spacing: 14) {
-                    HelpPanel(environment: environment, title: "Guidance", subtitle: "Keep help adjacent to the active task.") {
-                        BulletList(environment: environment, items: [
-                            "Explain the current decision clearly.",
-                            "Keep recovery guidance visible.",
-                            "Use calm, operational language."
-                        ])
+                    HelpPanel(
+                        environment: environment,
+                        title: "Guidance",
+                        subtitle: "Keep help adjacent to the active task.",
+                        topics: guidedHelpTopics,
+                        selectedTopicID: $selectedHelpTopicID
+                    ) {
+                        Text(guidedHelpCopy(selectedHelpTopicID))
+                            .font(environment.theme.typography(.body).font)
+                            .foregroundStyle(environment.theme.color(.textSecondary))
                     }
 
                     VStack(alignment: .leading, spacing: 12) {
@@ -373,17 +405,43 @@ private struct AdvancedComponentGallery: View {
 
             HStack(alignment: .top, spacing: 18) {
                 PanelSurface(environment: environment, title: "AI review", subtitle: "Keep prompt, output, and follow-up actions explicit.") {
-                    PromptInput(environment: environment, prompt: $prompt, actionTitle: "Draft") {}
+                    PromptInput(
+                        environment: environment,
+                        prompt: $prompt,
+                        actionTitle: "Draft",
+                        supportingText: "Command-Return submits. Keep authored input visible while the draft is generating.",
+                        isSubmitting: true,
+                        isMultiline: true,
+                        submitShortcutBehavior: .commandReturn,
+                        secondaryActionTitle: "Clear",
+                        secondaryActionSymbol: "xmark",
+                        onSecondaryAction: {
+                            prompt = ""
+                        }
+                    ) {}
                     SupportPromptGroup(
                         environment: environment,
                         prompts: [
-                            .init(title: "Summarize", detail: "Condense the latest changes."),
-                            .init(title: "Find gaps", detail: "Inspect missing inventory.")
+                            .init(id: "summarize", title: "Summarize", detail: "Condense the latest changes.", isSelected: true, isRecommended: true),
+                            .init(id: "find-gaps", title: "Find gaps", detail: "Inspect missing inventory."),
+                            .init(id: "compare", title: "Explain tradeoffs", detail: "Compare candidate APIs.", isEnabled: false)
                         ]
                     ) { selected in
                         prompt = selected.title
                     }
-                    ChatBubble(environment: environment, role: .assistant, author: "Builder assistant", message: "The design system now covers metrics, status, help, file upload, AI, and tutorial surfaces.")
+                    ChatBubble(
+                        environment: environment,
+                        role: .assistant,
+                        author: "Builder assistant",
+                        message: "The design system now covers metrics, status, help, file upload, AI, and tutorial surfaces.",
+                        detail: "Draft output is still streaming into the review surface.",
+                        state: .streaming,
+                        footerMetadata: [
+                            .init(label: "Model", value: "Builder review"),
+                            .init(label: "Updated", value: "Now")
+                        ],
+                        showsCopyAction: true
+                    )
                 }
                 .frame(maxWidth: .infinity)
 
@@ -394,13 +452,18 @@ private struct AdvancedComponentGallery: View {
                     steps: [
                         .init(id: "audit", title: "Audit", detail: "Review API shape."),
                         .init(id: "build", title: "Build", detail: "Add reusable surfaces."),
-                        .init(id: "verify", title: "Verify", detail: "Run validation.")
+                        .init(id: "verify", title: "Verify", detail: "Run validation.", status: .warning, isOptional: true)
                     ],
-                    currentStepID: "build"
+                    currentStepID: $currentTutorialStepID,
+                    completedStepIDs: ["audit"]
                 ) {
                     Text("Guide teams into the system without changing the shell language.")
                         .font(environment.theme.typography(.body).font)
                         .foregroundStyle(environment.theme.color(.textSecondary))
+                } primaryActions: {
+                    SystemButton(environment: environment, title: "Continue", tone: .primary) {}
+                } secondaryActions: {
+                    SystemButton(environment: environment, title: "Back", tone: .secondary) {}
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -480,6 +543,122 @@ private struct CollectionBehaviorGallery: View {
                     }
                 )
                 .frame(width: 320)
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(environment.theme.color(.workspaceBackground))
+    }
+}
+
+private struct GuidedBehaviorGallery: View {
+    let environment: DesignSystemEnvironment
+    @State private var prompt = "Summarize the rollout risks and note any missing behavior depth."
+    @State private var selectedHelpTopicID: String? = "recovery"
+    @State private var currentStepID = "verify"
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top, spacing: 18) {
+                PanelSurface(environment: environment, title: "Prompt composer", subtitle: "Submitting state and secondary actions should remain visible.") {
+                    PromptInput(
+                        environment: environment,
+                        prompt: $prompt,
+                        actionTitle: "Draft",
+                        supportingText: "Command-Return submits. Keep authored input visible while the draft is generating.",
+                        isSubmitting: true,
+                        isMultiline: true,
+                        submitShortcutBehavior: .commandReturn,
+                        secondaryActionTitle: "Clear",
+                        secondaryActionSymbol: "xmark",
+                        onSecondaryAction: {
+                            prompt = ""
+                        }
+                    ) {}
+
+                    SupportPromptGroup(
+                        environment: environment,
+                        title: "Suggested prompts",
+                        prompts: [
+                            .init(id: "summarize", title: "Summarize", detail: "Condense the latest changes.", isSelected: true, isRecommended: true),
+                            .init(id: "find-gaps", title: "Find gaps", detail: "Inspect missing inventory."),
+                            .init(id: "compare", title: "Explain tradeoffs", detail: "Compare candidate APIs.", isEnabled: false)
+                        ]
+                    ) { selected in
+                        prompt = selected.title
+                    }
+                }
+                .frame(maxWidth: .infinity)
+
+                PanelSurface(environment: environment, title: "Conversation state", subtitle: "Streaming and retry states should feel like first-class system surfaces.") {
+                    ChatBubble(
+                        environment: environment,
+                        role: .assistant,
+                        author: "Builder assistant",
+                        message: "The rollout summary is still streaming into the review surface.",
+                        detail: "Draft output is still streaming.",
+                        state: .streaming,
+                        footerMetadata: [
+                            .init(label: "Model", value: "Builder review"),
+                            .init(label: "Updated", value: "Now")
+                        ],
+                        showsCopyAction: true
+                    )
+                    ChatBubble(
+                        environment: environment,
+                        role: .assistant,
+                        author: "Builder assistant",
+                        message: "The token export summary could not load.",
+                        detail: "Retry after the export job finishes.",
+                        state: .error,
+                        footerMetadata: [
+                            .init(label: "Source", value: "Token export"),
+                            .init(label: "Status", value: "Unavailable")
+                        ],
+                        onRetry: {}
+                    )
+                }
+                .frame(maxWidth: .infinity)
+            }
+
+            HStack(alignment: .top, spacing: 18) {
+                HelpPanel(
+                    environment: environment,
+                    title: "Guidance",
+                    subtitle: "Topics should stay navigable without turning into a product-specific help center.",
+                    topics: guidedHelpTopics,
+                    selectedTopicID: $selectedHelpTopicID
+                ) {
+                    Text(guidedHelpCopy(selectedHelpTopicID))
+                        .font(environment.theme.typography(.body).font)
+                        .foregroundStyle(environment.theme.color(.textSecondary))
+                }
+                .frame(maxWidth: .infinity)
+
+                TutorialPanel(
+                    environment: environment,
+                    title: "Rollout guidance",
+                    subtitle: "Current step, completed work, and warning states should remain visible together.",
+                    steps: [
+                        .init(id: "audit", title: "Audit", detail: "Review API shape."),
+                        .init(id: "build", title: "Build", detail: "Add reusable surfaces."),
+                        .init(id: "verify", title: "Verify", detail: "Run validation before release.", status: .warning, isOptional: true)
+                    ],
+                    currentStepID: $currentStepID,
+                    completedStepIDs: ["audit", "build"],
+                    stepChangeAnnouncement: { step, index, total in
+                        "Tutorial progress updated. Step \(index) of \(total): \(step.title)."
+                    }
+                ) {
+                    Text("Guide teams into the system without changing the shell language.")
+                        .font(environment.theme.typography(.body).font)
+                        .foregroundStyle(environment.theme.color(.textSecondary))
+                } primaryActions: {
+                    SystemButton(environment: environment, title: "Continue", tone: .primary) {}
+                } secondaryActions: {
+                    SystemButton(environment: environment, title: "Back", tone: .secondary) {}
+                }
+                .frame(maxWidth: .infinity)
             }
         }
         .padding(24)
@@ -661,5 +840,22 @@ private func advancedInsertDestinations(environment: DesignSystemEnvironment) ->
             columnTitle: column.title,
             index: column.items.count
         )
+    }
+}
+
+private let guidedHelpTopics: [HelpTopic] = [
+    .init(id: "context", title: "Current context", detail: "Tie guidance to the active workflow.", symbol: "scope"),
+    .init(id: "recovery", title: "Recovery", detail: "Name the next safe action.", symbol: "arrow.uturn.backward"),
+    .init(id: "handoff", title: "Handoff", detail: "Explain what changes next.", symbol: "square.and.arrow.up")
+]
+
+private func guidedHelpCopy(_ selectedTopicID: String?) -> String {
+    switch selectedTopicID {
+    case "recovery":
+        "Recovery guidance should name the failed step and the safest next move without forcing the user out of the current panel."
+    case "handoff":
+        "Handoff guidance should confirm what changed, what still needs review, and who owns the next action."
+    default:
+        "Link support guidance to the active decision and preserve the user’s place in the workflow."
     }
 }

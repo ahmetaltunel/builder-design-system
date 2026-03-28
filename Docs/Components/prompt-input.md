@@ -141,5 +141,9 @@ Canonical compiled example for Prompt input. Use Prompt input when generated out
 // Canonical example for Prompt input
 let environment = DesignSystemEnvironment.preview(.dark)
 
-PromptInput(environment: environment, prompt: $prompt, actionTitle: "Draft") {}
+PromptInput(environment: environment, prompt: $prompt, actionTitle: "Draft", supportingText: "Command-Return submits.", isSubmitting: isSubmitting, isMultiline: true, submitShortcutBehavior: .commandReturn, secondaryActionTitle: "Clear", onSecondaryAction: {
+    prompt = ""
+}) {
+    isSubmitting = true
+}
 ```

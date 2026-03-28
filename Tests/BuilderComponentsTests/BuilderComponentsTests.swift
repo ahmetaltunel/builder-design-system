@@ -639,6 +639,133 @@ final class BuilderComponentsTests: XCTestCase {
         XCTAssertEqual(tutorialPanel.state, .error(.init(title: "Unable to load steps", message: "Retry after restoring the checklist source.")))
     }
 
+    func testGuidedAndAIBehaviorComponentsInstantiate() {
+        var promptValue = "Summarize the rollout risks."
+        var selectedHelpTopicID: String? = "context"
+        var currentStepID = "build"
+
+        let promptBinding = Binding(
+            get: { promptValue },
+            set: { promptValue = $0 }
+        )
+        let selectedHelpTopicBinding = Binding(
+            get: { selectedHelpTopicID },
+            set: { selectedHelpTopicID = $0 }
+        )
+        let currentStepBinding = Binding(
+            get: { currentStepID },
+            set: { currentStepID = $0 }
+        )
+
+        let promptInput = PromptInput(
+            environment: environment,
+            prompt: promptBinding,
+            actionTitle: "Draft",
+            supportingText: "Command-Return submits.",
+            isEnabled: true,
+            isSubmitting: true,
+            isMultiline: true,
+            submitShortcutBehavior: .commandReturn,
+            secondaryActionTitle: "Clear",
+            secondaryActionSymbol: "xmark",
+            onSecondaryAction: {},
+            onSubmit: {}
+        )
+        let supportPrompts = SupportPromptGroup(
+            environment: environment,
+            prompts: [
+                .init(id: "summarize", title: "Summarize", detail: "Condense the latest changes.", isSelected: true, isRecommended: true),
+                .init(id: "compare", title: "Explain tradeoffs", detail: "Compare candidate APIs.", isEnabled: false)
+            ]
+        ) { _ in }
+        let streamingBubble = ChatBubble(
+            environment: environment,
+            role: .assistant,
+            author: "Builder assistant",
+            message: "The rollout summary is still streaming.",
+            detail: "Draft output is still streaming.",
+            state: .streaming,
+            footerMetadata: [
+                .init(label: "Model", value: "Builder review")
+            ],
+            showsCopyAction: true
+        )
+        let errorBubble = ChatBubble(
+            environment: environment,
+            role: .assistant,
+            author: "Builder assistant",
+            message: "The token export summary could not load.",
+            detail: "Retry after the export job finishes.",
+            state: .error,
+            footerMetadata: [
+                .init(label: "Source", value: "Token export")
+            ],
+            onRetry: {}
+        )
+        let steps = StepsView(
+            environment: environment,
+            steps: [
+                .init(id: "audit", title: "Audit", detail: "Review API shape.", status: .complete),
+                .init(id: "build", title: "Build", detail: "Add reusable surfaces.", status: .current),
+                .init(id: "verify", title: "Verify", detail: "Run validation.", status: .warning, isOptional: true)
+            ]
+        )
+        let helpPanel = HelpPanel(
+            environment: environment,
+            title: "Help",
+            topics: [
+                .init(id: "context", title: "Current context", detail: "Tie guidance to the active workflow.", symbol: "scope"),
+                .init(id: "recovery", title: "Recovery", detail: "Name the next safe action.", symbol: "arrow.uturn.backward")
+            ],
+            selectedTopicID: selectedHelpTopicBinding
+        ) {
+            Text("Guidance")
+        }
+        let tutorialPanel = TutorialPanel(
+            environment: environment,
+            title: "Rollout guidance",
+            steps: [
+                .init(id: "audit", title: "Audit", detail: "Review API shape."),
+                .init(id: "build", title: "Build", detail: "Add reusable surfaces."),
+                .init(id: "verify", title: "Verify", detail: "Run validation.", status: .warning, isOptional: true)
+            ],
+            currentStepID: currentStepBinding,
+            completedStepIDs: ["audit"],
+            stepChangeAnnouncement: { step, index, total in
+                "Step \(index) of \(total): \(step.title)."
+            }
+        ) {
+            Text("Step content")
+        } primaryActions: {
+            SystemButton(environment: environment, title: "Continue", tone: .primary) {}
+        } secondaryActions: {
+            SystemButton(environment: environment, title: "Back", tone: .secondary) {}
+        }
+
+        XCTAssertEqual(promptInput.actionTitle, "Draft")
+        XCTAssertEqual(promptInput.supportingText, "Command-Return submits.")
+        XCTAssertTrue(promptInput.isSubmitting)
+        XCTAssertTrue(promptInput.isMultiline)
+        XCTAssertEqual(promptInput.secondaryActionTitle, "Clear")
+        XCTAssertEqual(supportPrompts.prompts.count, 2)
+        XCTAssertTrue(supportPrompts.prompts[0].isSelected)
+        XCTAssertTrue(supportPrompts.prompts[0].isRecommended)
+        XCTAssertFalse(supportPrompts.prompts[1].isEnabled)
+        XCTAssertEqual(streamingBubble.state, .streaming)
+        XCTAssertTrue(streamingBubble.showsCopyAction)
+        XCTAssertEqual(streamingBubble.footerMetadata.count, 1)
+        XCTAssertEqual(errorBubble.state, .error)
+        XCTAssertNotNil(errorBubble.onRetry)
+        XCTAssertEqual(steps.steps[2].status, .warning)
+        XCTAssertTrue(steps.steps[2].isOptional)
+        XCTAssertEqual(helpPanel.topics.count, 2)
+        XCTAssertEqual(helpPanel.selectedTopicID?.wrappedValue, "context")
+        XCTAssertEqual(tutorialPanel.currentStepID, "build")
+        XCTAssertEqual(tutorialPanel.completedStepIDs, Set(["audit"]))
+        XCTAssertTrue(tutorialPanel.showsPrimaryActions)
+        XCTAssertTrue(tutorialPanel.showsSecondaryActions)
+    }
+
     func testCollectionWorkflowComponentsInstantiate() {
         var isTargeted = false
         var selectedBoardItemID: String? = "review-docs"
@@ -825,6 +952,27 @@ final class BuilderComponentsTests: XCTestCase {
         XCTAssertEqual(clampedLowProgressItem.progress, 0)
         XCTAssertEqual(fileUploadItem.symbol, "photo")
         XCTAssertTrue(fileUploadItem.canRetry)
+    }
+
+    func testStepStatusResolutionSupportsCurrentCompleteAndWarningStates() {
+        let steps: [StepsView.Step] = [
+            .init(id: "audit", title: "Audit", detail: "Review API shape."),
+            .init(id: "build", title: "Build", detail: "Add reusable surfaces."),
+            .init(id: "verify", title: "Verify", detail: "Run validation.", status: .warning, isOptional: true)
+        ]
+
+        XCTAssertEqual(
+            resolvedStepStatus(for: steps[0], steps: steps, currentStepID: "build"),
+            .complete
+        )
+        XCTAssertEqual(
+            resolvedStepStatus(for: steps[1], steps: steps, currentStepID: "build"),
+            .current
+        )
+        XCTAssertEqual(
+            resolvedStepStatus(for: steps[2], steps: steps, currentStepID: "build"),
+            .warning
+        )
     }
 
     func testFileDropTypeMatchingHonorsAcceptedContentTypes() {

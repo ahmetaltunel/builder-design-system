@@ -142,8 +142,9 @@ Canonical compiled example for Support prompt group. Use Support prompt group wh
 let environment = DesignSystemEnvironment.preview(.dark)
 
 SupportPromptGroup(environment: environment, prompts: [
-    .init(title: "Summarize", detail: "Condense the latest changes."),
-    .init(title: "Find gaps", detail: "Inspect missing inventory.")
+    .init(id: "summarize", title: "Summarize", detail: "Condense the latest changes.", isSelected: true, isRecommended: true),
+    .init(id: "find-gaps", title: "Find gaps", detail: "Inspect missing inventory."),
+    .init(id: "compare", title: "Explain tradeoffs", detail: "Compare candidate APIs.", isEnabled: false)
 ]) { prompt in
     print(prompt.title)
 }

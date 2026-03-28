@@ -242,7 +242,10 @@ enum ExactReferenceContent {
             ])
         case "chat-bubble":
             return code([
-                "ChatBubble(environment: environment, role: .assistant, author: \"Builder assistant\", message: \"Review is ready.\", detail: \"Draft output\")"
+                "ChatBubble(environment: environment, role: .assistant, author: \"Builder assistant\", message: \"Review is ready.\", detail: \"Draft output is still streaming.\", state: .streaming, footerMetadata: [",
+                "    .init(label: \"Model\", value: \"Builder review\"),",
+                "    .init(label: \"Updated\", value: \"Now\")",
+                "], showsCopyAction: true)"
             ])
         case "charts":
             return code([
@@ -403,8 +406,20 @@ enum ExactReferenceContent {
         case "generative-ai-components":
             return code([
                 "VStack(spacing: 12) {",
-                "    PromptInput(environment: environment, prompt: $prompt, actionTitle: \"Draft\") {}",
-                "    ChatBubble(environment: environment, role: .assistant, author: \"Builder assistant\", message: output)",
+                "    PromptInput(environment: environment, prompt: $prompt, actionTitle: \"Draft\", supportingText: \"Command-Return submits.\", isSubmitting: isSubmitting, isMultiline: true, submitShortcutBehavior: .commandReturn, secondaryActionTitle: \"Clear\", onSecondaryAction: {",
+                "        prompt = \"\"",
+                "    }) {",
+                "        isSubmitting = true",
+                "    }",
+                "    SupportPromptGroup(environment: environment, prompts: [",
+                "        .init(id: \"summarize\", title: \"Summarize\", detail: \"Condense the latest changes.\", isSelected: true, isRecommended: true),",
+                "        .init(id: \"find-gaps\", title: \"Find gaps\", detail: \"Inspect missing inventory.\")",
+                "    ]) { prompt in",
+                "        print(prompt.id)",
+                "    }",
+                "    ChatBubble(environment: environment, role: .assistant, author: \"Builder assistant\", message: output, detail: \"Retry after the export job finishes.\", state: .error, onRetry: {",
+                "        print(\"retry\")",
+                "    })",
                 "}"
             ])
         case "grid":
@@ -421,7 +436,10 @@ enum ExactReferenceContent {
             ])
         case "help-panel":
             return code([
-                "HelpPanel(environment: environment, title: \"\(displayName)\") {",
+                "HelpPanel(environment: environment, title: \"\(displayName)\", topics: [",
+                "    .init(id: \"context\", title: \"Current context\", detail: \"Tie guidance to the active workflow.\", symbol: \"scope\"),",
+                "    .init(id: \"recovery\", title: \"Recovery\", detail: \"Name the next safe action.\", symbol: \"arrow.uturn.backward\")",
+                "], selectedTopicID: .constant(\"context\")) {",
                 "    BulletList(environment: environment, items: [\"Explain the current decision\", \"Keep guidance adjacent to work\"])",
                 "}"
             ])
@@ -550,7 +568,11 @@ enum ExactReferenceContent {
             ])
         case "prompt-input":
             return code([
-                "PromptInput(environment: environment, prompt: $prompt, actionTitle: \"Draft\") {}"
+                "PromptInput(environment: environment, prompt: $prompt, actionTitle: \"Draft\", supportingText: \"Command-Return submits.\", isSubmitting: isSubmitting, isMultiline: true, submitShortcutBehavior: .commandReturn, secondaryActionTitle: \"Clear\", onSecondaryAction: {",
+                "    prompt = \"\"",
+                "}) {",
+                "    isSubmitting = true",
+                "}"
             ])
         case "property-filter":
             return code([
@@ -607,16 +629,17 @@ enum ExactReferenceContent {
         case "steps":
             return code([
                 "StepsView(environment: environment, steps: [",
-                "    .init(id: \"audit\", title: \"Audit\", detail: \"Review the API and states.\"),",
-                "    .init(id: \"verify\", title: \"Verify\", detail: \"Run tests and inspect the showcase.\"),",
-                "    .init(id: \"ship\", title: \"Ship\", detail: \"Publish the updated docs.\")",
-                "], currentStepID: \"verify\")"
+                "    .init(id: \"audit\", title: \"Audit\", detail: \"Review the API and states.\", status: .complete),",
+                "    .init(id: \"verify\", title: \"Verify\", detail: \"Run tests and inspect the showcase.\", status: .current),",
+                "    .init(id: \"ship\", title: \"Ship\", detail: \"Publish the updated docs.\", status: .warning, isOptional: true)",
+                "])"
             ])
         case "support-prompt-group":
             return code([
                 "SupportPromptGroup(environment: environment, prompts: [",
-                "    .init(title: \"Summarize\", detail: \"Condense the latest changes.\"),",
-                "    .init(title: \"Find gaps\", detail: \"Inspect missing inventory.\")",
+                "    .init(id: \"summarize\", title: \"Summarize\", detail: \"Condense the latest changes.\", isSelected: true, isRecommended: true),",
+                "    .init(id: \"find-gaps\", title: \"Find gaps\", detail: \"Inspect missing inventory.\"),",
+                "    .init(id: \"compare\", title: \"Explain tradeoffs\", detail: \"Compare candidate APIs.\", isEnabled: false)",
                 "]) { prompt in",
                 "    print(prompt.title)",
                 "}"
@@ -700,15 +723,25 @@ enum ExactReferenceContent {
         case "tutorial-components":
             return code([
                 "WizardLayout(environment: environment, title: \"\(displayName)\", steps: steps, currentStepID: \"audit\") {",
-                "    TutorialPanel(environment: environment, title: \"Rollout guidance\", steps: steps, currentStepID: \"audit\") {",
+                "    TutorialPanel(environment: environment, title: \"Rollout guidance\", steps: steps, currentStepID: $currentStepID, completedStepIDs: [\"audit\"]) {",
                 "        Text(\"Keep progression visible inside the same shell language.\")",
+                "    } primaryActions: {",
+                "        SystemButton(environment: environment, title: \"Continue\", tone: .primary) {}",
+                "    } secondaryActions: {",
+                "        SystemButton(environment: environment, title: \"Back\", tone: .secondary) {}",
                 "    }",
                 "}"
             ])
         case "tutorial-panel":
             return code([
-                "TutorialPanel(environment: environment, title: \"\(displayName)\", steps: steps, currentStepID: \"audit\") {",
+                "TutorialPanel(environment: environment, title: \"\(displayName)\", steps: steps, currentStepID: $currentStepID, completedStepIDs: [\"audit\"], stepChangeAnnouncement: { step, index, total in",
+                "    \"Tutorial progress updated. Step \\(index) of \\(total): \\(step.title).\"",
+                "}) {",
                 "    Text(\"Keep progression visible inside the current workflow.\")",
+                "} primaryActions: {",
+                "    SystemButton(environment: environment, title: \"Continue\", tone: .primary) {}",
+                "} secondaryActions: {",
+                "    SystemButton(environment: environment, title: \"Back\", tone: .secondary) {}",
                 "}"
             ])
         case "wizard":
@@ -836,7 +869,10 @@ enum ExactReferenceContent {
             ])
         case "help-system":
             return code([
-                "HelpPanel(environment: environment, title: \"Help\") {",
+                "HelpPanel(environment: environment, title: \"Help\", topics: [",
+                "    .init(id: \"context\", title: \"Current context\", detail: \"Tie guidance to the active workflow.\"),",
+                "    .init(id: \"recovery\", title: \"Recovery\", detail: \"Name the next safe action.\")",
+                "], selectedTopicID: .constant(\"context\")) {",
                 "    BulletList(environment: environment, items: [\"Explain the current decision\", \"Keep guidance adjacent to work\"])",
                 "}"
             ])
@@ -858,8 +894,12 @@ enum ExactReferenceContent {
         case "onboarding":
             return code([
                 "WizardLayout(environment: environment, title: \"Team onboarding\", steps: steps, currentStepID: \"review\") {",
-                "    TutorialPanel(environment: environment, title: \"Rollout guidance\", steps: steps, currentStepID: \"review\") {",
+                "    TutorialPanel(environment: environment, title: \"Rollout guidance\", steps: steps, currentStepID: $currentStepID, completedStepIDs: [\"choose\"]) {",
                 "        Text(\"Keep the next action obvious.\")",
+                "    } primaryActions: {",
+                "        SystemButton(environment: environment, title: \"Continue\", tone: .primary) {}",
+                "    } secondaryActions: {",
+                "        SystemButton(environment: environment, title: \"Back\", tone: .secondary) {}",
                 "    }",
                 "}"
             ])

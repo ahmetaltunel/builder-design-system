@@ -142,8 +142,8 @@ Canonical compiled example for Steps. Use Steps when a guided flow needs visible
 let environment = DesignSystemEnvironment.preview(.dark)
 
 StepsView(environment: environment, steps: [
-    .init(id: "audit", title: "Audit", detail: "Review the API and states."),
-    .init(id: "verify", title: "Verify", detail: "Run tests and inspect the showcase."),
-    .init(id: "ship", title: "Ship", detail: "Publish the updated docs.")
-], currentStepID: "verify")
+    .init(id: "audit", title: "Audit", detail: "Review the API and states.", status: .complete),
+    .init(id: "verify", title: "Verify", detail: "Run tests and inspect the showcase.", status: .current),
+    .init(id: "ship", title: "Ship", detail: "Publish the updated docs.", status: .warning, isOptional: true)
+])
 ```

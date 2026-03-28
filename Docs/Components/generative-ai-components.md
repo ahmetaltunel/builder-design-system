@@ -142,7 +142,19 @@ Canonical compiled example for Generative AI components. Use Generative AI compo
 let environment = DesignSystemEnvironment.preview(.dark)
 
 VStack(spacing: 12) {
-    PromptInput(environment: environment, prompt: $prompt, actionTitle: "Draft") {}
-    ChatBubble(environment: environment, role: .assistant, author: "Builder assistant", message: output)
+    PromptInput(environment: environment, prompt: $prompt, actionTitle: "Draft", supportingText: "Command-Return submits.", isSubmitting: isSubmitting, isMultiline: true, submitShortcutBehavior: .commandReturn, secondaryActionTitle: "Clear", onSecondaryAction: {
+        prompt = ""
+    }) {
+        isSubmitting = true
+    }
+    SupportPromptGroup(environment: environment, prompts: [
+        .init(id: "summarize", title: "Summarize", detail: "Condense the latest changes.", isSelected: true, isRecommended: true),
+        .init(id: "find-gaps", title: "Find gaps", detail: "Inspect missing inventory.")
+    ]) { prompt in
+        print(prompt.id)
+    }
+    ChatBubble(environment: environment, role: .assistant, author: "Builder assistant", message: output, detail: "Retry after the export job finishes.", state: .error, onRetry: {
+        print("retry")
+    })
 }
 ```

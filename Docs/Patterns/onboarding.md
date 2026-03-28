@@ -121,8 +121,12 @@ Canonical compiled pattern example for Onboarding. Use Onboarding when the first
 let environment = DesignSystemEnvironment.preview(.dark)
 
 WizardLayout(environment: environment, title: "Team onboarding", steps: steps, currentStepID: "review") {
-    TutorialPanel(environment: environment, title: "Rollout guidance", steps: steps, currentStepID: "review") {
+    TutorialPanel(environment: environment, title: "Rollout guidance", steps: steps, currentStepID: $currentStepID, completedStepIDs: ["choose"]) {
         Text("Keep the next action obvious.")
+    } primaryActions: {
+        SystemButton(environment: environment, title: "Continue", tone: .primary) {}
+    } secondaryActions: {
+        SystemButton(environment: environment, title: "Back", tone: .secondary) {}
     }
 }
 ```

@@ -14,6 +14,7 @@ public struct TextInputField: View {
     public let isReadOnly: Bool
     public let isEnabled: Bool
     public let onEscape: (() -> Void)?
+    public let onSubmit: (() -> Void)?
 
     @FocusState private var isFocused: Bool
 
@@ -29,7 +30,8 @@ public struct TextInputField: View {
         message: String? = nil,
         isReadOnly: Bool = false,
         isEnabled: Bool = true,
-        onEscape: (() -> Void)? = nil
+        onEscape: (() -> Void)? = nil,
+        onSubmit: (() -> Void)? = nil
     ) {
         self.environment = environment
         self.placeholder = placeholder
@@ -43,6 +45,38 @@ public struct TextInputField: View {
         self.isReadOnly = isReadOnly
         self.isEnabled = isEnabled
         self.onEscape = onEscape
+        self.onSubmit = onSubmit
+    }
+
+    public init(
+        environment: DesignSystemEnvironment,
+        placeholder: String,
+        text: Binding<String>,
+        isFocused: Binding<Bool>? = nil,
+        leadingSymbol: String? = nil,
+        width: CGFloat? = nil,
+        height: CGFloat = 38,
+        status: FieldStatus = .normal,
+        message: String? = nil,
+        isReadOnly: Bool = false,
+        isEnabled: Bool = true,
+        onEscape: (() -> Void)? = nil
+    ) {
+        self.init(
+            environment: environment,
+            placeholder: placeholder,
+            text: text,
+            isFocused: isFocused,
+            leadingSymbol: leadingSymbol,
+            width: width,
+            height: height,
+            status: status,
+            message: message,
+            isReadOnly: isReadOnly,
+            isEnabled: isEnabled,
+            onEscape: onEscape,
+            onSubmit: nil
+        )
     }
 
     public var body: some View {
@@ -79,6 +113,10 @@ public struct TextInputField: View {
                     isFocused = false
                     externalFocus = false
                     onEscape?()
+                }
+                .onSubmit {
+                    guard !isReadOnly, isEnabled else { return }
+                    onSubmit?()
                 }
                 .accessibilityLabel(placeholder)
                 .accessibilityValue(text.isEmpty ? "Empty" : text)

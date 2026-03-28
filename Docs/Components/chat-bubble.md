@@ -141,5 +141,8 @@ Canonical compiled example for Chat bubble. Use Chat bubble when generated outpu
 // Canonical example for Chat bubble
 let environment = DesignSystemEnvironment.preview(.dark)
 
-ChatBubble(environment: environment, role: .assistant, author: "Builder assistant", message: "Review is ready.", detail: "Draft output")
+ChatBubble(environment: environment, role: .assistant, author: "Builder assistant", message: "Review is ready.", detail: "Draft output is still streaming.", state: .streaming, footerMetadata: [
+    .init(label: "Model", value: "Builder review"),
+    .init(label: "Updated", value: "Now")
+], showsCopyAction: true)
 ```

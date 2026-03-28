@@ -142,8 +142,12 @@ Canonical compiled example for Tutorial components. Use Tutorial components when
 let environment = DesignSystemEnvironment.preview(.dark)
 
 WizardLayout(environment: environment, title: "Tutorial components", steps: steps, currentStepID: "audit") {
-    TutorialPanel(environment: environment, title: "Rollout guidance", steps: steps, currentStepID: "audit") {
+    TutorialPanel(environment: environment, title: "Rollout guidance", steps: steps, currentStepID: $currentStepID, completedStepIDs: ["audit"]) {
         Text("Keep progression visible inside the same shell language.")
+    } primaryActions: {
+        SystemButton(environment: environment, title: "Continue", tone: .primary) {}
+    } secondaryActions: {
+        SystemButton(environment: environment, title: "Back", tone: .secondary) {}
     }
 }
 ```
