@@ -142,8 +142,10 @@ Canonical compiled example for Charts. Use Charts when analytical content needs 
 // Canonical example for Charts
 let environment = DesignSystemEnvironment.preview(.dark)
 
-ChartPanel(environment: environment, title: "Charts", points: [
-    .init(id: "quality", label: "Quality", value: 78),
-    .init(id: "coverage", label: "Coverage", value: 92)
-])
+BarChartPanel(environment: environment, title: "Charts", state: .ready, series: [
+    .init(title: "Coverage", color: environment.theme.color(.chartBlue), points: [
+        .init(label: "Quality", value: 78),
+        .init(label: "Coverage", value: 92)
+    ])
+], selection: .constant(nil), visibleSeriesIDs: .constant(["Coverage"]), valueFormatter: { value in "\(Int(value))%" })
 ```

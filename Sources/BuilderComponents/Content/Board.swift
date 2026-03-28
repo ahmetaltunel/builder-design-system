@@ -2,15 +2,48 @@ import SwiftUI
 import BuilderFoundation
 
 public struct Board: View {
-    public struct Column: Identifiable, Hashable {
+    public struct Item: Identifiable {
         public let id: String
         public let title: String
-        public let cards: [String]
+        public let detail: String?
+        public let status: String?
+        public let statusColor: Color?
+        public let symbol: String
 
-        public init(id: String? = nil, title: String, cards: [String]) {
+        public init(
+            id: String? = nil,
+            title: String,
+            detail: String? = nil,
+            status: String? = nil,
+            statusColor: Color? = nil,
+            symbol: String = "square.grid.2x2"
+        ) {
             self.id = id ?? title
             self.title = title
-            self.cards = cards
+            self.detail = detail
+            self.status = status
+            self.statusColor = statusColor
+            self.symbol = symbol
+        }
+    }
+
+    public struct Column: Identifiable {
+        public let id: String
+        public let title: String
+        public let items: [Item]
+
+        public init(id: String? = nil, title: String, items: [Item]) {
+            self.id = id ?? title
+            self.title = title
+            self.items = items
+        }
+
+        public init(id: String? = nil, title: String, cards: [String]) {
+            self.init(
+                id: id,
+                title: title,
+                items: cards.map { Item(title: $0) }
+            )
         }
     }
 
@@ -31,20 +64,8 @@ public struct Board: View {
                             .font(environment.theme.typography(.bodyStrong).font)
                             .foregroundStyle(environment.theme.color(.textPrimary))
 
-                        ForEach(column.cards, id: \.self) { card in
-                            Text(card)
-                                .font(environment.theme.typography(.body).font)
-                                .foregroundStyle(environment.theme.color(.textPrimary))
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(
-                                    RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous)
-                                        .fill(environment.theme.color(.raisedSurface))
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous)
-                                        .stroke(environment.theme.color(.subtleBorder), lineWidth: 1)
-                                )
+                        ForEach(column.items) { item in
+                            BoardItemView(environment: environment, item: item)
                         }
                     }
                     .padding(14)

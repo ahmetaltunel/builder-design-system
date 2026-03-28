@@ -227,20 +227,37 @@ package enum BuilderReferenceExamples {
             template = ComponentReferenceExample(
                 id: id,
                 title: "Data surfaces",
-                summary: "Tables and charts should stay dense and readable while using the same semantic token system as forms.",
-                supportedStates: ["Default", "Selected row", "Loading", "Empty"],
+                summary: "Tables and charts should stay dense and readable while exposing selection, filtering, and async state without product-local styling.",
+                supportedStates: ["Ready", "Selected", "Filtered", "Loading", "Empty", "Error"],
                 accessibilityNotes: [
                     "Data views should remain understandable without color-only distinctions.",
+                    "Selection detail should remain readable outside the chart.",
                     "Pagination and selection should be keyboard reachable."
                 ],
                 code: """
                 let environment = DesignSystemEnvironment.preview(.dark)
 
-                DataTable(
+                MixedChartPanel(
                     environment: environment,
-                    columns: [.init(title: "Metric"), .init(title: "Status")],
-                    rows: [.init(id: "tokens", cells: ["Tokens", "Ready"])],
-                    selectedRowID: $selectedRowID
+                    title: "Coverage and adoption",
+                    state: .ready,
+                    barSeries: [
+                        .init(title: "Coverage", color: environment.theme.color(.chartBlue), points: [
+                            .init(label: "Tokens", value: 82),
+                            .init(label: "Components", value: 80),
+                            .init(label: "Patterns", value: 24)
+                        ])
+                    ],
+                    lineSeries: [
+                        .init(title: "Adoption", color: environment.theme.color(.chartTeal), points: [
+                            .init(label: "Tokens", value: 64),
+                            .init(label: "Components", value: 58),
+                            .init(label: "Patterns", value: 18)
+                        ])
+                    ],
+                    selection: .constant(nil),
+                    visibleSeriesIDs: .constant(["Coverage", "Adoption"]),
+                    valueFormatter: { value in "\\(Int(value))%" }
                 )
                 """,
                 makePreview: { environment, _ in AnyView(DataReferenceExample(environment: environment)) }
@@ -258,9 +275,9 @@ package enum BuilderReferenceExamples {
                 code: """
                 let environment = DesignSystemEnvironment.preview(.dark)
 
-                PanelSurface(environment: environment, title: "Draft response") {
-                    TextInputField(environment: environment, placeholder: "Prompt", text: $prompt)
-                    ReadOnlyTextArea(environment: environment, value: output)
+                VStack(spacing: 12) {
+                    PromptInput(environment: environment, prompt: $prompt, actionTitle: "Draft") {}
+                    ChatBubble(environment: environment, role: .assistant, author: "Builder assistant", message: output)
                 }
                 """,
                 makePreview: { environment, _ in AnyView(AIReferenceExample(environment: environment)) }
@@ -278,9 +295,9 @@ package enum BuilderReferenceExamples {
                 code: """
                 let environment = DesignSystemEnvironment.preview(.dark)
 
-                WizardLayout(
+                TutorialPanel(
                     environment: environment,
-                    title: "Create a component family",
+                    title: "Build tutorial",
                     steps: [.init(id: "audit", title: "Audit"), .init(id: "verify", title: "Verify")],
                     currentStepID: "audit"
                 ) {
@@ -329,8 +346,8 @@ package enum BuilderReferenceExamples {
                 code: """
                 let environment = DesignSystemEnvironment.preview(.dark)
 
-                PanelSurface(environment: environment, title: "Resource selector") {
-                    StatusIndicator(environment: environment, label: "Ready", detail: "Selection stays in sync with the inspector.", tone: .success)
+                HelpPanel(environment: environment, title: "Help") {
+                    Text("Specialized surfaces should still feel like system components.")
                 }
                 """,
                 makePreview: { environment, _ in AnyView(SpecializedReferenceExample(environment: environment)) }
@@ -448,20 +465,32 @@ package enum BuilderReferenceExamples {
             template = PatternReferenceExample(
                 id: id,
                 title: "Data visualization recipe",
-                summary: "Charts, filters, and tables should share the same shell and token system.",
+                summary: "Charts, filters, async state, and detail panes should behave like one connected analytical workflow.",
                 contentGuidance: [
                     "Lead with the operational takeaway before dense detail.",
+                    "Expose selected values in adjacent detail content, not only in the plot.",
                     "Use labels that stay meaningful without chart color."
                 ],
                 accessibilityNotes: [
                     "Provide tabular detail adjacent to chart summaries.",
+                    "Selection changes should announce the chosen metric clearly.",
                     "Filtering controls should remain reachable without moving focus unexpectedly."
                 ],
                 code: """
                 let environment = DesignSystemEnvironment.preview(.dark)
 
                 VStack(spacing: 16) {
-                    ChartPanel(environment: environment, title: "Coverage", points: points)
+                    MixedChartPanel(
+                        environment: environment,
+                        title: "Coverage and adoption",
+                        state: .ready,
+                        barSeries: coverageSeries,
+                        lineSeries: adoptionSeries,
+                        selection: $selection,
+                        visibleSeriesIDs: $visibleSeriesIDs,
+                        valueFormatter: { value in "\\(Int(value))%" }
+                    )
+                    KeyValuePairs(environment: environment, pairs: metricPairs)
                     DataTable(environment: environment, columns: columns, rows: rows, selectedRowID: .constant(nil))
                 }
                 """,
@@ -979,6 +1008,10 @@ private struct FeedbackReferenceExample: View {
 
             HStack(spacing: 14) {
                 LoadingSpinner(environment: environment, label: options.showLoadingState ? "Refreshing previews" : "Idle")
+                if options.showLoadingState {
+                    LoadingBar(environment: environment, label: "Syncing examples", detail: "Reference pages are rebuilding.")
+                        .frame(maxWidth: 220)
+                }
                 LiveRegionMessage(environment: environment, message: "Status updates stay readable without relying on color alone.")
             }
         }
@@ -1056,10 +1089,20 @@ private struct ContentReferenceExample: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
             } else if tab == "content" {
-                ExpandableSection(environment: environment, title: "Advanced notes", subtitle: "Expandable surfaces should keep grouped DNA.", isExpanded: $isExpanded) {
-                    Text("Structure should come from reusable content primitives instead of local card stacks.")
-                        .font(environment.theme.typography(.body).font)
-                        .foregroundStyle(environment.theme.color(.textSecondary))
+                VStack(alignment: .leading, spacing: 14) {
+                    ExpandableSection(environment: environment, title: "Advanced notes", subtitle: "Expandable surfaces should keep grouped DNA.", isExpanded: $isExpanded) {
+                        Text("Structure should come from reusable content primitives instead of local card stacks.")
+                            .font(environment.theme.typography(.body).font)
+                            .foregroundStyle(environment.theme.color(.textSecondary))
+                    }
+
+                    ItemsPalette(
+                        environment: environment,
+                        items: [
+                            .init(title: "Metric card", detail: "Reusable dashboard tile.", status: "Ready", statusColor: environment.theme.color(.success), symbol: "chart.bar"),
+                            .init(title: "Status list", detail: "Dense collection summary.", status: "Review", statusColor: environment.theme.color(.warning), symbol: "list.bullet.rectangle")
+                        ]
+                    )
                 }
             } else {
                 CodeView(environment: environment, code: "let system = BuilderDesignSystem()")
@@ -1070,20 +1113,98 @@ private struct ContentReferenceExample: View {
 
 private struct DataReferenceExample: View {
     let environment: DesignSystemEnvironment
-    @State private var selectedRowID: String? = "tokens"
+    @State private var selectedMetric: MetricSelection? = coverageSelection(label: "Tokens")
+    @State private var visibleSeriesIDs: Set<String> = ["Coverage", "Adoption"]
     @State private var page = 1
+
+    private var coverageSeries: MetricSeries {
+        .init(title: "Coverage", color: environment.theme.color(.chartBlue), points: [
+            .init(label: "Tokens", value: 82),
+            .init(label: "Components", value: 80),
+            .init(label: "Patterns", value: 24)
+        ])
+    }
+
+    private var adoptionSeries: MetricSeries {
+        .init(title: "Adoption", color: environment.theme.color(.chartTeal), points: [
+            .init(label: "Tokens", value: 64),
+            .init(label: "Components", value: 58),
+            .init(label: "Patterns", value: 18)
+        ])
+    }
+
+    private var selectedRowID: Binding<String?> {
+        Binding(
+            get: { selectedMetric?.datumID },
+            set: { nextValue in
+                guard let nextValue else {
+                    selectedMetric = nil
+                    return
+                }
+                selectedMetric = coverageSelection(label: nextValue)
+            }
+        )
+    }
+
+    private var selectedPairs: [KeyValuePairs.Pair] {
+        guard let selectedMetric else {
+            return [
+                .init(key: "Selection", value: "Choose a visible metric"),
+                .init(key: "Behavior", value: "Hover to preview or click to pin")
+            ]
+        }
+
+        return [
+            .init(key: "Series", value: selectedMetric.seriesTitle),
+            .init(key: "Metric", value: selectedMetric.label),
+            .init(key: "Value", value: selectedMetric.formattedValue)
+        ]
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            ChartPanel(
+            MixedChartPanel(
                 environment: environment,
-                title: "Coverage",
-                points: [
-                    .init(label: "Tokens", value: 82, color: environment.theme.color(.chartBlue)),
-                    .init(label: "Components", value: 80, color: environment.theme.color(.chartTeal)),
-                    .init(label: "Patterns", value: 24, color: environment.theme.color(.chartAmber))
-                ]
+                title: "Coverage and adoption",
+                subtitle: "Selection stays synchronized across the chart, detail pane, and table.",
+                state: .ready,
+                barSeries: [coverageSeries],
+                lineSeries: [adoptionSeries],
+                selection: $selectedMetric,
+                visibleSeriesIDs: $visibleSeriesIDs,
+                valueFormatter: percentMetricValue
             )
+
+            HStack(alignment: .top, spacing: 16) {
+                KeyValuePairs(environment: environment, pairs: selectedPairs)
+                    .frame(maxWidth: .infinity)
+
+                BarChartPanel(
+                    environment: environment,
+                    title: "Coverage refresh",
+                    subtitle: "Async state keeps the layout stable while metrics reload.",
+                    state: .loading(.init(label: "Refreshing coverage", detail: "Legend and selection affordances stay in place.")),
+                    series: [
+                        .init(title: "Coverage", color: environment.theme.color(.chartPurple), points: [
+                            .init(label: "Dashboards", value: 74),
+                            .init(label: "Forms", value: 61),
+                            .init(label: "Feedback", value: 89)
+                        ])
+                    ],
+                    valueFormatter: percentMetricValue,
+                    height: 180
+                )
+                .frame(maxWidth: .infinity)
+
+                DonutChartPanel(
+                    environment: environment,
+                    title: "Status mix",
+                    state: .empty(.init(title: "No status mix", message: "Broaden the current filter to restore the distribution.", symbol: "chart.pie")),
+                    slices: [],
+                    height: 180
+                )
+                .frame(maxWidth: .infinity)
+            }
 
             DataTable(
                 environment: environment,
@@ -1093,11 +1214,11 @@ private struct DataReferenceExample: View {
                     .init(title: "Updated")
                 ],
                 rows: [
-                    .init(id: "tokens", cells: ["Tokens", "Ready", "Now"]),
-                    .init(id: "components", cells: ["Components", "Review", "2h ago"]),
-                    .init(id: "patterns", cells: ["Patterns", "Ready", "1d ago"])
+                    .init(id: "Tokens", cells: ["Tokens", "Ready", "Now"]),
+                    .init(id: "Components", cells: ["Components", "Review", "2h ago"]),
+                    .init(id: "Patterns", cells: ["Patterns", "Ready", "1d ago"])
                 ],
-                selectedRowID: $selectedRowID
+                selectedRowID: selectedRowID
             )
 
             PaginationControl(environment: environment, page: $page, pageCount: 5)
@@ -1111,12 +1232,33 @@ private struct AIReferenceExample: View {
 
     var body: some View {
         PanelSurface(environment: environment, title: "Generative workflow", subtitle: "Keep prompt, output, and review actions explicit.") {
-            TextInputField(environment: environment, placeholder: "Prompt", text: $prompt, leadingSymbol: "sparkles")
-            ReadOnlyTextArea(environment: environment, value: "BuilderDesignSystem now ships compiled reference examples, generated docs, and reusable search/validation patterns.")
             HStack(spacing: 10) {
-                TokenBadge(environment: environment, title: "Prompt", tint: environment.theme.color(.accentPrimary))
+                AvatarView(environment: environment, title: "Builder assistant", symbol: "sparkles")
                 TokenBadge(environment: environment, title: "Review required", tint: nil)
             }
+
+            PromptInput(environment: environment, prompt: $prompt, actionTitle: "Draft") {}
+
+            SupportPromptGroup(
+                environment: environment,
+                title: "Suggested prompts",
+                prompts: [
+                    .init(title: "Summarize", detail: "Condense the latest changes."),
+                    .init(title: "Find gaps", detail: "Inspect missing inventory."),
+                    .init(title: "Explain tradeoffs", detail: "Compare candidate APIs.")
+                ]
+            ) { selected in
+                prompt = selected.title
+            }
+
+            ChatBubble(environment: environment, role: .user, author: "Builder", message: prompt)
+            ChatBubble(
+                environment: environment,
+                role: .assistant,
+                author: "Builder assistant",
+                message: "BuilderDesignSystem now ships compiled reference examples, generated docs, and reusable search, chart, and status primitives.",
+                detail: "Draft output"
+            )
         }
     }
 }
@@ -1135,16 +1277,17 @@ private struct TutorialReferenceExample: View {
             ],
             currentStepID: "build"
         ) {
-            VStack(alignment: .leading, spacing: 12) {
-                StepsView(
-                    environment: environment,
-                    steps: [
-                        .init(title: "Audit"),
-                        .init(title: "Build"),
-                        .init(title: "Verify")
-                    ],
-                    currentStepID: "Build"
-                )
+            TutorialPanel(
+                environment: environment,
+                title: "Rollout guidance",
+                subtitle: "Keep progression visible without leaving the current workflow.",
+                steps: [
+                    .init(id: "audit", title: "Audit", detail: "Review API shape."),
+                    .init(id: "build", title: "Build", detail: "Add reusable surfaces."),
+                    .init(id: "verify", title: "Verify", detail: "Run validation.")
+                ],
+                currentStepID: "build"
+            ) {
                 Text("Tutorial flows should guide builders without leaving the shared shell language.")
                     .font(environment.theme.typography(.body).font)
                     .foregroundStyle(environment.theme.color(.textSecondary))
@@ -1185,12 +1328,32 @@ private struct SpecializedReferenceExample: View {
     let environment: DesignSystemEnvironment
 
     var body: some View {
-        PanelSurface(environment: environment, title: "Specialized workflow", subtitle: "Specialized surfaces should still feel like system components.") {
-            StatusIndicator(environment: environment, label: "Ready for review", detail: "Inspector context and primary actions stay in the same token system.", tone: .info)
-            ValidationMessage(environment: environment, status: .normal, message: "Use specialized components only when core primitives can no longer express the task.")
-            HStack(spacing: 10) {
-                SystemButton(environment: environment, title: "Inspect", tone: .primary) {}
-                SystemButton(environment: environment, title: "Reference docs", tone: .secondary) {}
+        VStack(alignment: .leading, spacing: 14) {
+            HelpPanel(environment: environment, title: "Help", subtitle: "Keep support adjacent to the active task.") {
+                BulletList(environment: environment, items: [
+                    "Explain the current decision clearly.",
+                    "Link guidance to the active surface.",
+                    "Avoid hiding recovery steps."
+                ])
+            } footer: {
+                HStack(spacing: 10) {
+                    SystemButton(environment: environment, title: "Open docs", tone: .primary) {}
+                    SystemButton(environment: environment, title: "Dismiss", tone: .secondary) {}
+                }
+            }
+
+            FileUploadField(
+                environment: environment,
+                title: "Attach release notes",
+                subtitle: "Presentation belongs to the system; picking and upload logic stays with the consumer.",
+                dropTitle: "Drop release notes",
+                dropDetail: "Or browse from disk.",
+                items: [
+                    .init(title: "release-notes.md", detail: "18 KB", status: .success),
+                    .init(title: "screenshots.zip", detail: "2 files", status: .warning)
+                ],
+                onPick: {}
+            ) { _ in
             }
         }
     }
@@ -1249,27 +1412,76 @@ private struct UnsavedChangesPatternExample: View {
 
 private struct DataVisualizationPatternExample: View {
     let environment: DesignSystemEnvironment
+    @State private var selectedMetric: MetricSelection? = coverageSelection(label: "Navigation")
+    @State private var visibleSeriesIDs: Set<String> = ["Coverage", "Adoption"]
+
+    private var coverageSeries: MetricSeries {
+        .init(title: "Coverage", color: environment.theme.color(.chartBlue), points: [
+            .init(label: "Navigation", value: 76),
+            .init(label: "Forms", value: 68),
+            .init(label: "Feedback", value: 59)
+        ])
+    }
+
+    private var adoptionSeries: MetricSeries {
+        .init(title: "Adoption", color: environment.theme.color(.chartTeal), points: [
+            .init(label: "Navigation", value: 62),
+            .init(label: "Forms", value: 51),
+            .init(label: "Feedback", value: 48)
+        ])
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            ChartPanel(
+            MixedChartPanel(
                 environment: environment,
                 title: "Usage coverage",
-                points: [
-                    .init(label: "Navigation", value: 76, color: environment.theme.color(.chartBlue)),
-                    .init(label: "Forms", value: 68, color: environment.theme.color(.chartTeal)),
-                    .init(label: "Feedback", value: 59, color: environment.theme.color(.chartAmber))
-                ]
+                subtitle: "Legend filtering and selection stay connected to the detail pane.",
+                state: .ready,
+                barSeries: [coverageSeries],
+                lineSeries: [adoptionSeries],
+                selection: $selectedMetric,
+                visibleSeriesIDs: $visibleSeriesIDs,
+                valueFormatter: percentMetricValue
             )
+
+            HStack(alignment: .top, spacing: 16) {
+                KeyValuePairs(
+                    environment: environment,
+                    pairs: [
+                        .init(key: "Series", value: selectedMetric?.seriesTitle ?? "Coverage"),
+                        .init(key: "Metric", value: selectedMetric?.label ?? "Navigation"),
+                        .init(key: "Value", value: selectedMetric?.formattedValue ?? "76%")
+                    ]
+                )
+                .frame(maxWidth: .infinity)
+
+                DonutChartPanel(
+                    environment: environment,
+                    title: "Coverage mix",
+                    state: .loading(.init(label: "Refreshing status mix", detail: "Use the same async contract as the main chart.")),
+                    slices: [
+                        .init(title: "Ready", value: 18, color: environment.theme.color(.chartGreen)),
+                        .init(title: "Review", value: 9, color: environment.theme.color(.chartAmber)),
+                        .init(title: "Planned", value: 6, color: environment.theme.color(.chartPurple))
+                    ],
+                    height: 180
+                )
+                .frame(width: 320)
+            }
 
             DataTable(
                 environment: environment,
                 columns: [.init(title: "Surface"), .init(title: "State"), .init(title: "Updated")],
                 rows: [
-                    .init(id: "nav", cells: ["Navigation shell", "Ready", "Now"]),
-                    .init(id: "forms", cells: ["Settings form", "Review", "3h ago"])
+                    .init(id: "Navigation", cells: ["Navigation shell", "Ready", "Now"]),
+                    .init(id: "Forms", cells: ["Settings form", "Review", "3h ago"]),
+                    .init(id: "Feedback", cells: ["Feedback summary", "Planned", "Tomorrow"])
                 ],
-                selectedRowID: .constant(nil)
+                selectedRowID: Binding(
+                    get: { selectedMetric?.datumID },
+                    set: { selectedMetric = coverageSelection(label: $0 ?? "Navigation") }
+                )
             )
         }
     }
@@ -1319,15 +1531,14 @@ private struct DragAndDropPatternExample: View {
     let environment: DesignSystemEnvironment
 
     var body: some View {
-        PanelSurface(environment: environment, title: "Drop files", subtitle: "Provide a visible target and a keyboard alternative.") {
-            EmptyStateView(
-                environment: environment,
-                title: "Drop release notes here",
-                message: "Or use Browse to upload from disk.",
-                symbol: "tray.and.arrow.down",
-                actionTitle: "Browse"
-            ) {}
-        }
+        FileUploadField(
+            environment: environment,
+            title: "Drop files",
+            subtitle: "Provide a visible target and a keyboard alternative.",
+            dropTitle: "Drop release notes here",
+            dropDetail: "Or use Browse to upload from disk.",
+            onPick: {}
+        )
     }
 }
 
@@ -1372,12 +1583,12 @@ private struct SupportPatternExample: View {
     let environment: DesignSystemEnvironment
 
     var body: some View {
-        DrawerSurface(environment: environment, title: "Guidance") {
+        HelpPanel(environment: environment, title: "Guidance", subtitle: "Keep help adjacent to work instead of interrupting the current task.") {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Keep help adjacent to work instead of interrupting the current task.")
+                Text("Link support guidance to the active decision and preserve the user’s place in the workflow.")
                     .font(environment.theme.typography(.body).font)
                     .foregroundStyle(environment.theme.color(.textSecondary))
-                ValidationMessage(environment: environment, status: .normal, message: "Link support guidance to the active decision.")
+                ValidationMessage(environment: environment, status: .normal, message: "Use the same calm shell language as the main workspace.")
             }
         }
     }
@@ -1389,8 +1600,9 @@ private struct LoadingPatternExample: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             LoadingSpinner(environment: environment, label: "Refreshing metrics")
+            LoadingBar(environment: environment, label: "Indexing references", detail: "Duration is not yet known.")
             StatusIndicator(environment: environment, label: "Refresh in progress", detail: "The data table and chart should keep their layout stable.", tone: .info)
-            ProgressBar(environment: environment, value: 0.66)
+            ProgressBar(environment: environment, value: 0.66, label: "Publishing docs")
         }
     }
 }
@@ -1409,9 +1621,21 @@ private struct OnboardingPatternExample: View {
             ],
             currentStepID: "Tune"
         ) {
-            Text("Guide teams into the system without changing the shell language.")
-                .font(environment.theme.typography(.body).font)
-                .foregroundStyle(environment.theme.color(.textSecondary))
+            TutorialPanel(
+                environment: environment,
+                title: "Team onboarding",
+                subtitle: "Keep progress visible and the next action obvious.",
+                steps: [
+                    .init(id: "Choose", title: "Choose"),
+                    .init(id: "Tune", title: "Tune"),
+                    .init(id: "Validate", title: "Validate")
+                ],
+                currentStepID: "Tune"
+            ) {
+                Text("Guide teams into the system without changing the shell language.")
+                    .font(environment.theme.typography(.body).font)
+                    .foregroundStyle(environment.theme.color(.textSecondary))
+            }
         }
     }
 }
@@ -1454,18 +1678,34 @@ private struct NavigationPatternExample: View {
 
 private struct DashboardPatternExample: View {
     let environment: DesignSystemEnvironment
+    @State private var selectedMetric: MetricSelection? = coverageSelection(label: "Tokens")
+    @State private var visibleSeriesIDs: Set<String> = ["Coverage", "Target"]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             StatusIndicator(environment: environment, label: "Release candidate", detail: "Ready to hand off after the final review clears.", tone: .success)
-            ChartPanel(
+            MixedChartPanel(
                 environment: environment,
                 title: "Coverage",
-                points: [
-                    .init(label: "Tokens", value: 82, color: environment.theme.color(.chartBlue)),
-                    .init(label: "Docs", value: 74, color: environment.theme.color(.chartTeal)),
-                    .init(label: "Patterns", value: 24, color: environment.theme.color(.chartPurple))
-                ]
+                subtitle: "Pinned metrics stay visible in the summary row.",
+                state: .ready,
+                barSeries: [
+                    .init(title: "Coverage", color: environment.theme.color(.chartBlue), points: [
+                        .init(label: "Tokens", value: 82),
+                        .init(label: "Docs", value: 74),
+                        .init(label: "Patterns", value: 24)
+                    ])
+                ],
+                lineSeries: [
+                    .init(title: "Target", color: environment.theme.color(.chartTeal), points: [
+                        .init(label: "Tokens", value: 90),
+                        .init(label: "Docs", value: 85),
+                        .init(label: "Patterns", value: 48)
+                    ])
+                ],
+                selection: $selectedMetric,
+                visibleSeriesIDs: $visibleSeriesIDs,
+                valueFormatter: percentMetricValue
             )
         }
     }
@@ -1483,6 +1723,33 @@ private struct TimeAndFeedbackPatternExample: View {
             ])
         }
     }
+}
+
+private func percentMetricValue(_ value: Double) -> String {
+    "\(Int(value.rounded()))%"
+}
+
+private func coverageSelection(label: String) -> MetricSelection {
+    let values: [String: Double] = [
+        "Tokens": 82,
+        "Components": 80,
+        "Patterns": 24,
+        "Navigation": 76,
+        "Forms": 68,
+        "Feedback": 59
+    ]
+
+    let resolvedValue = values[label] ?? 0
+
+    return MetricSelection(
+        kind: .point,
+        seriesID: "Coverage",
+        seriesTitle: "Coverage",
+        datumID: label,
+        label: label,
+        value: resolvedValue,
+        formattedValue: percentMetricValue(resolvedValue)
+    )
 }
 
 private struct ContentCard: Identifiable {

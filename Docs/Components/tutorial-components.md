@@ -142,6 +142,8 @@ Canonical compiled example for Tutorial components. Use Tutorial components when
 let environment = DesignSystemEnvironment.preview(.dark)
 
 WizardLayout(environment: environment, title: "Tutorial components", steps: steps, currentStepID: "audit") {
-    StepsView(environment: environment, steps: progressSteps)
+    TutorialPanel(environment: environment, title: "Rollout guidance", steps: steps, currentStepID: "audit") {
+        Text("Keep progression visible inside the same shell language.")
+    }
 }
 ```

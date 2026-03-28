@@ -12,7 +12,7 @@ Use this pattern when the first-run journey needs structured guidance inside the
 ## Required Components
 
 - Wizard
-- Steps
+- Tutorial panel
 - Tutorial components
 
 ## Layout Recipe
@@ -121,6 +121,8 @@ Canonical compiled pattern example for Onboarding. Use Onboarding when the first
 let environment = DesignSystemEnvironment.preview(.dark)
 
 WizardLayout(environment: environment, title: "Team onboarding", steps: steps, currentStepID: "review") {
-    StepsView(environment: environment, steps: progressSteps)
+    TutorialPanel(environment: environment, title: "Rollout guidance", steps: steps, currentStepID: "review") {
+        Text("Keep the next action obvious.")
+    }
 }
 ```

@@ -12,6 +12,7 @@ Use this pattern to show work-in-progress, refreshes, and incremental updates wh
 ## Required Components
 
 - Spinner
+- Loading bar
 - Progress bar
 - Notice stack
 
@@ -122,7 +123,8 @@ let environment = DesignSystemEnvironment.preview(.dark)
 
 VStack(spacing: 12) {
     LoadingSpinner(environment: environment, label: "Refreshing metrics")
-    ProgressBar(environment: environment, label: "Publishing docs", progress: 0.64)
+    LoadingBar(environment: environment, label: "Indexing references", detail: "Duration is not yet known.")
+    ProgressBar(environment: environment, value: 0.64, label: "Publishing docs")
     StatusIndicator(environment: environment, label: "Refresh in progress", tone: .info)
 }
 ```

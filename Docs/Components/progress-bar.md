@@ -140,5 +140,5 @@ Canonical compiled example for Progress bar. Use Progress bar when status needs 
 // Canonical example for Progress bar
 let environment = DesignSystemEnvironment.preview(.dark)
 
-ProgressBar(environment: environment, label: "Publishing docs", progress: 0.72)
+ProgressBar(environment: environment, value: 0.72, label: "Publishing docs")
 ```

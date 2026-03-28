@@ -11,7 +11,7 @@ Use this pattern when contextual help or inspection should sit adjacent to work 
 
 ## Required Components
 
-- Context panel
+- Help panel
 - Popover
 - Drawer
 
@@ -120,7 +120,7 @@ Canonical compiled pattern example for Help system. Use Help system when help, i
 // Canonical example for Help system
 let environment = DesignSystemEnvironment.preview(.dark)
 
-ContextPanel(environment: environment, title: "Help") {
+HelpPanel(environment: environment, title: "Help") {
     BulletList(environment: environment, items: ["Explain the current decision", "Keep guidance adjacent to work"])
 }
 ```

@@ -141,8 +141,8 @@ Canonical compiled example for Generative AI components. Use Generative AI compo
 // Canonical example for Generative AI components
 let environment = DesignSystemEnvironment.preview(.dark)
 
-PanelSurface(environment: environment, title: "Generative AI components") {
-    TextInputField(environment: environment, placeholder: "Prompt", text: $prompt)
-    ReadOnlyTextArea(environment: environment, value: output)
+VStack(spacing: 12) {
+    PromptInput(environment: environment, prompt: $prompt, actionTitle: "Draft") {}
+    ChatBubble(environment: environment, role: .assistant, author: "Builder assistant", message: output)
 }
 ```

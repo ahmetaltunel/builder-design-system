@@ -122,7 +122,8 @@ Canonical compiled pattern example for Data visualization. Use Data visualizatio
 let environment = DesignSystemEnvironment.preview(.dark)
 
 VStack(spacing: 16) {
-    ChartPanel(environment: environment, title: "Coverage", points: points)
+    MixedChartPanel(environment: environment, title: "Coverage and adoption", state: .ready, barSeries: coverageSeries, lineSeries: adoptionSeries, selection: $selection, visibleSeriesIDs: $visibleSeriesIDs, valueFormatter: { value in "\(Int(value))%" })
+    KeyValuePairs(environment: environment, pairs: metricPairs)
     DataTable(environment: environment, columns: columns, rows: rows, selectedRowID: $selectedRowID)
 }
 ```

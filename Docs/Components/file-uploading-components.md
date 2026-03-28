@@ -141,7 +141,5 @@ Canonical compiled example for File uploading components. Use File uploading com
 // Canonical example for File uploading components
 let environment = DesignSystemEnvironment.preview(.dark)
 
-FileDropZone(environment: environment, title: "Drop release notes", subtitle: "Or browse from disk.") { files in
-    print(files)
-}
+FileUploadField(environment: environment, title: "Drop release notes", subtitle: "Or browse from disk.", onPick: {})
 ```

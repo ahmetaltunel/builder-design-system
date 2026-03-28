@@ -115,6 +115,16 @@ enum ExactReferenceContent {
                 "    .init(title: \"Accessibility\", anchor: \"accessibility\")",
                 "])"
             ])
+        case "area-chart":
+            return code([
+                "AreaChartPanel(environment: environment, title: \"\(displayName)\", series: [",
+                "    .init(title: \"Coverage\", color: environment.theme.color(.chartBlue), points: [",
+                "        .init(label: \"Mon\", value: 64),",
+                "        .init(label: \"Tue\", value: 68),",
+                "        .init(label: \"Wed\", value: 74)",
+                "    ])",
+                "], selection: .constant(nil), visibleSeriesIDs: .constant([\"Coverage\"]), valueFormatter: { value in \"\\(Int(value))%\" })"
+            ])
         case "app-layout":
             return code([
                 "AppLayout(environment: environment, sidebarWidth: 240) {",
@@ -143,16 +153,37 @@ enum ExactReferenceContent {
             return code([
                 "AutosuggestField(environment: environment, placeholder: \"Search components\", text: $query, suggestions: [\"Button\", \"Tabs\", \"Table\"])"
             ])
+        case "avatar":
+            return code([
+                "AvatarView(environment: environment, title: \"Builder assistant\", symbol: \"sparkles\")"
+            ])
         case "badge":
             return code([
                 "StatusBadge(environment: environment, label: \"Ready\", tone: .success)"
             ])
+        case "bar-chart":
+            return code([
+                "BarChartPanel(environment: environment, title: \"\(displayName)\", state: .ready, series: [",
+                "    .init(title: \"Coverage\", color: environment.theme.color(.chartBlue), points: [",
+                "        .init(label: \"Tokens\", value: 82),",
+                "        .init(label: \"Components\", value: 80),",
+                "        .init(label: \"Patterns\", value: 24)",
+                "    ])",
+                "], selection: .constant(nil), visibleSeriesIDs: .constant([\"Coverage\"]), valueFormatter: { value in \"\\(Int(value))%\" })"
+            ])
         case "board":
             return code([
                 "Board(environment: environment, columns: [",
-                "    .init(id: \"queued\", title: \"Queued\", cards: [\"Review tokens\", \"Verify docs\"]),",
+                "    .init(id: \"queued\", title: \"Queued\", items: [",
+                "        .init(title: \"Review tokens\", detail: \"Validation and docs\", status: \"Review\", statusColor: environment.theme.color(.warning)),",
+                "        .init(title: \"Verify docs\", detail: \"Generated references\", status: \"Ready\", statusColor: environment.theme.color(.success))",
+                "    ]),",
                 "    .init(id: \"done\", title: \"Done\", cards: [\"Ship foundations\"])",
                 "])"
+            ])
+        case "board-item":
+            return code([
+                "BoardItemView(environment: environment, item: .init(title: \"Review tokens\", detail: \"Validation and docs\", status: \"Review\", statusColor: environment.theme.color(.warning)))"
             ])
         case "box":
             return code([
@@ -201,12 +232,18 @@ enum ExactReferenceContent {
                 "    }",
                 "}"
             ])
+        case "chat-bubble":
+            return code([
+                "ChatBubble(environment: environment, role: .assistant, author: \"Builder assistant\", message: \"Review is ready.\", detail: \"Draft output\")"
+            ])
         case "charts":
             return code([
-                "ChartPanel(environment: environment, title: \"\(displayName)\", points: [",
-                "    .init(id: \"quality\", label: \"Quality\", value: 78),",
-                "    .init(id: \"coverage\", label: \"Coverage\", value: 92)",
-                "])"
+                "BarChartPanel(environment: environment, title: \"\(displayName)\", state: .ready, series: [",
+                "    .init(title: \"Coverage\", color: environment.theme.color(.chartBlue), points: [",
+                "        .init(label: \"Quality\", value: 78),",
+                "        .init(label: \"Coverage\", value: 92)",
+                "    ])",
+                "], selection: .constant(nil), visibleSeriesIDs: .constant([\"Coverage\"]), valueFormatter: { value in \"\\(Int(value))%\" })"
             ])
         case "checkbox":
             return code([
@@ -265,11 +302,23 @@ enum ExactReferenceContent {
             return code([
                 "DateRangeField(environment: environment, label: \"Review window\", startDate: $startDate, endDate: $endDate)"
             ])
+        case "donut-chart":
+            return code([
+                "DonutChartPanel(environment: environment, title: \"\(displayName)\", state: .ready, slices: [",
+                "    .init(title: \"Ready\", value: 18, color: environment.theme.color(.chartGreen)),",
+                "    .init(title: \"Review\", value: 7, color: environment.theme.color(.chartAmber)),",
+                "    .init(title: \"Blocked\", value: 3, color: environment.theme.color(.chartRed))",
+                "], selection: .constant(nil), visibleSeriesIDs: .constant([\"Ready\", \"Review\", \"Blocked\"]), valueFormatter: { value in \"\\(Int(value)) items\" })"
+            ])
         case "drawer":
             return code([
                 "DrawerSurface(environment: environment, title: \"\(displayName)\") {",
                 "    ValidationSummary(environment: environment, items: validationItems)",
                 "}"
+            ])
+        case "empty-state":
+            return code([
+                "EmptyStateView(environment: environment, title: \"Nothing matches the current filter\", message: \"Clear filters or broaden the search.\")"
             ])
         case "error-boundary":
             return code([
@@ -281,11 +330,26 @@ enum ExactReferenceContent {
                 "    Text(\"Nested guidance remains readable when expanded.\")",
                 "}"
             ])
+        case "file-picker-button":
+            return code([
+                "FilePickerButton(environment: environment, title: \"Browse files\") {}"
+            ])
+        case "file-token-group":
+            return code([
+                "FileTokenGroup(environment: environment, items: [",
+                "    .init(title: \"release-notes.md\", detail: \"18 KB\", status: .success),",
+                "    .init(title: \"screenshots.zip\", detail: \"2 files\", status: .warning)",
+                "])"
+            ])
+        case "file-upload-field":
+            return code([
+                "FileUploadField(environment: environment, title: \"Attach release notes\", subtitle: \"Presentation belongs to the system.\", items: [",
+                "    .init(title: \"release-notes.md\", detail: \"18 KB\", status: .success)",
+                "], onPick: {})"
+            ])
         case "file-uploading-components":
             return code([
-                "FileDropZone(environment: environment, title: \"Drop release notes\", subtitle: \"Or browse from disk.\") { files in",
-                "    print(files)",
-                "}"
+                "FileUploadField(environment: environment, title: \"Drop release notes\", subtitle: \"Or browse from disk.\", onPick: {})"
             ])
         case "notice-stack":
             return code([
@@ -310,9 +374,9 @@ enum ExactReferenceContent {
             ])
         case "generative-ai-components":
             return code([
-                "PanelSurface(environment: environment, title: \"\(displayName)\") {",
-                "    TextInputField(environment: environment, placeholder: \"Prompt\", text: $prompt)",
-                "    ReadOnlyTextArea(environment: environment, value: output)",
+                "VStack(spacing: 12) {",
+                "    PromptInput(environment: environment, prompt: $prompt, actionTitle: \"Draft\") {}",
+                "    ChatBubble(environment: environment, role: .assistant, author: \"Builder assistant\", message: output)",
                 "}"
             ])
         case "grid":
@@ -326,6 +390,12 @@ enum ExactReferenceContent {
         case "header":
             return code([
                 "HeaderBlock(environment: environment, title: \"\(displayName)\", subtitle: \"Orient the workspace before dense detail.\")"
+            ])
+        case "help-panel":
+            return code([
+                "HelpPanel(environment: environment, title: \"\(displayName)\") {",
+                "    BulletList(environment: environment, items: [\"Explain the current decision\", \"Keep guidance adjacent to work\"])",
+                "}"
             ])
         case "context-panel":
             return code([
@@ -345,12 +415,34 @@ enum ExactReferenceContent {
             return code([
                 "TextInputField(environment: environment, placeholder: \"Component name\", text: $text)"
             ])
+        case "items-palette":
+            return code([
+                "ItemsPalette(environment: environment, items: [",
+                "    .init(title: \"Metric card\", detail: \"Reusable dashboard tile.\"),",
+                "    .init(title: \"Status list\", detail: \"Dense collection summary.\")",
+                "])"
+            ])
         case "keyvalue-pairs":
             return code([
                 "KeyValuePairs(environment: environment, items: [",
                 "    .init(id: \"mode\", key: \"Mode\", value: \"Compact\"),",
                 "    .init(id: \"contrast\", key: \"Contrast\", value: \"Standard\")",
                 "])"
+            ])
+        case "line-chart":
+            return code([
+                "LineChartPanel(environment: environment, title: \"\(displayName)\", state: .ready, series: [",
+                "    .init(title: \"Coverage\", color: environment.theme.color(.chartBlue), points: [",
+                "        .init(label: \"Mon\", value: 64),",
+                "        .init(label: \"Tue\", value: 68),",
+                "        .init(label: \"Wed\", value: 74)",
+                "    ]),",
+                "    .init(title: \"Adoption\", color: environment.theme.color(.chartTeal), points: [",
+                "        .init(label: \"Mon\", value: 52),",
+                "        .init(label: \"Tue\", value: 55),",
+                "        .init(label: \"Wed\", value: 61)",
+                "    ])",
+                "], selection: .constant(nil), visibleSeriesIDs: .constant([\"Coverage\", \"Adoption\"]), valueFormatter: { value in \"\\(Int(value))%\" })"
             ])
         case "link":
             return code([
@@ -368,6 +460,10 @@ enum ExactReferenceContent {
             return code([
                 "LiveRegionMessage(environment: environment, message: \"\(displayName) announced that the latest validation checks passed.\")"
             ])
+        case "loading-bar":
+            return code([
+                "LoadingBar(environment: environment, label: \"Indexing references\", detail: \"Duration is not yet known.\")"
+            ])
         case "modal":
             return code([
                 "ModalSurface(environment: environment, title: \"\(displayName)\") {",
@@ -375,6 +471,20 @@ enum ExactReferenceContent {
                 "} footer: {",
                 "    SystemButton(environment: environment, title: \"Continue\", tone: .primary) {}",
                 "}"
+            ])
+        case "mixed-chart":
+            return code([
+                "MixedChartPanel(environment: environment, title: \"\(displayName)\", state: .ready, barSeries: [",
+                "    .init(title: \"Coverage\", color: environment.theme.color(.chartBlue), points: [",
+                "        .init(label: \"Tokens\", value: 82),",
+                "        .init(label: \"Docs\", value: 74)",
+                "    ])",
+                "], lineSeries: [",
+                "    .init(title: \"Target\", color: environment.theme.color(.chartTeal), points: [",
+                "        .init(label: \"Tokens\", value: 90),",
+                "        .init(label: \"Docs\", value: 85)",
+                "    ])",
+                "], selection: .constant(nil), visibleSeriesIDs: .constant([\"Coverage\", \"Target\"]), valueFormatter: { value in \"\\(Int(value))%\" })"
             ])
         case "multiselect":
             return code([
@@ -402,7 +512,11 @@ enum ExactReferenceContent {
             ])
         case "progress-bar":
             return code([
-                "ProgressBar(environment: environment, label: \"Publishing docs\", progress: 0.72)"
+                "ProgressBar(environment: environment, value: 0.72, label: \"Publishing docs\")"
+            ])
+        case "prompt-input":
+            return code([
+                "PromptInput(environment: environment, prompt: $prompt, actionTitle: \"Draft\") {}"
             ])
         case "property-filter":
             return code([
@@ -417,7 +531,7 @@ enum ExactReferenceContent {
             ])
         case "resource-selector":
             return code([
-                "ResourceSelector(environment: environment, title: \"\(displayName)\", items: resources, selection: $selectedResourceID)"
+                "ResourceSelector(environment: environment, resources: [\"Design system\", \"Showcase\"], selection: $selectedResourceID)"
             ])
         case "segmented-control":
             return code([
@@ -459,10 +573,19 @@ enum ExactReferenceContent {
         case "steps":
             return code([
                 "StepsView(environment: environment, steps: [",
-                "    .init(id: \"audit\", title: \"Audit\", status: .complete),",
-                "    .init(id: \"verify\", title: \"Verify\", status: .current),",
-                "    .init(id: \"ship\", title: \"Ship\", status: .upcoming)",
-                "])"
+                "    .init(id: \"audit\", title: \"Audit\", detail: \"Review the API and states.\"),",
+                "    .init(id: \"verify\", title: \"Verify\", detail: \"Run tests and inspect the showcase.\"),",
+                "    .init(id: \"ship\", title: \"Ship\", detail: \"Publish the updated docs.\")",
+                "], currentStepID: \"verify\")"
+            ])
+        case "support-prompt-group":
+            return code([
+                "SupportPromptGroup(environment: environment, prompts: [",
+                "    .init(title: \"Summarize\", detail: \"Condense the latest changes.\"),",
+                "    .init(title: \"Find gaps\", detail: \"Inspect missing inventory.\")",
+                "]) { prompt in",
+                "    print(prompt.title)",
+                "}"
             ])
         case "table":
             return code([
@@ -543,7 +666,15 @@ enum ExactReferenceContent {
         case "tutorial-components":
             return code([
                 "WizardLayout(environment: environment, title: \"\(displayName)\", steps: steps, currentStepID: \"audit\") {",
-                "    StepsView(environment: environment, steps: progressSteps)",
+                "    TutorialPanel(environment: environment, title: \"Rollout guidance\", steps: steps, currentStepID: \"audit\") {",
+                "        Text(\"Keep progression visible inside the same shell language.\")",
+                "    }",
+                "}"
+            ])
+        case "tutorial-panel":
+            return code([
+                "TutorialPanel(environment: environment, title: \"\(displayName)\", steps: steps, currentStepID: \"audit\") {",
+                "    Text(\"Keep progression visible inside the current workflow.\")",
                 "}"
             ])
         case "wizard":
@@ -597,7 +728,8 @@ enum ExactReferenceContent {
         case "data-visualization":
             return code([
                 "VStack(spacing: 16) {",
-                "    ChartPanel(environment: environment, title: \"Coverage\", points: points)",
+                "    MixedChartPanel(environment: environment, title: \"Coverage and adoption\", state: .ready, barSeries: coverageSeries, lineSeries: adoptionSeries, selection: $selection, visibleSeriesIDs: $visibleSeriesIDs, valueFormatter: { value in \"\\(Int(value))%\" })",
+                "    KeyValuePairs(environment: environment, pairs: metricPairs)",
                 "    DataTable(environment: environment, columns: columns, rows: rows, selectedRowID: $selectedRowID)",
                 "}"
             ])
@@ -618,10 +750,7 @@ enum ExactReferenceContent {
             ])
         case "draganddrop":
             return code([
-                "VStack(spacing: 14) {",
-                "    FileDropZone(environment: environment, title: \"Drop release notes\", subtitle: \"Or browse from disk.\") { files in print(files) }",
-                "    EmptyStateView(environment: environment, title: \"No files yet\", message: \"Drop a file or choose one from disk.\")",
-                "}"
+                "FileUploadField(environment: environment, title: \"Drop release notes\", subtitle: \"Or browse from disk.\", onPick: {})"
             ])
         case "errors":
             return code([
@@ -656,7 +785,7 @@ enum ExactReferenceContent {
             ])
         case "help-system":
             return code([
-                "ContextPanel(environment: environment, title: \"Help\") {",
+                "HelpPanel(environment: environment, title: \"Help\") {",
                 "    BulletList(environment: environment, items: [\"Explain the current decision\", \"Keep guidance adjacent to work\"])",
                 "}"
             ])
@@ -670,14 +799,17 @@ enum ExactReferenceContent {
             return code([
                 "VStack(spacing: 12) {",
                 "    LoadingSpinner(environment: environment, label: \"Refreshing metrics\")",
-                "    ProgressBar(environment: environment, label: \"Publishing docs\", progress: 0.64)",
+                "    LoadingBar(environment: environment, label: \"Indexing references\", detail: \"Duration is not yet known.\")",
+                "    ProgressBar(environment: environment, value: 0.64, label: \"Publishing docs\")",
                 "    StatusIndicator(environment: environment, label: \"Refresh in progress\", tone: .info)",
                 "}"
             ])
         case "onboarding":
             return code([
                 "WizardLayout(environment: environment, title: \"Team onboarding\", steps: steps, currentStepID: \"review\") {",
-                "    StepsView(environment: environment, steps: progressSteps)",
+                "    TutorialPanel(environment: environment, title: \"Rollout guidance\", steps: steps, currentStepID: \"review\") {",
+                "        Text(\"Keep the next action obvious.\")",
+                "    }",
                 "}"
             ])
         case "selection-in-forms":
@@ -709,7 +841,7 @@ enum ExactReferenceContent {
             return code([
                 "VStack(spacing: 16) {",
                 "    StatusIndicator(environment: environment, label: \"Release candidate\", detail: \"Ready for review.\", tone: .success)",
-                "    ChartPanel(environment: environment, title: \"Coverage\", points: points)",
+                "    MixedChartPanel(environment: environment, title: \"Coverage\", state: .ready, barSeries: barSeries, lineSeries: lineSeries, selection: $selection, visibleSeriesIDs: $visibleSeriesIDs, valueFormatter: { value in \"\\(Int(value))%\" })",
                 "    DataTable(environment: environment, columns: columns, rows: rows, selectedRowID: $selectedRowID)",
                 "}"
             ])

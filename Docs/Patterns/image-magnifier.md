@@ -11,7 +11,7 @@ Use this pattern when contextual help or inspection should sit adjacent to work 
 
 ## Required Components
 
-- Context panel
+- Help panel
 - Popover
 - Drawer
 

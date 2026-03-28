@@ -12,7 +12,7 @@ Use this pattern when rearrangement or file intake should feel spatially obvious
 ## Required Components
 
 - Board
-- File uploading components
+- File upload field
 - Tiles
 
 ## Layout Recipe
@@ -120,8 +120,5 @@ Canonical compiled pattern example for Drag-and-drop. Use Drag-and-drop when fil
 // Canonical example for Drag-and-drop
 let environment = DesignSystemEnvironment.preview(.dark)
 
-VStack(spacing: 14) {
-    FileDropZone(environment: environment, title: "Drop release notes", subtitle: "Or browse from disk.") { files in print(files) }
-    EmptyStateView(environment: environment, title: "No files yet", message: "Drop a file or choose one from disk.")
-}
+FileUploadField(environment: environment, title: "Drop release notes", subtitle: "Or browse from disk.", onPick: {})
 ```

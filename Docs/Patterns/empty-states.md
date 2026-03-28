@@ -13,7 +13,7 @@ Use this pattern whenever the interface needs to show disabled, read-only, empty
 
 - Alert
 - Status indicator
-- Empty states
+- Empty state
 - Spinner
 
 ## Layout Recipe

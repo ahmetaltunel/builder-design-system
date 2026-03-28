@@ -394,6 +394,7 @@ final class BuilderComponentsTests: XCTestCase {
             .init(title: "Ready", message: "All checks passed.", tone: .success)
         ])
         let progress = ProgressBar(environment: environment, value: 0.6)
+        let loadingBar = LoadingBar(environment: environment, label: "Refreshing metrics", detail: "Duration is not yet known.")
         let spinner = LoadingSpinner(environment: environment, label: "Loading")
         let modal = ModalSurface(environment: environment, title: "Modal") {
             Text("Body")
@@ -420,6 +421,7 @@ final class BuilderComponentsTests: XCTestCase {
         XCTAssertEqual(alert.title, "Saved")
         XCTAssertEqual(notices.notices.count, 1)
         XCTAssertEqual(progress.value, 0.6)
+        XCTAssertEqual(loadingBar.label, "Refreshing metrics")
         XCTAssertEqual(spinner.label, "Loading")
         XCTAssertEqual(modal.title, "Modal")
         XCTAssertEqual(drawer.title, "Drawer")
@@ -489,6 +491,174 @@ final class BuilderComponentsTests: XCTestCase {
         XCTAssertEqual(propertyFilter.activeTokens.count, 2)
         XCTAssertEqual(resourceSelector.resources.count, 2)
         XCTAssertEqual(fileDropZone.title, "Drop files")
+    }
+
+    func testAdvancedMetricsWorkflowAndAIComponentsInstantiate() {
+        let selectedMetric = MetricSelection(
+            kind: .point,
+            seriesID: "Coverage",
+            seriesTitle: "Coverage",
+            datumID: "Tokens",
+            label: "Tokens",
+            value: 82,
+            formattedValue: "82%"
+        )
+        let barChart = BarChartPanel(
+            environment: environment,
+            title: "Coverage",
+            state: .ready,
+            series: [
+                .init(title: "Coverage", color: .blue, points: [
+                    .init(label: "Tokens", value: 82),
+                    .init(label: "Components", value: 80)
+                ])
+            ],
+            selection: .constant(Optional(selectedMetric)),
+            visibleSeriesIDs: .constant(["Coverage"]),
+            valueFormatter: { value in "\(Int(value))%" }
+        )
+        let lineChart = LineChartPanel(
+            environment: environment,
+            title: "Trend",
+            state: .loading(.init(label: "Refreshing trend", detail: "Loading uses the shared async contract.")),
+            series: [
+                .init(title: "Adoption", color: .green, points: [
+                    .init(label: "Mon", value: 12),
+                    .init(label: "Tue", value: 18)
+                ])
+            ],
+            selection: .constant(nil),
+            visibleSeriesIDs: .constant(["Adoption"])
+        )
+        let areaChart = AreaChartPanel(
+            environment: environment,
+            title: "Area",
+            state: .empty(.init(title: "No trend", message: "The filter removed every series.")),
+            series: [
+                .init(title: "Coverage", color: .purple, points: [
+                    .init(label: "Mon", value: 42),
+                    .init(label: "Tue", value: 48)
+                ])
+            ]
+        )
+        let donutChart = DonutChartPanel(
+            environment: environment,
+            title: "Status mix",
+            state: .error(.init(title: "Unable to load status mix", message: "Retry after the dataset refresh completes.")),
+            slices: [
+                .init(title: "Ready", value: 18, color: .green),
+                .init(title: "Review", value: 7, color: .orange)
+            ],
+            selection: .constant(nil),
+            visibleSeriesIDs: .constant(["Ready", "Review"])
+        )
+        let mixedChart = MixedChartPanel(
+            environment: environment,
+            title: "Mixed",
+            state: .ready,
+            barSeries: [
+                .init(title: "Coverage", color: .blue, points: [
+                    .init(label: "Tokens", value: 82)
+                ])
+            ],
+            lineSeries: [
+                .init(title: "Target", color: .teal, points: [
+                    .init(label: "Tokens", value: 90)
+                ])
+            ],
+            selection: .constant(Optional(selectedMetric)),
+            visibleSeriesIDs: .constant(["Coverage", "Target"]),
+            valueFormatter: { value in "\(Int(value))%" }
+        )
+        let helpPanel = HelpPanel(
+            environment: environment,
+            title: "Help",
+            state: .loading(.init(label: "Refreshing guidance", detail: "Support surfaces share the same async contract."))
+        ) {
+            Text("Guidance")
+        }
+        let filePicker = FilePickerButton(environment: environment, title: "Browse files") {}
+        let fileTokens = FileTokenGroup(environment: environment, items: [
+            .init(title: "release-notes.md", detail: "18 KB", status: .success)
+        ])
+        let fileUpload = FileUploadField(
+            environment: environment,
+            title: "Attach release notes",
+            items: [.init(title: "release-notes.md", detail: "18 KB", status: .success)],
+            state: .empty(.init(title: "No files selected", message: "Pick a file to continue.")),
+            onPick: {}
+        )
+        let board = Board(environment: environment, columns: [
+            .init(title: "Backlog", items: [
+                .init(title: "Alert", detail: "Feedback work", status: "Review", statusColor: .orange),
+                .init(title: "Charts", detail: "Metrics work", status: "Ready", statusColor: .green)
+            ])
+        ])
+        let boardItem = BoardItemView(environment: environment, item: .init(title: "Alert", detail: "Feedback work"))
+        let itemsPalette = ItemsPalette(environment: environment, items: [.init(title: "Metric card", detail: "Reusable dashboard tile.")])
+        let avatar = AvatarView(environment: environment, title: "Builder assistant", symbol: "sparkles")
+        let promptInput = PromptInput(environment: environment, prompt: .constant("Summarize")) {}
+        let supportPrompts = SupportPromptGroup(environment: environment, prompts: [.init(title: "Summarize")]) { _ in }
+        let chatBubble = ChatBubble(environment: environment, role: .assistant, author: "Builder assistant", message: "Review is ready.")
+        let tutorialPanel = TutorialPanel(
+            environment: environment,
+            title: "Rollout guidance",
+            state: .error(.init(title: "Unable to load steps", message: "Retry after restoring the checklist source.")),
+            steps: [.init(id: "audit", title: "Audit"), .init(id: "verify", title: "Verify")],
+            currentStepID: "audit"
+        ) {
+            Text("Step content")
+        }
+
+        XCTAssertEqual(barChart.title, "Coverage")
+        XCTAssertEqual(barChart.state, .ready)
+        XCTAssertEqual(barChart.selection?.wrappedValue, selectedMetric)
+        XCTAssertEqual(lineChart.series.count, 1)
+        XCTAssertEqual(lineChart.state, .loading(.init(label: "Refreshing trend", detail: "Loading uses the shared async contract.")))
+        XCTAssertEqual(areaChart.series.count, 1)
+        XCTAssertEqual(areaChart.state, .empty(.init(title: "No trend", message: "The filter removed every series.")))
+        XCTAssertEqual(donutChart.slices.count, 2)
+        XCTAssertEqual(donutChart.state, .error(.init(title: "Unable to load status mix", message: "Retry after the dataset refresh completes.")))
+        XCTAssertEqual(mixedChart.lineSeries.count, 1)
+        XCTAssertEqual(mixedChart.visibleSeriesIDs?.wrappedValue, Set(["Coverage", "Target"]))
+        XCTAssertEqual(helpPanel.title, "Help")
+        XCTAssertEqual(helpPanel.state, .loading(.init(label: "Refreshing guidance", detail: "Support surfaces share the same async contract.")))
+        XCTAssertEqual(filePicker.title, "Browse files")
+        XCTAssertEqual(fileTokens.items.count, 1)
+        XCTAssertEqual(fileUpload.items.count, 1)
+        XCTAssertEqual(fileUpload.state, .empty(.init(title: "No files selected", message: "Pick a file to continue.")))
+        XCTAssertEqual(board.columns.count, 1)
+        XCTAssertEqual(boardItem.item.title, "Alert")
+        XCTAssertEqual(itemsPalette.items.count, 1)
+        XCTAssertEqual(avatar.title, "Builder assistant")
+        XCTAssertEqual(promptInput.placeholder, "Prompt")
+        XCTAssertEqual(supportPrompts.prompts.count, 1)
+        XCTAssertEqual(chatBubble.author, "Builder assistant")
+        XCTAssertEqual(tutorialPanel.title, "Rollout guidance")
+        XCTAssertEqual(tutorialPanel.state, .error(.init(title: "Unable to load steps", message: "Retry after restoring the checklist source.")))
+    }
+
+    func testAsyncContentStateAndMetricSelectionModels() {
+        let loadingState = AsyncContentState.loading(.init(label: "Refreshing metrics", detail: "Layout should remain stable."))
+        let emptyState = AsyncContentState.empty(.init(title: "No visible series", message: "Choose a legend item to restore the chart."))
+        let errorState = AsyncContentState.error(.init(title: "Unable to load metrics", message: "Retry after the dataset refresh completes."))
+        let selection = MetricSelection(
+            kind: .point,
+            seriesID: "Coverage",
+            seriesTitle: "Coverage",
+            datumID: "Tokens",
+            label: "Tokens",
+            value: 82,
+            formattedValue: "82%"
+        )
+
+        XCTAssertEqual(loadingState, .loading(.init(label: "Refreshing metrics", detail: "Layout should remain stable.")))
+        XCTAssertEqual(emptyState, .empty(.init(title: "No visible series", message: "Choose a legend item to restore the chart.")))
+        XCTAssertEqual(errorState, .error(.init(title: "Unable to load metrics", message: "Retry after the dataset refresh completes.")))
+        XCTAssertFalse(loadingState.isReady)
+        XCTAssertEqual(selection.id, "Coverage::Tokens")
+        XCTAssertEqual(selection.seriesTitle, "Coverage")
+        XCTAssertEqual(selection.formattedValue, "82%")
     }
 
     func testNativeNavigationViewsDisableDefaultFocusRingAndTranslateReturn() throws {

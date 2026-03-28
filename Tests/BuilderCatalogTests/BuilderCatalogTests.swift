@@ -30,12 +30,16 @@ final class BuilderCatalogTests: XCTestCase {
         let expected = Set([
             "Alert",
             "Anchor navigation",
+            "Area chart",
             "App layout",
             "App layout toolbar",
             "Attribute editor",
             "Autosuggest",
+            "Avatar",
             "Badge",
+            "Bar chart",
             "Board",
+            "Board item",
             "Box",
             "Breadcrumb group",
             "Button",
@@ -43,6 +47,7 @@ final class BuilderCatalogTests: XCTestCase {
             "Button group",
             "Calendar",
             "Cards",
+            "Chat bubble",
             "Charts",
             "Checkbox",
             "Code editor",
@@ -56,9 +61,14 @@ final class BuilderCatalogTests: XCTestCase {
             "Date input",
             "Date picker",
             "Date range picker",
+            "Donut chart",
             "Drawer",
+            "Empty state",
             "Error boundary",
             "Expandable section",
+            "File picker button",
+            "File token group",
+            "File upload field",
             "File uploading components",
             "Notice stack",
             "Form",
@@ -66,19 +76,25 @@ final class BuilderCatalogTests: XCTestCase {
             "Generative AI components",
             "Grid",
             "Header",
+            "Help panel",
             "Context panel",
             "Icon",
             "Input",
+            "Items palette",
             "Key-value pairs",
+            "Line chart",
             "Link",
             "List",
             "Live region",
+            "Loading bar",
             "Modal",
+            "Mixed chart",
             "Multiselect",
             "Pagination",
             "Panel layout",
             "Popover",
             "Progress bar",
+            "Prompt input",
             "Property filter",
             "Radio group",
             "Resource selector",
@@ -91,6 +107,7 @@ final class BuilderCatalogTests: XCTestCase {
             "Split panel",
             "Status indicator",
             "Steps",
+            "Support prompt group",
             "Table",
             "Tabs",
             "Tag editor",
@@ -106,6 +123,7 @@ final class BuilderCatalogTests: XCTestCase {
             "Top navigation",
             "Tree view",
             "Tutorial components",
+            "Tutorial panel",
             "Wizard"
         ])
 
@@ -149,6 +167,8 @@ final class BuilderCatalogTests: XCTestCase {
         XCTAssertEqual(CatalogContent.componentCrossReference.count, CatalogContent.components.count)
         XCTAssertTrue(CatalogContent.componentCrossReference.contains { $0.catalog == "App layout" && $0.swiftUI == "AppLayoutView" })
         XCTAssertTrue(CatalogContent.componentCrossReference.contains { $0.catalog == "Generative AI components" && $0.swiftUI == "GenerativeAIComponentsView" })
+        XCTAssertTrue(CatalogContent.componentCrossReference.contains { $0.catalog == "Help panel" && $0.swiftUI == "HelpPanel" })
+        XCTAssertTrue(CatalogContent.componentCrossReference.contains { $0.catalog == "Loading bar" && $0.swiftUI == "LoadingBar" })
     }
 
     func testCatalogEntriesCarryDocumentationFields() {

@@ -110,19 +110,19 @@ private func requiredComponents(for seed: PatternSeed) -> [String] {
     case .density:
         ["App layout toolbar", "Segmented control", "Table", "Form field"]
     case .stateHandling:
-        ["Alert", "Status indicator", "Empty states", "Spinner"]
+        ["Alert", "Status indicator", "Empty state", "Spinner"]
     case .dragAndDrop:
-        ["Board", "File uploading components", "Tiles"]
+        ["Board", "File upload field", "Tiles"]
     case .filtering:
         ["Property filter", "Text filter", "Filter select", "Table"]
     case .hero:
         ["Header", "Text content", "Button"]
     case .support:
-        ["Context panel", "Popover", "Drawer"]
+        ["Help panel", "Popover", "Drawer"]
     case .loading:
-        ["Spinner", "Progress bar", "Notice stack"]
+        ["Spinner", "Loading bar", "Progress bar", "Notice stack"]
     case .onboarding:
-        ["Wizard", "Steps", "Tutorial components"]
+        ["Wizard", "Tutorial panel", "Tutorial components"]
     case .navigation:
         ["Side navigation", "Top navigation", "Split panel"]
     case .dashboard:

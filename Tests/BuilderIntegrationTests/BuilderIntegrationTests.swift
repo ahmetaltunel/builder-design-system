@@ -97,7 +97,7 @@ final class BuilderIntegrationTests: XCTestCase {
         let files = try fileManager.subpathsOfDirectory(atPath: root.path)
             .filter { $0.hasSuffix(".swift") }
 
-        XCTAssertGreaterThanOrEqual(files.count, 80)
+        XCTAssertGreaterThanOrEqual(files.count, 95)
 
         for required in [
             "Surfaces/AppLayout.swift",
@@ -113,9 +113,16 @@ final class BuilderIntegrationTests: XCTestCase {
             "Forms/TextAreaField.swift",
             "Forms/AttributeEditor.swift",
             "Feedback/AlertBanner.swift",
+            "Feedback/LoadingBar.swift",
+            "Feedback/AsyncContentState.swift",
             "Content/DataTable.swift",
             "Content/ChartPanel.swift",
-            "Content/Board.swift"
+            "Content/BarChartPanel.swift",
+            "Content/DonutChartPanel.swift",
+            "Content/Board.swift",
+            "Content/TutorialPanel.swift",
+            "Surfaces/HelpPanel.swift",
+            "Forms/FileUploadField.swift"
         ] {
             XCTAssertTrue(files.contains(required), "Missing expected BuilderComponents file: \(required)")
         }

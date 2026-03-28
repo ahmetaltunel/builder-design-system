@@ -143,7 +143,10 @@ Canonical compiled example for Board. Use Board to organize content before reach
 let environment = DesignSystemEnvironment.preview(.dark)
 
 Board(environment: environment, columns: [
-    .init(id: "queued", title: "Queued", cards: ["Review tokens", "Verify docs"]),
+    .init(id: "queued", title: "Queued", items: [
+        .init(title: "Review tokens", detail: "Validation and docs", status: "Review", statusColor: environment.theme.color(.warning)),
+        .init(title: "Verify docs", detail: "Generated references", status: "Ready", statusColor: environment.theme.color(.success))
+    ]),
     .init(id: "done", title: "Done", cards: ["Ship foundations"])
 ])
 ```

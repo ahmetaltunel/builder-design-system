@@ -141,5 +141,5 @@ Canonical compiled example for Resource selector. Use Resource selector when a d
 // Canonical example for Resource selector
 let environment = DesignSystemEnvironment.preview(.dark)
 
-ResourceSelector(environment: environment, title: "Resource selector", items: resources, selection: $selectedResourceID)
+ResourceSelector(environment: environment, resources: ["Design system", "Showcase"], selection: $selectedResourceID)
 ```

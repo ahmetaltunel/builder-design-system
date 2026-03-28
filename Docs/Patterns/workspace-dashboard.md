@@ -123,7 +123,7 @@ let environment = DesignSystemEnvironment.preview(.dark)
 
 VStack(spacing: 16) {
     StatusIndicator(environment: environment, label: "Release candidate", detail: "Ready for review.", tone: .success)
-    ChartPanel(environment: environment, title: "Coverage", points: points)
+    MixedChartPanel(environment: environment, title: "Coverage", state: .ready, barSeries: barSeries, lineSeries: lineSeries, selection: $selection, visibleSeriesIDs: $visibleSeriesIDs, valueFormatter: { value in "\(Int(value))%" })
     DataTable(environment: environment, columns: columns, rows: rows, selectedRowID: $selectedRowID)
 }
 ```
