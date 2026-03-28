@@ -141,11 +141,11 @@ Canonical compiled example for Support prompt group. Use Support prompt group wh
 // Canonical example for Support prompt group
 let environment = DesignSystemEnvironment.preview(.dark)
 
+let promptController = PromptComposerController(draft: "Summarize the runtime rollout.")
+
 SupportPromptGroup(environment: environment, prompts: [
     .init(id: "summarize", title: "Summarize", detail: "Condense the latest changes.", isSelected: true, isRecommended: true),
     .init(id: "find-gaps", title: "Find gaps", detail: "Inspect missing inventory."),
     .init(id: "compare", title: "Explain tradeoffs", detail: "Compare candidate APIs.", isEnabled: false)
-]) { prompt in
-    print(prompt.title)
-}
+], controller: promptController)
 ```

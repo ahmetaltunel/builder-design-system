@@ -120,13 +120,15 @@ Canonical compiled pattern example for Onboarding. Use Onboarding when the first
 // Canonical example for Onboarding
 let environment = DesignSystemEnvironment.preview(.dark)
 
-WizardLayout(environment: environment, title: "Team onboarding", steps: steps, currentStepID: "review") {
-    TutorialPanel(environment: environment, title: "Rollout guidance", steps: steps, currentStepID: $currentStepID, completedStepIDs: ["choose"]) {
-        Text("Keep the next action obvious.")
-    } primaryActions: {
-        SystemButton(environment: environment, title: "Continue", tone: .primary) {}
-    } secondaryActions: {
-        SystemButton(environment: environment, title: "Back", tone: .secondary) {}
+let tutorialController = TutorialFlowController(steps: steps.map { .init(id: $0.id, title: $0.title) }, currentStepID: "review", completedStepIDs: ["choose"])
+
+CoachmarkHost(environment: environment, step: .init(anchorID: "invite-team", title: "Invite the rollout group", message: "Attach onboarding help to a real anchor.", primaryActionTitle: "Continue", secondaryActionTitle: "Dismiss")) {
+    WizardLayout(environment: environment, title: "Team onboarding", steps: steps, currentStepID: tutorialController.currentStepID) {
+        TutorialPanel(environment: environment, title: "Rollout guidance", controller: tutorialController) {
+            AnnotationAnchor(id: "invite-team") {
+                SystemButton(environment: environment, title: "Invite team", tone: .primary) {}
+            }
+        }
     }
 }
 ```

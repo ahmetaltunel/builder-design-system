@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct SupportPromptGroup: View {
     public struct Prompt: Identifiable, Hashable, Sendable {
@@ -53,6 +54,21 @@ public struct SupportPromptGroup: View {
         self.title = title
         self.prompts = prompts
         self.onSelect = onSelect
+    }
+
+    public init(
+        environment: DesignSystemEnvironment,
+        title: String? = nil,
+        prompts: [Prompt],
+        controller: PromptComposerController
+    ) {
+        self.init(
+            environment: environment,
+            title: title,
+            prompts: prompts
+        ) { prompt in
+            controller.acceptSuggestion(prompt.title)
+        }
     }
 
     public var body: some View {

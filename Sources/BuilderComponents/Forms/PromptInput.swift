@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct PromptInput: View {
     public enum SubmitShortcutBehavior: Hashable, Sendable {
@@ -79,15 +80,42 @@ public struct PromptInput: View {
         self.onSubmit = onSubmit
     }
 
+    public init(
+        environment: DesignSystemEnvironment,
+        controller: PromptComposerController,
+        placeholder: String = "Prompt",
+        actionTitle: String = "Run",
+        isMultiline: Bool = false,
+        minHeight: CGFloat = 120,
+        secondaryActionTitle: String? = nil,
+        secondaryActionSymbol: String? = nil,
+        onSecondaryAction: (() -> Void)? = nil,
+        onSubmit: @escaping () -> Void
+    ) {
+        self.init(
+            environment: environment,
+            prompt: Binding(
+                get: { controller.draft },
+                set: { controller.updateDraft($0) }
+            ),
+            placeholder: placeholder,
+            actionTitle: actionTitle,
+            supportingText: controller.supportingText,
+            isEnabled: controller.isEnabled,
+            isSubmitting: controller.isSubmitting,
+            isMultiline: isMultiline,
+            minHeight: minHeight,
+            submitShortcutBehavior: Self.submitShortcutBehavior(for: controller.submitShortcutBehavior),
+            secondaryActionTitle: secondaryActionTitle,
+            secondaryActionSymbol: secondaryActionSymbol,
+            onSecondaryAction: onSecondaryAction,
+            onSubmit: onSubmit
+        )
+    }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            TextAreaField(
-                environment: environment,
-                placeholder: placeholder,
-                text: prompt,
-                minHeight: isMultiline ? minHeight : 52,
-                isEnabled: isEnabled
-            )
+            composerField()
 
             HStack(alignment: .center, spacing: 10) {
                 if let supportingText {
@@ -112,6 +140,29 @@ public struct PromptInput: View {
 
                 submitButton
             }
+        }
+    }
+
+    @ViewBuilder
+    private func composerField() -> some View {
+        if isMultiline {
+            TextAreaField(
+                environment: environment,
+                placeholder: placeholder,
+                text: prompt,
+                minHeight: minHeight,
+                isEnabled: isEnabled
+            )
+        } else {
+            TextInputField(
+                environment: environment,
+                placeholder: placeholder,
+                text: prompt,
+                leadingSymbol: "sparkles",
+                height: 44,
+                isEnabled: isEnabled,
+                onSubmit: inlineSubmitAction
+            )
         }
     }
 
@@ -157,8 +208,26 @@ public struct PromptInput: View {
         prompt.wrappedValue.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var inlineSubmitAction: (() -> Void)? {
+        guard submitShortcutBehavior == .returnKey else { return nil }
+        return submitIfPossible
+    }
+
     private func submitIfPossible() {
         guard canSubmit else { return }
         onSubmit()
+    }
+
+    private static func submitShortcutBehavior(
+        for behavior: PromptSubmitShortcutBehavior
+    ) -> SubmitShortcutBehavior {
+        switch behavior {
+        case .none:
+            .none
+        case .returnKey:
+            .returnKey
+        case .commandReturn:
+            .commandReturn
+        }
     }
 }

@@ -1,34 +1,41 @@
 import SwiftUI
+import UniformTypeIdentifiers
 import BuilderFoundation
 
 public struct BoardItemView: View {
     public let environment: DesignSystemEnvironment
     public let item: Board.Item
     public let isSelected: Bool
+    public let isFocused: Bool
     public let onActivate: (() -> Void)?
     public let moveDestinations: [Board.Destination]
     public let onMove: ((Board.Destination) -> Void)?
     public let insertDestinations: [Board.Destination]
     public let onInsert: ((Board.Destination) -> Void)?
+    public let dragPayload: String?
 
     public init(
         environment: DesignSystemEnvironment,
         item: Board.Item,
         isSelected: Bool = false,
+        isFocused: Bool = false,
         onActivate: (() -> Void)? = nil,
         moveDestinations: [Board.Destination] = [],
         onMove: ((Board.Destination) -> Void)? = nil,
         insertDestinations: [Board.Destination] = [],
-        onInsert: ((Board.Destination) -> Void)? = nil
+        onInsert: ((Board.Destination) -> Void)? = nil,
+        dragPayload: String? = nil
     ) {
         self.environment = environment
         self.item = item
         self.isSelected = isSelected
+        self.isFocused = isFocused
         self.onActivate = onActivate
         self.moveDestinations = moveDestinations
         self.onMove = onMove
         self.insertDestinations = insertDestinations
         self.onInsert = onInsert
+        self.dragPayload = dragPayload
     }
 
     public init(environment: DesignSystemEnvironment, item: Board.Item) {
@@ -36,17 +43,19 @@ public struct BoardItemView: View {
             environment: environment,
             item: item,
             isSelected: false,
+            isFocused: false,
             onActivate: nil,
             moveDestinations: [],
             onMove: nil,
             insertDestinations: [],
-            onInsert: nil
+            onInsert: nil,
+            dragPayload: nil
         )
     }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Group {
+            dragEnabledContent {
                 if let onActivate {
                     Button(action: onActivate) {
                         itemCard
@@ -134,7 +143,12 @@ public struct BoardItemView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous)
-                .stroke(isSelected ? environment.theme.color(.accentPrimary) : environment.theme.color(.subtleBorder), lineWidth: isSelected ? 1.5 : 1)
+                .stroke(
+                    isFocused
+                    ? environment.theme.color(.focusRing)
+                    : (isSelected ? environment.theme.color(.accentPrimary) : environment.theme.color(.subtleBorder)),
+                    lineWidth: isFocused || isSelected ? 1.5 : 1
+                )
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel(item.title)
@@ -156,5 +170,19 @@ public struct BoardItemView: View {
                 RoundedRectangle(cornerRadius: environment.theme.radius(.medium), style: .continuous)
                     .stroke(environment.theme.color(.subtleBorder), lineWidth: 1)
             )
+    }
+
+    @ViewBuilder
+    private func dragEnabledContent<Content: View>(
+        @ViewBuilder _ content: () -> Content
+    ) -> some View {
+        if let dragPayload {
+            content()
+                .onDrag {
+                    NSItemProvider(object: NSString(string: dragPayload))
+                }
+        } else {
+            content()
+        }
     }
 }

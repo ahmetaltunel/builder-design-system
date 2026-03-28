@@ -43,14 +43,6 @@ package enum PatternCategory: String, CaseIterable, Identifiable {
     package var id: String { rawValue }
 }
 
-package enum ComponentStatus: String, CaseIterable, Identifiable {
-    case calibrated = "Calibrated"
-    case implemented = "Implemented"
-    case systemized = "Systemized"
-
-    package var id: String { rawValue }
-}
-
 package struct UsageGuideline: Identifiable {
     package let title: String
     package let body: String
@@ -188,7 +180,6 @@ package struct ComponentCatalogEntry: Identifiable {
     package let usage: [UsageGuideline]
     package let antiPatterns: [String]
     package let macOSNotes: [String]
-    package let status: ComponentStatus
     package let previewGroup: ComponentPreviewGroup
     package let canonicalExampleID: ComponentExampleID
     package let accessibilityAcceptance: AccessibilityAcceptance

@@ -121,7 +121,9 @@ Canonical compiled pattern example for Filtering patterns. Use Filtering pattern
 // Canonical example for Filtering patterns
 let environment = DesignSystemEnvironment.preview(.dark)
 
-PropertyFilterBar(environment: environment, filters: filters, selection: $selection)
+let collectionController = CollectionController(items: rows, activeFilterTokens: ["component"], searchableText: { row in row.cells.joined(separator: " ") })
+
+PropertyFilterBar(environment: environment, controller: collectionController)
 SearchResultsOverlay(environment: environment, sections: sections) { item in
     print(item.title)
 }

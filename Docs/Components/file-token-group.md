@@ -141,13 +141,11 @@ Canonical compiled example for File token group. Use File token group when a dom
 // Canonical example for File token group
 let environment = DesignSystemEnvironment.preview(.dark)
 
-FileTokenGroup(environment: environment, items: [
+let uploadController = FileUploadSessionController(items: [
     .init(title: "release-notes.md", detail: "18 KB", status: .success, message: "Uploaded successfully.", symbol: "doc.text"),
     .init(title: "screenshots.zip", detail: "2 files", status: .uploading, progress: 0.64, message: "Uploading archive...", symbol: "archivebox"),
     .init(title: "hero.png", detail: "4.2 MB", status: .error, message: "The file exceeds the current size limit.", symbol: "photo", canRetry: true)
-], onRetry: { item in
-    print(item.id)
-}, onRemove: { item in
-    print(item.id)
-})
+])
+
+FileTokenGroup(environment: environment, controller: uploadController)
 ```

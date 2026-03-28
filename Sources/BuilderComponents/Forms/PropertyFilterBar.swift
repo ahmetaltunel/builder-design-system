@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct PropertyFilterBar: View {
     public let environment: DesignSystemEnvironment
@@ -10,6 +11,18 @@ public struct PropertyFilterBar: View {
         self.environment = environment
         self._query = query
         self.activeTokens = activeTokens
+    }
+
+    public init<Item: Identifiable & Hashable>(
+        environment: DesignSystemEnvironment,
+        controller: CollectionController<Item>
+    ) {
+        self.environment = environment
+        self._query = Binding(
+            get: { controller.query },
+            set: { controller.updateQuery($0) }
+        )
+        self.activeTokens = controller.activeFilterTokens
     }
 
     public var body: some View {

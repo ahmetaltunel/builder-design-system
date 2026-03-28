@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct ChartPanel: View {
     public struct Point: Identifiable, Hashable {
@@ -20,6 +21,7 @@ public struct ChartPanel: View {
     public let title: String
     public let state: AsyncContentState
     public let points: [Point]
+    public let chartController: MetricChartController?
     public let selection: Binding<MetricSelection?>?
     public let valueFormatter: (Double) -> String
 
@@ -28,6 +30,7 @@ public struct ChartPanel: View {
         title: String,
         state: AsyncContentState = .ready,
         points: [Point],
+        chartController: MetricChartController? = nil,
         selection: Binding<MetricSelection?>? = nil,
         valueFormatter: @escaping (Double) -> String = defaultMetricValueFormatter
     ) {
@@ -35,8 +38,31 @@ public struct ChartPanel: View {
         self.title = title
         self.state = state
         self.points = points
+        self.chartController = chartController
         self.selection = selection
         self.valueFormatter = valueFormatter
+    }
+
+    public init(
+        environment: DesignSystemEnvironment,
+        title: String,
+        state: AsyncContentState = .ready,
+        points: [Point],
+        controller: MetricChartController,
+        valueFormatter: @escaping (Double) -> String = defaultMetricValueFormatter
+    ) {
+        self.init(
+            environment: environment,
+            title: title,
+            state: state,
+            points: points,
+            chartController: controller,
+            selection: Binding(
+                get: { controller.pinnedSelection },
+                set: { controller.pin($0) }
+            ),
+            valueFormatter: valueFormatter
+        )
     }
 
     public init(environment: DesignSystemEnvironment, title: String, points: [Point]) {
@@ -64,6 +90,7 @@ public struct ChartPanel: View {
                 )
             },
             showsLegend: false,
+            chartController: chartController,
             selection: selection,
             valueFormatter: valueFormatter,
             height: 180

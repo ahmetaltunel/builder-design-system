@@ -2,6 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import XCTest
 import BuilderFoundation
+import BuilderBehaviors
 @testable import BuilderComponents
 
 @MainActor
@@ -979,10 +980,10 @@ final class BuilderComponentsTests: XCTestCase {
         let markdownURL = URL(fileURLWithPath: "/tmp/release-notes.md")
         let imageURL = URL(fileURLWithPath: "/tmp/preview.png")
 
-        XCTAssertTrue(matchesAcceptedContentType(markdownURL, acceptedContentTypes: [.plainText, .pdf]))
-        XCTAssertFalse(matchesAcceptedContentType(imageURL, acceptedContentTypes: [.plainText, .pdf]))
-        XCTAssertTrue(matchesAcceptedContentType(imageURL, acceptedContentTypes: [.fileURL]))
-        XCTAssertTrue(matchesAcceptedContentType(imageURL, acceptedContentTypes: []))
+        XCTAssertTrue(BuilderBehaviors.matchesAcceptedContentType(markdownURL, acceptedContentTypes: [.plainText, .pdf]))
+        XCTAssertFalse(BuilderBehaviors.matchesAcceptedContentType(imageURL, acceptedContentTypes: [.plainText, .pdf]))
+        XCTAssertTrue(BuilderBehaviors.matchesAcceptedContentType(imageURL, acceptedContentTypes: [.fileURL]))
+        XCTAssertTrue(BuilderBehaviors.matchesAcceptedContentType(imageURL, acceptedContentTypes: []))
     }
 
     func testNativeNavigationViewsDisableDefaultFocusRingAndTranslateReturn() throws {
@@ -1016,5 +1017,140 @@ final class BuilderComponentsTests: XCTestCase {
         XCTAssertEqual(outline.focusRingType, .none)
         XCTAssertTrue(tableActivated)
         XCTAssertTrue(outlineActivated)
+    }
+
+    func testRuntimeBackedComponentsInstantiate() {
+        let collectionController = CollectionController(
+            items: [
+                DataTable.Row(id: "alert", cells: ["Alert", "Ready"]),
+                DataTable.Row(id: "board", cells: ["Board", "Review"])
+            ],
+            pageSize: 1,
+            searchableText: { $0.cells.joined(separator: " ") }
+        )
+        let chartController = MetricChartController(visibleSeriesIDs: ["coverage"])
+        let importController = FileImportController(acceptedContentTypes: [.plainText, .pdf])
+        let uploadController = FileUploadSessionController(
+            items: [
+                .init(
+                    id: "release-notes",
+                    title: "release-notes.md",
+                    detail: "12 KB",
+                    status: .uploading,
+                    progress: 0.4,
+                    message: "Uploading",
+                    symbol: "doc.text",
+                    canRetry: false
+                )
+            ]
+        )
+        let boardController = BoardController(selectedItemID: "review-docs")
+        let promptController = PromptComposerController(
+            draft: "Summarize the rollout",
+            supportingText: "Command-Return submits."
+        )
+        let tutorialController = TutorialFlowController(
+            steps: [
+                .init(id: "audit", title: "Audit"),
+                .init(id: "build", title: "Build")
+            ]
+        )
+        let helpNavigator = HelpNavigator(
+            topics: [
+                .init(id: "context", title: "Context")
+            ]
+        )
+
+        let textFilter = TextFilterField(environment: environment, controller: collectionController)
+        let propertyFilter = PropertyFilterBar(environment: environment, controller: collectionController)
+        let preferences = ViewPreferencesPanel(environment: environment, controller: collectionController)
+        let pagination = PaginationControl(environment: environment, controller: collectionController)
+        let table = DataTable(
+            environment: environment,
+            columns: [.init(title: "Surface"), .init(title: "State")],
+            controller: collectionController
+        )
+        let barChart = BarChartPanel(
+            environment: environment,
+            title: "Coverage",
+            series: [
+                .init(title: "Coverage", color: environment.theme.color(.chartBlue), points: [
+                    .init(label: "Tokens", value: 82),
+                    .init(label: "Docs", value: 74)
+                ])
+            ],
+            controller: chartController
+        )
+        let fileDropZone = FileDropZone(environment: environment, controller: importController, actionTitle: "Browse", action: {})
+        let fileTokens = FileTokenGroup(environment: environment, controller: uploadController)
+        let fileUpload = FileUploadField(
+            environment: environment,
+            title: "Attach release notes",
+            importController: importController,
+            uploadController: uploadController
+        )
+        let board = Board(
+            environment: environment,
+            columns: .constant([
+                .init(id: "ready", title: "Ready", items: [.init(id: "review-docs", title: "Review docs")]),
+                .init(id: "later", title: "Later", items: [])
+            ]),
+            controller: boardController
+        )
+        let itemsPalette = ItemsPalette(
+            environment: environment,
+            items: [.init(id: "metric-card", title: "Metric card")],
+            controller: boardController
+        )
+        let promptInput = PromptInput(environment: environment, controller: promptController) {}
+        let promptGroup = SupportPromptGroup(
+            environment: environment,
+            prompts: [.init(id: "summarize", title: "Summarize")],
+            controller: promptController
+        )
+        let chatBubble = ChatBubble(
+            environment: environment,
+            message: .init(role: .assistant, author: "Builder assistant", message: "Draft ready")
+        )
+        let tutorialPanel = TutorialPanel(
+            environment: environment,
+            title: "Rollout",
+            controller: tutorialController
+        ) {
+            Text("Guide builders through the rollout.")
+        }
+        let helpPanel = HelpPanel(
+            environment: environment,
+            title: "Help",
+            navigator: helpNavigator
+        ) {
+            Text("Keep support adjacent to work.")
+        }
+        let coachmark = CoachmarkHost(
+            environment: environment,
+            step: .init(anchorID: "prompt", title: "Prompt", message: "Start here.")
+        ) {
+            AnnotationAnchor(id: "prompt") {
+                Text("Prompt area")
+            }
+        }
+
+        XCTAssertEqual(textFilter.placeholder, "Filter")
+        XCTAssertEqual(propertyFilter.activeTokens.count, 0)
+        XCTAssertFalse(preferences.denseMode)
+        XCTAssertEqual(pagination.pageCount, 2)
+        XCTAssertEqual(table.rows.count, 1)
+        XCTAssertNotNil(barChart.chartController)
+        XCTAssertEqual(fileDropZone.acceptedContentTypes, [.plainText, .pdf])
+        XCTAssertEqual(fileTokens.items.count, 1)
+        XCTAssertEqual(fileUpload.items.count, 1)
+        XCTAssertNotNil(board.columnsBinding)
+        XCTAssertEqual(itemsPalette.selectedItemID?.wrappedValue, "review-docs")
+        XCTAssertEqual(promptInput.prompt.wrappedValue, "Summarize the rollout")
+        XCTAssertEqual(promptGroup.prompts.count, 1)
+        XCTAssertEqual(chatBubble.author, "Builder assistant")
+        XCTAssertEqual(tutorialPanel.steps.count, 2)
+        XCTAssertEqual(helpPanel.topics.count, 1)
+        XCTAssertNotNil(coachmark)
     }
 }

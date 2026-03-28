@@ -145,6 +145,6 @@ let environment = DesignSystemEnvironment.preview(.dark)
 ContentLayout(environment: environment) {
     HeaderBlock(environment: environment, title: "Content layout", subtitle: "Header and content stay aligned.")
 } content: {
-    TextContentBlock(environment: environment, title: "Usage", body: "Keep layout structure explicit before styling.")
+    TextContentBlock(environment: environment, title: "Usage", bodyText: "Keep layout structure explicit before styling.")
 }
 ```

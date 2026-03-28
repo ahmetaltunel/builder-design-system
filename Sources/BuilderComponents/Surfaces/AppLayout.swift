@@ -23,7 +23,10 @@ public struct AppLayout<Sidebar: View, Content: View>: View {
         HStack(spacing: 0) {
             sidebar
                 .frame(width: sidebarWidth, alignment: .topLeading)
-                .background(SidebarBackdrop(environment: environment))
+                .background(
+                    SidebarBackdrop(environment: environment)
+                        .extendsIntoTitlebar()
+                )
 
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

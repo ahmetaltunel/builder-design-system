@@ -143,5 +143,5 @@ Canonical compiled example for Slider. Use Slider when selection state must stay
 // Canonical example for Slider
 let environment = DesignSystemEnvironment.preview(.dark)
 
-SliderField(environment: environment, title: "Radius", value: $radius, range: 0...24)
+SliderField(environment: environment, title: "Radius", value: $radius, in: 0...24)
 ```

@@ -212,28 +212,28 @@
       "description": "No visible shadow."
     },
     "hairline": {
-      "light": { "color": "#00000008", "radius": 1, "x": 0, "y": 0.5 },
-      "dark": { "color": "#00000014", "radius": 1, "x": 0, "y": 0.5 },
+      "light": { "color": "#00000006", "radius": 0.5, "x": 0, "y": 0.5 },
+      "dark": { "color": "#00000010", "radius": 0.5, "x": 0, "y": 0.5 },
       "description": "Hairline separation for crisp low-elevation surfaces."
     },
     "subtle": {
-      "light": { "color": "#00000014", "radius": 3, "x": 0, "y": 1 },
-      "dark": { "color": "#0000001A", "radius": 3, "x": 0, "y": 1 },
+      "light": { "color": "#0000000A", "radius": 1.5, "x": 0, "y": 1 },
+      "dark": { "color": "#00000014", "radius": 1.5, "x": 0, "y": 1 },
       "description": "Small grouped panels and table headers."
     },
     "raised": {
-      "light": { "color": "#0000001F", "radius": 10, "x": 0, "y": 4 },
-      "dark": { "color": "#00000029", "radius": 10, "x": 0, "y": 4 },
+      "light": { "color": "#00000012", "radius": 6, "x": 0, "y": 2 },
+      "dark": { "color": "#00000020", "radius": 8, "x": 0, "y": 3 },
       "description": "Raised cards, menus, and sheet-like regions."
     },
     "floating": {
-      "light": { "color": "#00000026", "radius": 18, "x": 0, "y": 12 },
-      "dark": { "color": "#00000033", "radius": 18, "x": 0, "y": 12 },
+      "light": { "color": "#00000018", "radius": 10, "x": 0, "y": 4 },
+      "dark": { "color": "#00000028", "radius": 12, "x": 0, "y": 6 },
       "description": "Floating overlays, popovers, and modals."
     },
     "focus": {
-      "light": { "color": "#5AA8FF55", "radius": 0, "x": 0, "y": 0 },
-      "dark": { "color": "#81C5FF55", "radius": 0, "x": 0, "y": 0 },
+      "light": { "color": "#5AA8FF22", "radius": 6, "x": 0, "y": 0 },
+      "dark": { "color": "#81C5FF22", "radius": 6, "x": 0, "y": 0 },
       "description": "Supplementary focus glow for highly interactive surfaces."
     }
   },
@@ -273,10 +273,10 @@
     "titlebar": { "fill": "bg.titlebar", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 0.98, "translucent": { "light": true, "dark": true }, "interactive": false },
     "toolbar": { "fill": "bg.toolbar", "border": "border.subtle", "elevation": "flat", "radius": "medium", "opacity": 0.98, "translucent": { "light": true, "dark": false }, "interactive": false },
     "workspace": { "fill": "bg.workspace", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
-    "grouped": { "fill": "surface.grouped", "border": "border.subtle", "elevation": "subtle", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
-    "raised": { "fill": "surface.raised", "border": "border.subtle", "elevation": "raised", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
-    "panel": { "fill": "surface.grouped", "border": "border.subtle", "elevation": "subtle", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
-    "card": { "fill": "surface.raised", "border": "border.subtle", "elevation": "subtle", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
+    "grouped": { "fill": "surface.grouped", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
+    "raised": { "fill": "surface.raised", "border": "border.subtle", "elevation": "subtle", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
+    "panel": { "fill": "surface.grouped", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
+    "card": { "fill": "surface.raised", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
     "inset": { "fill": "surface.inset", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
     "input": { "fill": "surface.input", "border": "border.subtle", "elevation": "flat", "radius": "medium", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": true },
     "code": { "fill": "surface.inset", "border": "border.strong", "elevation": "flat", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
@@ -284,12 +284,12 @@
     "hover": { "fill": "surface.hover", "border": "border.subtle", "elevation": "flat", "radius": "medium", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": true },
     "pressed": { "fill": "surface.pressed", "border": "border.subtle", "elevation": "flat", "radius": "medium", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": true },
     "selected": { "fill": "surface.selected", "border": "border.strong", "elevation": "flat", "radius": "medium", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": true },
-    "notice": { "fill": "surface.raised", "border": "border.strong", "elevation": "subtle", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
+    "notice": { "fill": "surface.raised", "border": "border.strong", "elevation": "flat", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
     "tableHeader": { "fill": "surface.inset", "border": "border.subtle", "elevation": "flat", "radius": "medium", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
     "tableRow": { "fill": "surface.grouped", "border": "border.subtle", "elevation": "flat", "radius": "medium", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": true },
     "popover": { "fill": "surface.overlay", "border": "border.subtle", "elevation": "floating", "radius": "large", "opacity": 0.98, "translucent": { "light": true, "dark": false }, "interactive": false },
     "modal": { "fill": "surface.overlay", "border": "border.subtle", "elevation": "floating", "radius": "extraLarge", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
-    "drawer": { "fill": "surface.overlay", "border": "border.subtle", "elevation": "raised", "radius": "large", "opacity": 0.99, "translucent": { "light": false, "dark": false }, "interactive": false },
+    "drawer": { "fill": "surface.overlay", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 0.99, "translucent": { "light": false, "dark": false }, "interactive": false },
     "overlay": { "fill": "surface.overlay", "border": "border.subtle", "elevation": "floating", "radius": "large", "opacity": 0.99, "translucent": { "light": false, "dark": false }, "interactive": false },
     "scrim": { "fill": "surface.scrim", "border": "border.subtle", "elevation": "flat", "radius": "small", "opacity": 1.0, "translucent": { "light": true, "dark": true }, "interactive": false }
   },

@@ -143,7 +143,7 @@ Canonical compiled example for Tiles. Use Tiles when selection state must stay l
 // Canonical example for Tiles
 let environment = DesignSystemEnvironment.preview(.dark)
 
-TilePicker(environment: environment, title: "Tiles", options: [
+TilePicker(environment: environment, options: [
     .init(label: "Compact", value: "compact"),
     .init(label: "Default", value: "default")
 ], selection: $selection)

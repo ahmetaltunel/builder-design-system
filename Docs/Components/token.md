@@ -143,5 +143,5 @@ Canonical compiled example for Token. Use Token when selection state must stay l
 // Canonical example for Token
 let environment = DesignSystemEnvironment.preview(.dark)
 
-TokenBadge(environment: environment, label: "accentAction")
+TokenBadge(environment: environment, title: "accentAction")
 ```

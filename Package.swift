@@ -23,13 +23,18 @@ let package = Package(
             path: "Sources/BuilderFoundation"
         ),
         .target(
-            name: "BuilderComponents",
+            name: "BuilderBehaviors",
             dependencies: ["BuilderFoundation"],
+            path: "Sources/BuilderBehaviors"
+        ),
+        .target(
+            name: "BuilderComponents",
+            dependencies: ["BuilderFoundation", "BuilderBehaviors"],
             path: "Sources/BuilderComponents"
         ),
         .target(
             name: "BuilderDesignSystem",
-            dependencies: ["BuilderFoundation", "BuilderComponents"],
+            dependencies: ["BuilderFoundation", "BuilderBehaviors", "BuilderComponents"],
             path: "Sources/BuilderDesignSystem"
         ),
         .target(
@@ -58,18 +63,23 @@ let package = Package(
             path: "Tests/BuilderFoundationTests"
         ),
         .testTarget(
+            name: "BuilderBehaviorsTests",
+            dependencies: ["BuilderFoundation", "BuilderBehaviors"],
+            path: "Tests/BuilderBehaviorsTests"
+        ),
+        .testTarget(
             name: "BuilderComponentsTests",
-            dependencies: ["BuilderFoundation", "BuilderComponents"],
+            dependencies: ["BuilderFoundation", "BuilderBehaviors", "BuilderComponents"],
             path: "Tests/BuilderComponentsTests"
         ),
         .testTarget(
             name: "BuilderCatalogTests",
-            dependencies: ["BuilderFoundation", "BuilderCatalog"],
+            dependencies: ["BuilderFoundation", "BuilderCatalog", "BuilderReferenceExamples"],
             path: "Tests/BuilderCatalogTests"
         ),
         .testTarget(
             name: "BuilderIntegrationTests",
-            dependencies: ["BuilderFoundation", "BuilderComponents", "BuilderDesignSystem", "BuilderCatalog", "BuilderShowcase"],
+            dependencies: ["BuilderFoundation", "BuilderBehaviors", "BuilderComponents", "BuilderDesignSystem", "BuilderCatalog", "BuilderShowcase"],
             path: "Tests/BuilderIntegrationTests",
             resources: [
                 .process("__Snapshots__")

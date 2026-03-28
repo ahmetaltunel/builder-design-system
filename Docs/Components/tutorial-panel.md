@@ -141,9 +141,13 @@ Canonical compiled example for Tutorial panel. Use Tutorial panel when a guided 
 // Canonical example for Tutorial panel
 let environment = DesignSystemEnvironment.preview(.dark)
 
-TutorialPanel(environment: environment, title: "Tutorial panel", steps: steps, currentStepID: $currentStepID, completedStepIDs: ["audit"], stepChangeAnnouncement: { step, index, total in
-    "Tutorial progress updated. Step \(index) of \(total): \(step.title)."
-}) {
+let tutorialController = TutorialFlowController(steps: [
+    .init(id: "audit", title: "Audit", detail: "Review the API and states.", status: .complete),
+    .init(id: "build", title: "Build", detail: "Promote shared primitives.", status: .current),
+    .init(id: "verify", title: "Verify", detail: "Run tests and inspect the showcase.", status: .warning, isOptional: true)
+], currentStepID: "build", completedStepIDs: ["audit"])
+
+TutorialPanel(environment: environment, title: "Tutorial panel", controller: tutorialController) {
     Text("Keep progression visible inside the current workflow.")
 } primaryActions: {
     SystemButton(environment: environment, title: "Continue", tone: .primary) {}

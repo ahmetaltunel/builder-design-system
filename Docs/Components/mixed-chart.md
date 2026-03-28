@@ -142,6 +142,8 @@ Canonical compiled example for Mixed chart. Use Mixed chart when analytical cont
 // Canonical example for Mixed chart
 let environment = DesignSystemEnvironment.preview(.dark)
 
+let chartController = MetricChartController()
+
 MixedChartPanel(environment: environment, title: "Mixed chart", state: .ready, barSeries: [
     .init(title: "Coverage", color: environment.theme.color(.chartBlue), points: [
         .init(label: "Tokens", value: 82),
@@ -152,5 +154,5 @@ MixedChartPanel(environment: environment, title: "Mixed chart", state: .ready, b
         .init(label: "Tokens", value: 90),
         .init(label: "Docs", value: 85)
     ])
-], selection: .constant(nil), visibleSeriesIDs: .constant(["Coverage", "Target"]), valueFormatter: { value in "\(Int(value))%" })
+], controller: chartController, valueFormatter: { value in "\(Int(value))%" })
 ```

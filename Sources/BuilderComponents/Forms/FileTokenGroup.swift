@@ -1,26 +1,111 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct FileTokenGroup: View {
     public let environment: DesignSystemEnvironment
     public let items: [FileUploadItem]
+    public let summaryMessage: String?
     public let onRetry: ((FileUploadItem) -> Void)?
+    public let onCancel: ((FileUploadItem) -> Void)?
     public let onRemove: ((FileUploadItem) -> Void)?
+    public let onRetryFailed: (() -> Void)?
+    public let onRemoveCompleted: (() -> Void)?
+    public let onCancelAll: (() -> Void)?
 
     public init(
         environment: DesignSystemEnvironment,
         items: [FileUploadItem],
+        summaryMessage: String? = nil,
         onRetry: ((FileUploadItem) -> Void)? = nil,
-        onRemove: ((FileUploadItem) -> Void)? = nil
+        onCancel: ((FileUploadItem) -> Void)? = nil,
+        onRemove: ((FileUploadItem) -> Void)? = nil,
+        onRetryFailed: (() -> Void)? = nil,
+        onRemoveCompleted: (() -> Void)? = nil,
+        onCancelAll: (() -> Void)? = nil
     ) {
         self.environment = environment
         self.items = items
+        self.summaryMessage = summaryMessage
         self.onRetry = onRetry
+        self.onCancel = onCancel
         self.onRemove = onRemove
+        self.onRetryFailed = onRetryFailed
+        self.onRemoveCompleted = onRemoveCompleted
+        self.onCancelAll = onCancelAll
+    }
+
+    public init(
+        environment: DesignSystemEnvironment,
+        controller: FileUploadSessionController,
+        onRetry: ((FileUploadItem) -> Void)? = nil
+    ) {
+        self.init(
+            environment: environment,
+            items: controller.items,
+            summaryMessage: controller.validationSummary,
+            onRetry: onRetry,
+            onCancel: { item in controller.cancel(id: item.id) },
+            onRemove: { item in controller.remove(id: item.id) },
+            onRetryFailed: nil,
+            onRemoveCompleted: { controller.removeCompleted() },
+            onCancelAll: controller.isUploading ? { controller.cancelAll() } : nil
+        )
     }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 10) {
+            if let summaryMessage {
+                ValidationSummary(
+                    environment: environment,
+                    items: [
+                        .init(
+                            id: "upload-summary",
+                            title: "Upload session",
+                            detail: summaryMessage,
+                            status: .warning
+                        )
+                    ]
+                )
+            }
+
+            if showsBatchActions {
+                HStack(spacing: 8) {
+                    if let onRetryFailed {
+                        SystemButton(
+                            environment: environment,
+                            title: "Retry failed",
+                            tone: .secondary,
+                            size: .small,
+                            leadingSymbol: "arrow.clockwise",
+                            action: onRetryFailed
+                        )
+                    }
+
+                    if let onRemoveCompleted {
+                        SystemButton(
+                            environment: environment,
+                            title: "Remove completed",
+                            tone: .secondary,
+                            size: .small,
+                            leadingSymbol: "tray.and.arrow.down",
+                            action: onRemoveCompleted
+                        )
+                    }
+
+                    if let onCancelAll {
+                        SystemButton(
+                            environment: environment,
+                            title: "Cancel uploads",
+                            tone: .secondary,
+                            size: .small,
+                            leadingSymbol: "xmark.circle",
+                            action: onCancelAll
+                        )
+                    }
+                }
+            }
+
             ForEach(items) { item in
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .center, spacing: 10) {
@@ -90,6 +175,22 @@ public struct FileTokenGroup: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
+                    if item.status == .uploading, let onCancel {
+                        HStack(spacing: 8) {
+                            SystemButton(
+                                environment: environment,
+                                title: "Cancel",
+                                tone: .secondary,
+                                size: .small,
+                                leadingSymbol: "xmark.circle"
+                            ) {
+                                onCancel(item)
+                            }
+
+                            Spacer(minLength: 0)
+                        }
+                    }
+
                     if item.canRetry, let onRetry, item.status == .error || item.status == .warning {
                         HStack(spacing: 8) {
                             SystemButton(
@@ -121,6 +222,10 @@ public struct FileTokenGroup: View {
                 .accessibilityHint(accessibilityHint(for: item.status))
             }
         }
+    }
+
+    private var showsBatchActions: Bool {
+        onRetryFailed != nil || onRemoveCompleted != nil || onCancelAll != nil
     }
 
     private func statusLabel(for item: FileUploadItem) -> String {

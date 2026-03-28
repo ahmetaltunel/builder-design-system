@@ -142,5 +142,5 @@ Canonical compiled example for List. Use List to organize content before reachin
 // Canonical example for List
 let environment = DesignSystemEnvironment.preview(.dark)
 
-ListSurface(environment: environment, title: "List", items: ["Tokens", "Patterns", "Accessibility"] )
+ListSurface(environment: environment, items: ["Tokens", "Patterns", "Accessibility"])
 ```

@@ -141,9 +141,11 @@ Canonical compiled example for Prompt input. Use Prompt input when generated out
 // Canonical example for Prompt input
 let environment = DesignSystemEnvironment.preview(.dark)
 
-PromptInput(environment: environment, prompt: $prompt, actionTitle: "Draft", supportingText: "Command-Return submits.", isSubmitting: isSubmitting, isMultiline: true, submitShortcutBehavior: .commandReturn, secondaryActionTitle: "Clear", onSecondaryAction: {
-    prompt = ""
+let promptController = PromptComposerController(draft: "Summarize the runtime rollout.", supportingText: "Command-Return submits.")
+
+PromptInput(environment: environment, controller: promptController, actionTitle: "Draft", isMultiline: true, secondaryActionTitle: "Clear", onSecondaryAction: {
+    promptController.clear()
 }) {
-    isSubmitting = true
+    promptController.beginSubmitting()
 }
 ```

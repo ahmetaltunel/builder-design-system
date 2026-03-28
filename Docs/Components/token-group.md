@@ -143,5 +143,5 @@ Canonical compiled example for Token group. Use Token group when selection state
 // Canonical example for Token group
 let environment = DesignSystemEnvironment.preview(.dark)
 
-TokenGroup(environment: environment, tokens: ["bg.sidebar", "surface.grouped", "text.primary"])
+TokenGroup(environment: environment, titles: ["bg.sidebar", "surface.grouped", "text.primary"])
 ```

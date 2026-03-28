@@ -2,6 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import XCTest
 import BuilderFoundation
+import BuilderBehaviors
 import BuilderComponents
 @testable import BuilderShowcase
 
@@ -191,6 +192,32 @@ final class BuilderSnapshotTests: XCTestCase {
             matching: GuidedBehaviorGallery(environment: lightEnvironment),
             named: "component-guided-behavior-light",
             size: CGSize(width: 1400, height: 920)
+        )
+    }
+
+    func testRuntimeControllerSnapshots() {
+        let darkEnvironment = DesignSystemEnvironment.preview(
+            .dark,
+            density: .compact,
+            visualContext: .editorComposer,
+            reduceMotion: true
+        )
+        let lightEnvironment = DesignSystemEnvironment.preview(
+            .light,
+            density: .default,
+            visualContext: .editorComposer,
+            reduceMotion: true
+        )
+
+        SnapshotTestSupport.assertSnapshot(
+            matching: RuntimeControllerGallery(environment: darkEnvironment),
+            named: "component-runtime-controllers-dark",
+            size: CGSize(width: 1400, height: 980)
+        )
+        SnapshotTestSupport.assertSnapshot(
+            matching: RuntimeControllerGallery(environment: lightEnvironment),
+            named: "component-runtime-controllers-light",
+            size: CGSize(width: 1400, height: 980)
         )
     }
 }
@@ -781,6 +808,298 @@ private struct ChartBehaviorGallery: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(environment.theme.color(.workspaceBackground))
     }
+}
+
+private struct SnapshotConversationDriver: ConversationDriver {
+    func streamReply(
+        prompt: String,
+        history: [ConversationMessage]
+    ) -> AsyncThrowingStream<ConversationStreamEvent, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(.appendText("Drafted response for "))
+            continuation.yield(.appendText(prompt))
+            continuation.yield(.complete)
+            continuation.finish()
+        }
+    }
+}
+
+private struct RuntimeControllerGallery: View {
+    let environment: DesignSystemEnvironment
+
+    @StateObject private var collectionController: CollectionController<DataTable.Row>
+    @StateObject private var chartController: MetricChartController
+    @StateObject private var importController: FileImportController
+    @StateObject private var uploadController: FileUploadSessionController
+    @StateObject private var boardController: BoardController
+    @StateObject private var promptController: PromptComposerController
+    @StateObject private var tutorialController: TutorialFlowController
+    @StateObject private var helpNavigator: HelpNavigator
+    @StateObject private var conversationController: ConversationController
+    @State private var boardColumns: [Board.Column]
+
+    init(environment: DesignSystemEnvironment) {
+        self.environment = environment
+        let collectionRows: [DataTable.Row] = [
+            .init(id: "tokens", cells: ["Tokens", "Ready", "Now"]),
+            .init(id: "components", cells: ["Components", "Review", "2h ago"]),
+            .init(id: "patterns", cells: ["Patterns", "Ready", "1d ago"])
+        ]
+        let sortOptions: [CollectionController<DataTable.Row>.SortOption] = [
+            .init(id: "title-asc", title: "Title") { lhs, rhs in
+                lhs.cells[0] < rhs.cells[0]
+            }
+        ]
+        let collection = CollectionController<DataTable.Row>(
+            items: collectionRows,
+            pageSize: 2,
+            sortOptions: sortOptions,
+            searchableText: { $0.cells.joined(separator: " ") },
+            preferencesStore: .init(key: "snapshot.runtime.collection")
+        )
+        let chart = MetricChartController(
+            visibleSeriesStore: .init(key: "snapshot.runtime.chart")
+        )
+        let importer = FileImportController(
+            acceptedContentTypes: [.plainText, .pdf],
+            source: nil
+        )
+        let uploads = FileUploadSessionController(
+            items: [
+                .init(id: "release-notes", title: "release-notes.md", detail: "12 KB", status: .uploading, progress: 0.45, message: "Uploading", symbol: "doc.text")
+            ]
+        )
+        let board = BoardController(selectedItemID: "review-docs")
+        let prompt = PromptComposerController(
+            draft: "Summarize the rollout and review risk.",
+            supportingText: "Command-Return submits.",
+            draftStore: .init(key: "snapshot.runtime.prompt")
+        )
+        let tutorial = TutorialFlowController(
+            steps: [
+                .init(id: "audit", title: "Audit"),
+                .init(id: "build", title: "Build"),
+                .init(id: "verify", title: "Verify", status: .warning, isOptional: true)
+            ],
+            progressStore: .init(key: "snapshot.runtime.tutorial")
+        )
+        let help = HelpNavigator(
+            topics: [
+                .init(id: "context", title: "Current context", detail: "Link guidance to the active decision.", symbol: "scope"),
+                .init(id: "recovery", title: "Recovery", detail: "Name the next safe action.", symbol: "arrow.uturn.backward")
+            ],
+            relatedTopicsByID: ["context": ["recovery"]],
+            selectionStore: .init(key: "snapshot.runtime.help")
+        )
+        let conversation = ConversationController(
+            messages: [
+                .init(role: .system, author: "System", message: "Runtime controller preview"),
+                .init(role: .assistant, author: "Builder assistant", message: "The runtime layer now owns reusable state and native interactions.", state: .complete)
+            ],
+            driver: SnapshotConversationDriver()
+        )
+
+        _collectionController = StateObject(wrappedValue: collection)
+        _chartController = StateObject(wrappedValue: chart)
+        _importController = StateObject(wrappedValue: importer)
+        _uploadController = StateObject(wrappedValue: uploads)
+        _boardController = StateObject(wrappedValue: board)
+        _promptController = StateObject(wrappedValue: prompt)
+        _tutorialController = StateObject(wrappedValue: tutorial)
+        _helpNavigator = StateObject(wrappedValue: help)
+        _conversationController = StateObject(wrappedValue: conversation)
+        _boardColumns = State(initialValue: [
+            .init(id: "ready", title: "Ready", items: [
+                .init(id: "review-docs", title: "Review docs", detail: "Align examples to runtime APIs.", status: "Review", statusColor: environment.theme.color(.warning))
+            ]),
+            .init(id: "done", title: "Done", items: [])
+        ])
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            HStack(alignment: .top, spacing: 18) {
+                VStack(alignment: .leading, spacing: 12) {
+                    TextFilterField(environment: environment, controller: collectionController)
+                    DataTable(
+                        environment: environment,
+                        columns: [.init(title: "Area"), .init(title: "State"), .init(title: "Updated")],
+                        controller: collectionController
+                    )
+                    PaginationControl(environment: environment, controller: collectionController)
+                }
+                .frame(maxWidth: .infinity)
+
+                MixedChartPanel(
+                    environment: environment,
+                    title: "Coverage and adoption",
+                    barSeries: [
+                        .init(title: "Coverage", color: environment.theme.color(.chartBlue), points: [
+                            .init(label: "Tokens", value: 82),
+                            .init(label: "Components", value: 80)
+                        ])
+                    ],
+                    lineSeries: [
+                        .init(title: "Adoption", color: environment.theme.color(.chartTeal), points: [
+                            .init(label: "Tokens", value: 64),
+                            .init(label: "Components", value: 58)
+                        ])
+                    ],
+                    controller: chartController
+                )
+                .frame(maxWidth: .infinity)
+            }
+
+            HStack(alignment: .top, spacing: 18) {
+                FileUploadField(
+                    environment: environment,
+                    title: "Attach release notes",
+                    subtitle: "Controller-backed file import and upload queues.",
+                    importController: importController,
+                    uploadController: uploadController
+                )
+                .frame(maxWidth: .infinity)
+
+                HStack(alignment: .top, spacing: 16) {
+                    Board(
+                        environment: environment,
+                        columns: $boardColumns,
+                        controller: boardController,
+                        paletteItemResolver: { itemID in
+                            runtimePaletteItems(environment: environment).first { $0.id == itemID }
+                        }
+                    )
+                    .frame(maxWidth: .infinity)
+
+                    ItemsPalette(
+                        environment: environment,
+                        items: runtimePaletteItems(environment: environment),
+                        controller: boardController,
+                        insertDestinations: [
+                            .init(title: "Add to Ready", columnID: "ready", columnTitle: "Ready", index: boardColumns.first?.items.count ?? 0)
+                        ]
+                    )
+                    .frame(width: 280)
+                }
+                .frame(maxWidth: .infinity)
+            }
+
+            HStack(alignment: .top, spacing: 18) {
+                PanelSurface(environment: environment, title: "AI workflow", subtitle: "Controllers keep the prompt and transcript coordinated.") {
+                    PromptInput(
+                        environment: environment,
+                        controller: promptController,
+                        actionTitle: "Draft",
+                        isMultiline: false,
+                        secondaryActionTitle: "Clear",
+                        secondaryActionSymbol: "xmark",
+                        onSecondaryAction: { promptController.clear() }
+                    ) {
+                        promptController.submit { draft in
+                            conversationController.send(prompt: draft)
+                        }
+                    }
+
+                    SupportPromptGroup(
+                        environment: environment,
+                        prompts: [
+                            .init(id: "summarize", title: "Summarize", detail: "Condense the rollout.", isSelected: true, isRecommended: true),
+                            .init(id: "review", title: "Review risk", detail: "Call out regressions.")
+                        ],
+                        controller: promptController
+                    )
+
+                    ForEach(conversationController.messages) { message in
+                        ChatBubble(
+                            environment: environment,
+                            message: message,
+                            showsCopyAction: message.role == .assistant,
+                            onRetry: message.state == .error ? {
+                                conversationController.retry(messageID: message.id)
+                            } : nil
+                        )
+                    }
+                }
+                .frame(maxWidth: .infinity)
+
+                VStack(alignment: .leading, spacing: 14) {
+                    TutorialPanel(
+                        environment: environment,
+                        title: "Rollout guidance",
+                        controller: tutorialController
+                    ) {
+                        Text("Guide builders through the shared runtime layer.")
+                            .font(environment.theme.typography(.body).font)
+                            .foregroundStyle(environment.theme.color(.textSecondary))
+                    } primaryActions: {
+                        SystemButton(environment: environment, title: "Continue", tone: .primary) {
+                            tutorialController.advance()
+                            helpNavigator.sync(withTutorialStepID: tutorialController.currentStepID)
+                        }
+                    } secondaryActions: {
+                        SystemButton(environment: environment, title: "Back", tone: .secondary) {
+                            tutorialController.goBack()
+                            helpNavigator.sync(withTutorialStepID: tutorialController.currentStepID)
+                        }
+                    }
+
+                    HelpPanel(
+                        environment: environment,
+                        title: "Help",
+                        navigator: helpNavigator
+                    ) {
+                        Text("Keep help and tutorials synchronized through shared runtime state.")
+                            .font(environment.theme.typography(.body).font)
+                            .foregroundStyle(environment.theme.color(.textSecondary))
+                    }
+                }
+                .frame(maxWidth: .infinity)
+            }
+
+            CoachmarkHost(
+                environment: environment,
+                step: .init(
+                    anchorID: "controller-prompt",
+                    title: "Composer runtime",
+                    message: "Prompt state, shortcuts, and draft persistence now live in the shared behavior layer.",
+                    primaryActionTitle: "Next",
+                    secondaryActionTitle: "Dismiss"
+                ),
+                onPrimaryAction: { tutorialController.advance() },
+                onSecondaryAction: {}
+            ) {
+                AnnotationAnchor(id: "controller-prompt") {
+                    PromptInput(
+                        environment: environment,
+                        controller: promptController,
+                        actionTitle: "Draft",
+                        isMultiline: false
+                    ) {
+                        promptController.submit { draft in
+                            conversationController.send(prompt: draft)
+                        }
+                    }
+                }
+            }
+            .frame(height: 150)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(environment.theme.color(.workspaceBackground))
+    }
+}
+
+private func runtimePaletteItems(environment: DesignSystemEnvironment) -> [Board.Item] {
+    [
+        .init(
+            id: "metric-card",
+            title: "Metric card",
+            detail: "Reusable dashboard insight.",
+            status: "Ready",
+            statusColor: environment.theme.color(.success),
+            symbol: "chart.bar"
+        )
+    ]
 }
 
 private let collectionUploadItems: [FileUploadItem] = [

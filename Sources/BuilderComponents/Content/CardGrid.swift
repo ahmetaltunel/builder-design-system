@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct CardGrid<Data: RandomAccessCollection, Content: View>: View where Data.Element: Identifiable {
     public let environment: DesignSystemEnvironment
@@ -37,5 +38,21 @@ public struct CardGrid<Data: RandomAccessCollection, Content: View>: View where 
                     )
             }
         }
+    }
+}
+
+public extension CardGrid {
+    init<Item>(
+        environment: DesignSystemEnvironment,
+        controller: CollectionController<Item>,
+        columns: Int = 3,
+        @ViewBuilder content: @escaping (Item) -> Content
+    ) where Data == [Item], Item: Identifiable & Hashable {
+        self.init(
+            environment: environment,
+            data: controller.visibleItems,
+            columns: columns,
+            content: content
+        )
     }
 }

@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct ItemsPalette: View {
     public let environment: DesignSystemEnvironment
@@ -10,6 +11,7 @@ public struct ItemsPalette: View {
     public let insertDestinations: [Board.Destination]
     public let onActivateItem: ((Board.Item) -> Void)?
     public let onInsertItem: ((Board.Item, String, Int) -> Void)?
+    public let boardController: BoardController?
 
     @State private var localSelectedItemID: String?
     @State private var liveAnnouncement: String?
@@ -32,6 +34,7 @@ public struct ItemsPalette: View {
         self.insertDestinations = insertDestinations
         self.onActivateItem = onActivateItem
         self.onInsertItem = onInsertItem
+        self.boardController = nil
     }
 
     public init(
@@ -53,6 +56,30 @@ public struct ItemsPalette: View {
         )
     }
 
+    public init(
+        environment: DesignSystemEnvironment,
+        title: String = "Items palette",
+        subtitle: String? = nil,
+        items: [Board.Item],
+        controller: BoardController,
+        insertDestinations: [Board.Destination] = [],
+        onActivateItem: ((Board.Item) -> Void)? = nil,
+        onInsertItem: ((Board.Item, String, Int) -> Void)? = nil
+    ) {
+        self.environment = environment
+        self.title = title
+        self.subtitle = subtitle
+        self.items = items
+        self.selectedItemID = Binding(
+            get: { controller.selectedItemID },
+            set: { controller.select(itemID: $0) }
+        )
+        self.insertDestinations = insertDestinations
+        self.onActivateItem = onActivateItem
+        self.onInsertItem = onInsertItem
+        self.boardController = controller
+    }
+
     public var body: some View {
         PanelSurface(environment: environment, title: title, subtitle: subtitle) {
             VStack(alignment: .leading, spacing: 10) {
@@ -61,13 +88,15 @@ public struct ItemsPalette: View {
                         environment: environment,
                         item: item,
                         isSelected: resolvedSelectedItemID == item.id,
+                        isFocused: boardController?.focusedItemID == item.id,
                         onActivate: activationHandler(for: item),
                         insertDestinations: insertDestinations,
                         onInsert: onInsertItem == nil ? nil : { destination in
                             updateSelectedItemID(item.id)
                             onInsertItem?(item, destination.columnID, destination.index)
                             announce("\(item.title) inserted in \(destination.columnTitle).")
-                        }
+                        },
+                        dragPayload: dragPayload(for: item)
                     )
                 }
 
@@ -83,15 +112,20 @@ public struct ItemsPalette: View {
     }
 
     private func activationHandler(for item: Board.Item) -> (() -> Void)? {
-        guard selectedItemID != nil || onActivateItem != nil else { return nil }
+        guard selectedItemID != nil || onActivateItem != nil || boardController != nil else { return nil }
 
         return {
             updateSelectedItemID(item.id)
+            boardController?.activate(itemID: item.id)
             onActivateItem?(item)
         }
     }
 
     private func updateSelectedItemID(_ itemID: String?) {
+        if let boardController {
+            boardController.select(itemID: itemID)
+            return
+        }
         if let selectedItemID {
             selectedItemID.wrappedValue = itemID
         } else {
@@ -102,5 +136,17 @@ public struct ItemsPalette: View {
     private func announce(_ message: String) {
         liveAnnouncement = message
         postAccessibilityAnnouncement(message)
+    }
+
+    private func dragPayload(for item: Board.Item) -> String? {
+        guard boardController != nil else { return nil }
+        let payload = BoardDragPayload(
+            itemID: item.id,
+            itemTitle: item.title,
+            sourceColumnID: nil,
+            sourceKind: .palette
+        )
+        guard let data = try? JSONEncoder().encode(payload) else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 }

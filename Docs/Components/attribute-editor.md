@@ -141,8 +141,8 @@ Canonical compiled example for Attribute editor. Use Attribute editor when a dom
 // Canonical example for Attribute editor
 let environment = DesignSystemEnvironment.preview(.dark)
 
-AttributeEditor(environment: environment, attributes: [
-    .init(id: "title", name: "Title", value: "Builder surface"),
-    .init(id: "status", name: "Status", value: "Ready")
-], selectedAttributeID: $selectedAttributeID)
+AttributeEditor(environment: environment, attributes: .constant([
+    .init(key: "Title", value: "Builder surface"),
+    .init(key: "Status", value: "Ready")
+]))
 ```

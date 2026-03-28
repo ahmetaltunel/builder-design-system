@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct PaginationControl: View {
     public let environment: DesignSystemEnvironment
@@ -14,6 +15,18 @@ public struct PaginationControl: View {
         self.environment = environment
         self._page = page
         self.pageCount = max(pageCount, 1)
+    }
+
+    public init<Item: Identifiable & Hashable>(
+        environment: DesignSystemEnvironment,
+        controller: CollectionController<Item>
+    ) {
+        self.environment = environment
+        self._page = Binding(
+            get: { controller.currentPage },
+            set: { controller.setPage($0) }
+        )
+        self.pageCount = max(controller.pageCount, 1)
     }
 
     public var body: some View {

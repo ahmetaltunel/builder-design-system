@@ -144,10 +144,8 @@ Canonical compiled example for Button dropdown. Use Button dropdown when selecti
 let environment = DesignSystemEnvironment.preview(.dark)
 
 ButtonDropdown(environment: environment, title: "Create", items: [
-    .init(title: "Component"),
-    .init(title: "Pattern"),
-    .init(title: "Foundation note")
-]) { item in
-    print(item.title)
-}
+    .init(title: "Component", action: {}),
+    .init(title: "Pattern", action: {}),
+    .init(title: "Foundation note", action: {})
+])
 ```

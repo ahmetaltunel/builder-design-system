@@ -120,10 +120,12 @@ Canonical compiled pattern example for Help system. Use Help system when help, i
 // Canonical example for Help system
 let environment = DesignSystemEnvironment.preview(.dark)
 
-HelpPanel(environment: environment, title: "Help", topics: [
+let navigator = HelpNavigator(topics: [
     .init(id: "context", title: "Current context", detail: "Tie guidance to the active workflow."),
     .init(id: "recovery", title: "Recovery", detail: "Name the next safe action.")
-], selectedTopicID: .constant("context")) {
+], selectedTopicID: "context")
+
+HelpPanel(environment: environment, title: "Help", navigator: navigator) {
     BulletList(environment: environment, items: ["Explain the current decision", "Keep guidance adjacent to work"])
 }
 ```

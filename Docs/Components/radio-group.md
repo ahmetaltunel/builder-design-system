@@ -143,7 +143,7 @@ Canonical compiled example for Radio group. Use Radio group when selection state
 // Canonical example for Radio group
 let environment = DesignSystemEnvironment.preview(.dark)
 
-RadioGroup(environment: environment, title: "Mode", options: [
+RadioGroup(environment: environment, options: [
     .init(label: "Automatic", value: "automatic"),
     .init(label: "Manual", value: "manual")
 ], selection: $selection)

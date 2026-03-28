@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct ChatBubble: View {
     public enum Role: Hashable, Sendable {
@@ -82,6 +83,31 @@ public struct ChatBubble: View {
         self.copyActionTitle = copyActionTitle
         self.retryActionTitle = retryActionTitle
         self.onRetry = onRetry
+    }
+
+    public init(
+        environment: DesignSystemEnvironment,
+        message: ConversationMessage,
+        showsCopyAction: Bool = false,
+        copyActionTitle: String = "Copy",
+        retryActionTitle: String = "Retry",
+        onRetry: (() -> Void)? = nil
+    ) {
+        self.init(
+            environment: environment,
+            role: Self.role(for: message.role),
+            author: message.author,
+            message: message.message,
+            detail: message.detail,
+            state: Self.messageState(for: message.state),
+            footerMetadata: message.footerMetadata.map {
+                .init(id: $0.id, label: $0.label, value: $0.value)
+            },
+            showsCopyAction: showsCopyAction,
+            copyActionTitle: copyActionTitle,
+            retryActionTitle: retryActionTitle,
+            onRetry: onRetry
+        )
     }
 
     public var body: some View {
@@ -281,6 +307,28 @@ public struct ChatBubble: View {
             "Conversation message"
         case .error:
             "Message needs retry"
+        }
+    }
+
+    private static func role(for role: ConversationMessage.Role) -> Role {
+        switch role {
+        case .assistant:
+            .assistant
+        case .user:
+            .user
+        case .system:
+            .system
+        }
+    }
+
+    private static func messageState(for state: ConversationMessage.State) -> MessageState {
+        switch state {
+        case .streaming:
+            .streaming
+        case .complete:
+            .complete
+        case .error:
+            .error
         }
     }
 }

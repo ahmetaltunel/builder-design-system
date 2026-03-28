@@ -143,5 +143,7 @@ Canonical compiled example for Text filter. Use Text filter when fields, helper 
 // Canonical example for Text filter
 let environment = DesignSystemEnvironment.preview(.dark)
 
-TextFilterField(environment: environment, placeholder: "Filter components", text: $query)
+let collectionController = CollectionController(items: rows, searchableText: { row in row.cells.joined(separator: " ") })
+
+TextFilterField(environment: environment, placeholder: "Filter components", controller: collectionController)
 ```

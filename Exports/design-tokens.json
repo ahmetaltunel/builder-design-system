@@ -121,7 +121,7 @@
   "materials" : {
     "card" : {
       "border" : "border.subtle",
-      "elevation" : "subtle",
+      "elevation" : "flat",
       "fill" : "surface.raised",
       "interactive" : false,
       "opacity" : 1,
@@ -145,7 +145,7 @@
     },
     "drawer" : {
       "border" : "border.subtle",
-      "elevation" : "raised",
+      "elevation" : "flat",
       "fill" : "surface.overlay",
       "interactive" : false,
       "opacity" : 0.98999999999999999,
@@ -157,7 +157,7 @@
     },
     "grouped" : {
       "border" : "border.subtle",
-      "elevation" : "subtle",
+      "elevation" : "flat",
       "fill" : "surface.grouped",
       "interactive" : false,
       "opacity" : 1,
@@ -229,7 +229,7 @@
     },
     "notice" : {
       "border" : "border.strong",
-      "elevation" : "subtle",
+      "elevation" : "flat",
       "fill" : "surface.raised",
       "interactive" : false,
       "opacity" : 1,
@@ -253,7 +253,7 @@
     },
     "panel" : {
       "border" : "border.subtle",
-      "elevation" : "subtle",
+      "elevation" : "flat",
       "fill" : "surface.grouped",
       "interactive" : false,
       "opacity" : 1,
@@ -289,7 +289,7 @@
     },
     "raised" : {
       "border" : "border.subtle",
-      "elevation" : "raised",
+      "elevation" : "subtle",
       "fill" : "surface.raised",
       "interactive" : false,
       "opacity" : 1,
@@ -503,75 +503,75 @@
     },
     "floating" : {
       "dark" : {
-        "color" : "#00000033",
-        "radius" : 18,
+        "color" : "#00000028",
+        "radius" : 12,
         "x" : 0,
-        "y" : 12
+        "y" : 6
       },
       "description" : "Floating overlays, popovers, and modals.",
       "light" : {
-        "color" : "#00000026",
-        "radius" : 18,
+        "color" : "#00000018",
+        "radius" : 10,
         "x" : 0,
-        "y" : 12
+        "y" : 4
       }
     },
     "focus" : {
       "dark" : {
-        "color" : "#81C5FF55",
-        "radius" : 0,
+        "color" : "#81C5FF22",
+        "radius" : 6,
         "x" : 0,
         "y" : 0
       },
       "description" : "Supplementary focus glow for highly interactive surfaces.",
       "light" : {
-        "color" : "#5AA8FF55",
-        "radius" : 0,
+        "color" : "#5AA8FF22",
+        "radius" : 6,
         "x" : 0,
         "y" : 0
       }
     },
     "hairline" : {
       "dark" : {
-        "color" : "#00000014",
-        "radius" : 1,
+        "color" : "#00000010",
+        "radius" : 0.5,
         "x" : 0,
         "y" : 0.5
       },
       "description" : "Hairline separation for crisp low-elevation surfaces.",
       "light" : {
-        "color" : "#00000008",
-        "radius" : 1,
+        "color" : "#00000006",
+        "radius" : 0.5,
         "x" : 0,
         "y" : 0.5
       }
     },
     "raised" : {
       "dark" : {
-        "color" : "#00000029",
-        "radius" : 10,
+        "color" : "#00000020",
+        "radius" : 8,
         "x" : 0,
-        "y" : 4
+        "y" : 3
       },
       "description" : "Raised cards, menus, and sheet-like regions.",
       "light" : {
-        "color" : "#0000001F",
-        "radius" : 10,
+        "color" : "#00000012",
+        "radius" : 6,
         "x" : 0,
-        "y" : 4
+        "y" : 2
       }
     },
     "subtle" : {
       "dark" : {
-        "color" : "#0000001A",
-        "radius" : 3,
+        "color" : "#00000014",
+        "radius" : 1.5,
         "x" : 0,
         "y" : 1
       },
       "description" : "Small grouped panels and table headers.",
       "light" : {
-        "color" : "#00000014",
-        "radius" : 3,
+        "color" : "#0000000A",
+        "radius" : 1.5,
         "x" : 0,
         "y" : 1
       }

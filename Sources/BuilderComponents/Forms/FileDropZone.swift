@@ -2,17 +2,21 @@ import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct FileDropZone: View {
     public let environment: DesignSystemEnvironment
     public let title: String
     public let detail: String
+    public let validationMessage: String?
     public let state: AsyncContentState
     public let acceptedContentTypes: [UTType]
     public let isTargeted: Binding<Bool>?
     public let onDropURLs: (([URL]) -> Void)?
     public let actionTitle: String?
     public let action: (() -> Void)?
+    public let secondaryActionTitle: String?
+    public let secondaryAction: (() -> Void)?
 
     @State private var localIsTargeted = false
     @State private var liveAnnouncement: String?
@@ -21,22 +25,28 @@ public struct FileDropZone: View {
         environment: DesignSystemEnvironment,
         title: String = "Drop files",
         detail: String = "Drag files here or use the action button to select them.",
+        validationMessage: String? = nil,
         state: AsyncContentState = .ready,
         acceptedContentTypes: [UTType] = [.fileURL],
         isTargeted: Binding<Bool>? = nil,
         onDropURLs: (([URL]) -> Void)? = nil,
         actionTitle: String? = nil,
-        action: (() -> Void)? = nil
+        action: (() -> Void)? = nil,
+        secondaryActionTitle: String? = nil,
+        secondaryAction: (() -> Void)? = nil
     ) {
         self.environment = environment
         self.title = title
         self.detail = detail
+        self.validationMessage = validationMessage
         self.state = state
         self.acceptedContentTypes = acceptedContentTypes
         self.isTargeted = isTargeted
         self.onDropURLs = onDropURLs
         self.actionTitle = actionTitle
         self.action = action
+        self.secondaryActionTitle = secondaryActionTitle
+        self.secondaryAction = secondaryAction
     }
 
     public init(
@@ -50,12 +60,15 @@ public struct FileDropZone: View {
             environment: environment,
             title: title,
             detail: detail,
+            validationMessage: nil,
             state: .ready,
             acceptedContentTypes: [.fileURL],
             isTargeted: nil,
             onDropURLs: nil,
             actionTitle: actionTitle,
-            action: action
+            action: action,
+            secondaryActionTitle: nil,
+            secondaryAction: nil
         )
     }
 
@@ -63,23 +76,29 @@ public struct FileDropZone: View {
         environment: DesignSystemEnvironment,
         title: String = "Drop files",
         subtitle: String,
+        validationMessage: String? = nil,
         state: AsyncContentState = .ready,
         acceptedContentTypes: [UTType] = [.fileURL],
         isTargeted: Binding<Bool>? = nil,
         onDropURLs: (([URL]) -> Void)? = nil,
         actionTitle: String? = nil,
-        action: (() -> Void)? = nil
+        action: (() -> Void)? = nil,
+        secondaryActionTitle: String? = nil,
+        secondaryAction: (() -> Void)? = nil
     ) {
         self.init(
             environment: environment,
             title: title,
             detail: subtitle,
+            validationMessage: validationMessage,
             state: state,
             acceptedContentTypes: acceptedContentTypes,
             isTargeted: isTargeted,
             onDropURLs: onDropURLs,
             actionTitle: actionTitle,
-            action: action
+            action: action,
+            secondaryActionTitle: secondaryActionTitle,
+            secondaryAction: secondaryAction
         )
     }
 
@@ -94,12 +113,46 @@ public struct FileDropZone: View {
             environment: environment,
             title: title,
             detail: subtitle,
+            validationMessage: nil,
             state: .ready,
             acceptedContentTypes: [.fileURL],
             isTargeted: nil,
             onDropURLs: nil,
             actionTitle: actionTitle,
-            action: action
+            action: action,
+            secondaryActionTitle: nil,
+            secondaryAction: nil
+        )
+    }
+
+    public init(
+        environment: DesignSystemEnvironment,
+        title: String = "Drop files",
+        detail: String = "Drag files here or use the action button to select them.",
+        controller: FileImportController,
+        actionTitle: String? = nil,
+        action: (() -> Void)? = nil,
+        secondaryActionTitle: String? = nil,
+        secondaryAction: (() -> Void)? = nil
+    ) {
+        self.init(
+            environment: environment,
+            title: title,
+            detail: detail,
+            validationMessage: controller.validationSummary,
+            state: controller.state,
+            acceptedContentTypes: controller.acceptedContentTypes,
+            isTargeted: Binding(
+                get: { controller.isTargeted },
+                set: { controller.setTargeted($0) }
+            ),
+            onDropURLs: { urls in
+                _ = controller.handleDroppedURLs(urls)
+            },
+            actionTitle: actionTitle,
+            action: action,
+            secondaryActionTitle: secondaryActionTitle,
+            secondaryAction: secondaryAction
         )
     }
 
@@ -117,8 +170,31 @@ public struct FileDropZone: View {
                     .foregroundStyle(environment.theme.color(.textSecondary))
                     .multilineTextAlignment(.center)
 
-                if let actionTitle, let action {
-                    FilePickerButton(environment: environment, title: actionTitle, action: action)
+                if let validationMessage {
+                    ValidationMessage(
+                        environment: environment,
+                        status: .warning,
+                        message: validationMessage
+                    )
+                }
+
+                if actionTitle != nil || secondaryActionTitle != nil {
+                    HStack(spacing: 8) {
+                        if let actionTitle, let action {
+                            FilePickerButton(environment: environment, title: actionTitle, action: action)
+                        }
+
+                        if let secondaryActionTitle, let secondaryAction {
+                            SystemButton(
+                                environment: environment,
+                                title: secondaryActionTitle,
+                                tone: .secondary,
+                                size: .small,
+                                leadingSymbol: "doc.on.clipboard",
+                                action: secondaryAction
+                            )
+                        }
+                    }
                 }
 
                 if let liveAnnouncement, !liveAnnouncement.isEmpty {
@@ -179,7 +255,7 @@ public struct FileDropZone: View {
 
         group.notify(queue: .main) {
             let resolvedURLs = unique(collector.values).filter { url in
-                matchesAcceptedContentType(url, acceptedContentTypes: acceptedContentTypes)
+                BuilderBehaviors.matchesAcceptedContentType(url, acceptedContentTypes: acceptedContentTypes)
             }
             guard !resolvedURLs.isEmpty else { return }
 

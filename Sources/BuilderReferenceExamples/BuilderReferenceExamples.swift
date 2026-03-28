@@ -385,7 +385,16 @@ package enum BuilderReferenceExamples {
         environment: DesignSystemEnvironment,
         options: ComponentPreviewOptions = .live
     ) -> AnyView {
-        componentExample(id: id, displayName: displayName, family: family).makePreview(environment, options)
+        if let exactPreview = exactComponentPreview(
+            id: id,
+            displayName: displayName,
+            environment: environment,
+            options: options
+        ) {
+            return exactPreview
+        }
+
+        return componentExample(id: id, displayName: displayName, family: family).makePreview(environment, options)
     }
 
     package static func patternExample(
@@ -1164,9 +1173,22 @@ private struct ContentReferenceExample: View {
 
 private struct DataReferenceExample: View {
     let environment: DesignSystemEnvironment
-    @State private var selectedMetric: MetricSelection? = coverageSelection(label: "Tokens")
-    @State private var visibleSeriesIDs: Set<String> = ["Coverage", "Adoption"]
-    @State private var page = 1
+    @StateObject private var announcementCenter: AnnouncementCenter
+    @StateObject private var collectionController: CollectionController<DataTable.Row>
+    @StateObject private var chartController: MetricChartController
+
+    init(environment: DesignSystemEnvironment) {
+        self.environment = environment
+
+        let announcementCenter = AnnouncementCenter()
+        _announcementCenter = StateObject(wrappedValue: announcementCenter)
+        _collectionController = StateObject(
+            wrappedValue: makeDataCollectionController(announcementCenter: announcementCenter)
+        )
+        _chartController = StateObject(
+            wrappedValue: MetricChartController(announcementCenter: announcementCenter)
+        )
+    }
 
     private var coverageSeries: MetricSeries {
         .init(title: "Coverage", color: environment.theme.color(.chartBlue), points: [
@@ -1184,24 +1206,11 @@ private struct DataReferenceExample: View {
         ])
     }
 
-    private var selectedRowID: Binding<String?> {
-        Binding(
-            get: { selectedMetric?.datumID },
-            set: { nextValue in
-                guard let nextValue else {
-                    selectedMetric = nil
-                    return
-                }
-                selectedMetric = coverageSelection(label: nextValue)
-            }
-        )
-    }
-
     private var selectedPairs: [KeyValuePairs.Pair] {
-        guard let selectedMetric else {
+        guard let selectedMetric = chartController.activeSelection else {
             return [
                 .init(key: "Selection", value: "Choose a visible metric"),
-                .init(key: "Behavior", value: "Hover to preview or click to pin")
+                .init(key: "Behavior", value: "Hover, filter, or choose a row to pin the same metric.")
             ]
         }
 
@@ -1214,15 +1223,25 @@ private struct DataReferenceExample: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 16) {
+                TextFilterField(
+                    environment: environment,
+                    placeholder: "Filter metrics",
+                    controller: collectionController
+                )
+
+                ViewPreferencesPanel(environment: environment, controller: collectionController)
+                    .frame(width: 220)
+            }
+
             MixedChartPanel(
                 environment: environment,
                 title: "Coverage and adoption",
-                subtitle: "Selection stays synchronized across the chart, detail pane, and table.",
-                state: .ready,
+                subtitle: "Collection and chart controllers keep selection, pagination, and announcements aligned.",
+                state: collectionController.presentationState,
                 barSeries: [coverageSeries],
                 lineSeries: [adoptionSeries],
-                selection: $selectedMetric,
-                visibleSeriesIDs: $visibleSeriesIDs,
+                controller: chartController,
                 valueFormatter: percentMetricValue
             )
 
@@ -1271,104 +1290,178 @@ private struct DataReferenceExample: View {
                     .init(title: "Status"),
                     .init(title: "Updated")
                 ],
-                rows: [
-                    .init(id: "Tokens", cells: ["Tokens", "Ready", "Now"]),
-                    .init(id: "Components", cells: ["Components", "Review", "2h ago"]),
-                    .init(id: "Patterns", cells: ["Patterns", "Ready", "1d ago"])
-                ],
-                selectedRowID: selectedRowID
+                controller: collectionController
             )
 
-            PaginationControl(environment: environment, page: $page, pageCount: 5)
+            PaginationControl(environment: environment, controller: collectionController)
+
+            if let latestMessage = announcementCenter.latestMessage {
+                LiveRegionMessage(environment: environment, message: latestMessage)
+            }
         }
+        .onAppear {
+            synchronizeChartSelection(with: collectionController.selectedItemID)
+        }
+        .onChange(of: chartController.activeSelection?.datumID) { _, nextValue in
+            guard collectionController.selectedItemID != nextValue else { return }
+            collectionController.select(itemID: nextValue)
+        }
+        .onChange(of: collectionController.selectedItemID) { _, nextValue in
+            synchronizeChartSelection(with: nextValue)
+        }
+    }
+
+    private func synchronizeChartSelection(with itemID: String?) {
+        guard let itemID else {
+            chartController.clearPinnedSelection()
+            return
+        }
+
+        guard chartController.pinnedSelection?.datumID != itemID else { return }
+        chartController.pin(coverageSelection(label: itemID))
     }
 }
 
 private struct AIReferenceExample: View {
     let environment: DesignSystemEnvironment
-    @State private var prompt = "Summarize the component contract and call out any review risks."
+    @StateObject private var announcementCenter: AnnouncementCenter
+    @StateObject private var promptController: PromptComposerController
+    @StateObject private var conversationController: ConversationController
     @State private var selectedPromptID = "summarize"
-    @State private var isSubmitting = true
+
+    init(environment: DesignSystemEnvironment) {
+        self.environment = environment
+
+        let announcementCenter = AnnouncementCenter()
+        _announcementCenter = StateObject(wrappedValue: announcementCenter)
+        _promptController = StateObject(
+            wrappedValue: PromptComposerController(
+                draft: "Summarize the latest runtime additions and call out any remaining rollout risks.",
+                supportingText: "Command-Return submits. Draft persistence and streaming state stay with the controller.",
+                submitShortcutBehavior: .commandReturn
+            )
+        )
+        _conversationController = StateObject(
+            wrappedValue: ConversationController(
+                messages: [
+                    .init(
+                        role: .assistant,
+                        author: "Builder assistant",
+                        message: "BuilderBehaviors keeps reusable runtime logic headless so the views stay composable.",
+                        detail: "Submit a prompt to stream a new reply through the injected driver.",
+                        footerMetadata: [
+                            .init(label: "Runtime", value: "Controller-backed"),
+                            .init(label: "Updated", value: "Now")
+                        ]
+                    )
+                ],
+                driver: ReferenceConversationDriver(),
+                announcementCenter: announcementCenter
+            )
+        )
+    }
 
     var body: some View {
         PanelSurface(environment: environment, title: "Generative workflow", subtitle: "Keep prompt, output, and review actions explicit.") {
             HStack(spacing: 10) {
                 AvatarView(environment: environment, title: "Builder assistant", symbol: "sparkles")
-                TokenBadge(environment: environment, title: "Review required", tint: nil)
+                TokenBadge(
+                    environment: environment,
+                    title: conversationController.isStreaming ? "Streaming" : "Runtime backed",
+                    tint: nil
+                )
             }
 
             PromptInput(
                 environment: environment,
-                prompt: $prompt,
+                controller: promptController,
                 actionTitle: "Draft",
-                supportingText: "Command-Return submits. Keep authored input visible while the draft is generating.",
-                isEnabled: true,
-                isSubmitting: isSubmitting,
                 isMultiline: true,
                 minHeight: 110,
-                submitShortcutBehavior: .commandReturn,
                 secondaryActionTitle: "Clear",
                 secondaryActionSymbol: "xmark",
                 onSecondaryAction: {
-                    prompt = ""
+                    promptController.clear()
                     selectedPromptID = ""
-                    isSubmitting = false
                 }
             ) {
-                isSubmitting = true
+                promptController.beginSubmitting()
+                conversationController.send(prompt: promptController.draft)
             }
 
             SupportPromptGroup(
                 environment: environment,
                 title: "Suggested prompts",
                 prompts: [
-                    .init(id: "summarize", title: "Summarize", detail: "Condense the latest changes.", isSelected: selectedPromptID == "summarize", isRecommended: true),
-                    .init(id: "find-gaps", title: "Find gaps", detail: "Inspect missing inventory.", isSelected: selectedPromptID == "find-gaps"),
-                    .init(id: "compare", title: "Explain tradeoffs", detail: "Compare candidate APIs.", isEnabled: false, isSelected: selectedPromptID == "compare")
+                    .init(
+                        id: "summarize",
+                        title: "Summarize the runtime rollout",
+                        detail: "Condense the latest controller work.",
+                        isSelected: selectedPromptID == "summarize",
+                        isRecommended: true
+                    ),
+                    .init(
+                        id: "find-gaps",
+                        title: "Find remaining orchestration gaps",
+                        detail: "Inspect any app-owned runtime glue that still remains.",
+                        isSelected: selectedPromptID == "find-gaps"
+                    ),
+                    .init(
+                        id: "compare",
+                        title: "Explain protocol tradeoffs",
+                        detail: "Compare controller-backed and callback-only adoption paths.",
+                        isEnabled: false,
+                        isSelected: selectedPromptID == "compare"
+                    )
                 ]
             ) { selected in
-                prompt = selected.title
+                promptController.acceptSuggestion(selected.title)
                 selectedPromptID = selected.id
-                isSubmitting = false
             }
 
-            ChatBubble(environment: environment, role: .user, author: "Builder", message: prompt)
-            ChatBubble(
-                environment: environment,
-                role: .assistant,
-                author: "Builder assistant",
-                message: "BuilderDesignSystem now ships compiled reference examples, generated docs, and reusable search, chart, status, collection, and guided-flow primitives.",
-                detail: "Draft output is still streaming into the review surface.",
-                state: .streaming,
-                footerMetadata: [
-                    .init(label: "Model", value: "Builder review"),
-                    .init(label: "Updated", value: "Now")
-                ],
-                showsCopyAction: true
-            )
-            ChatBubble(
-                environment: environment,
-                role: .assistant,
-                author: "Builder assistant",
-                message: "The last draft could not load the token export summary.",
-                detail: "Retry after the export job finishes.",
-                state: .error,
-                footerMetadata: [
-                    .init(label: "Source", value: "Token export"),
-                    .init(label: "Status", value: "Unavailable")
-                ],
-                onRetry: {
-                    isSubmitting = true
-                }
-            )
+            ForEach(conversationController.messages) { message in
+                ChatBubble(
+                    environment: environment,
+                    message: message,
+                    showsCopyAction: message.role == .assistant,
+                    onRetry: message.state == .error ? {
+                        conversationController.retry(messageID: message.id)
+                    } : nil
+                )
+            }
+
+            if let latestMessage = announcementCenter.latestMessage {
+                LiveRegionMessage(environment: environment, message: latestMessage)
+            }
+        }
+        .onChange(of: conversationController.isStreaming) { _, isStreaming in
+            if isStreaming {
+                promptController.beginSubmitting()
+            } else {
+                promptController.finishSubmitting()
+            }
         }
     }
 }
 
 private struct TutorialReferenceExample: View {
     let environment: DesignSystemEnvironment
-    @State private var currentStepID = "build"
-    @State private var completedStepIDs: Set<String> = ["audit"]
+    @StateObject private var announcementCenter: AnnouncementCenter
+    @StateObject private var tutorialController: TutorialFlowController
+    @StateObject private var helpNavigator: HelpNavigator
+
+    init(environment: DesignSystemEnvironment) {
+        self.environment = environment
+
+        let announcementCenter = AnnouncementCenter()
+        _announcementCenter = StateObject(wrappedValue: announcementCenter)
+        _tutorialController = StateObject(
+            wrappedValue: makeTutorialFlowController(announcementCenter: announcementCenter)
+        )
+        _helpNavigator = StateObject(
+            wrappedValue: makeHelpNavigator(announcementCenter: announcementCenter)
+        )
+    }
 
     var body: some View {
         WizardLayout(
@@ -1379,59 +1472,67 @@ private struct TutorialReferenceExample: View {
                 .init(id: "build", title: "Build", detail: "Promote shared primitives."),
                 .init(id: "verify", title: "Verify", detail: "Run tests and inspect the showcase.")
             ],
-            currentStepID: "build"
+            currentStepID: tutorialController.currentStepID
         ) {
-            TutorialPanel(
-                environment: environment,
-                title: "Rollout guidance",
-                subtitle: "Keep progression visible without leaving the current workflow.",
-                steps: [
-                    .init(id: "audit", title: "Audit", detail: "Review API shape."),
-                    .init(id: "build", title: "Build", detail: "Add reusable surfaces."),
-                    .init(id: "verify", title: "Verify", detail: "Run validation before release.", status: .warning, isOptional: true)
-                ],
-                currentStepID: $currentStepID,
-                completedStepIDs: completedStepIDs,
-                stepChangeAnnouncement: { step, index, total in
-                    "Tutorial progress updated. Step \(index) of \(total): \(step.title)."
+            HStack(alignment: .top, spacing: 16) {
+                TutorialPanel(
+                    environment: environment,
+                    title: "Rollout guidance",
+                    subtitle: "Controller-backed progression keeps state, announcements, and resume points aligned.",
+                    controller: tutorialController
+                ) {
+                    Text("Tutorial flows should guide builders without leaving the shared shell language.")
+                        .font(environment.theme.typography(.body).font)
+                        .foregroundStyle(environment.theme.color(.textSecondary))
+                } primaryActions: {
+                    SystemButton(environment: environment, title: "Continue", tone: .primary) {
+                        tutorialController.advance()
+                    }
+                } secondaryActions: {
+                    HStack(spacing: 10) {
+                        SystemButton(environment: environment, title: "Back", tone: .secondary) {
+                            tutorialController.goBack()
+                        }
+                        SystemButton(environment: environment, title: "Skip optional", tone: .secondary) {
+                            tutorialController.skipCurrentStep()
+                        }
+                    }
                 }
-            ) {
-                Text("Tutorial flows should guide builders without leaving the shared shell language.")
-                    .font(environment.theme.typography(.body).font)
-                    .foregroundStyle(environment.theme.color(.textSecondary))
-            } primaryActions: {
-                SystemButton(environment: environment, title: "Continue", tone: .primary) {
-                    advanceTutorial()
+                .frame(maxWidth: .infinity)
+
+                HelpPanel(
+                    environment: environment,
+                    title: "Step help",
+                    subtitle: "Context help can follow tutorial progress without becoming product logic.",
+                    topics: helpNavigator.topics,
+                    selectedTopicID: Binding(
+                        get: { helpNavigator.selectedTopicID },
+                        set: { helpNavigator.selectTopic($0) }
+                    )
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(helpMessage(for: helpNavigator.selectedTopicID))
+                            .font(environment.theme.typography(.body).font)
+                            .foregroundStyle(environment.theme.color(.textSecondary))
+                        ValidationMessage(
+                            environment: environment,
+                            status: .normal,
+                            message: "Related guidance stays adjacent to the active rollout step."
+                        )
+                    }
                 }
-            } secondaryActions: {
-                SystemButton(environment: environment, title: "Back", tone: .secondary) {
-                    retreatTutorial()
-                }
+                .frame(width: 320)
+            }
+
+            if let latestMessage = announcementCenter.latestMessage {
+                LiveRegionMessage(environment: environment, message: latestMessage)
             }
         }
-    }
-
-    private func advanceTutorial() {
-        switch currentStepID {
-        case "audit":
-            completedStepIDs.insert("audit")
-            currentStepID = "build"
-        case "build":
-            completedStepIDs.insert("build")
-            currentStepID = "verify"
-        default:
-            break
+        .onAppear {
+            helpNavigator.sync(withTutorialStepID: tutorialController.currentStepID)
         }
-    }
-
-    private func retreatTutorial() {
-        switch currentStepID {
-        case "verify":
-            currentStepID = "build"
-        case "build":
-            currentStepID = "audit"
-        default:
-            break
+        .onChange(of: tutorialController.currentStepID) { _, nextValue in
+            helpNavigator.sync(withTutorialStepID: nextValue)
         }
     }
 }
@@ -1466,92 +1567,60 @@ private struct UtilityReferenceExample: View {
 
 private struct SpecializedReferenceExample: View {
     let environment: DesignSystemEnvironment
-    @State private var uploadItems = specializedUploadItems
-    @State private var isDropTargeted = false
+    @StateObject private var announcementCenter: AnnouncementCenter
+    @StateObject private var importController: FileImportController
+    @StateObject private var uploadController: FileUploadSessionController
+
+    init(environment: DesignSystemEnvironment) {
+        self.environment = environment
+
+        let announcementCenter = AnnouncementCenter()
+        let importController = makeReferenceFileImportController(announcementCenter: announcementCenter)
+        let uploadController = makeReferenceFileUploadController(announcementCenter: announcementCenter)
+
+        _announcementCenter = StateObject(wrappedValue: announcementCenter)
+        _importController = StateObject(wrappedValue: importController)
+        _uploadController = StateObject(wrappedValue: uploadController)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HelpPanel(environment: environment, title: "Help", subtitle: "Keep support adjacent to the active task.") {
                 BulletList(environment: environment, items: [
-                    "Explain the current decision clearly.",
-                    "Link guidance to the active surface.",
-                    "Avoid hiding recovery steps."
+                    "Import, paste, and upload stay inside one runtime-backed contract.",
+                    "Validation and retry messaging come from the shared session controller.",
+                    "Apps still own the real upload driver and file source."
                 ])
             } footer: {
                 HStack(spacing: 10) {
-                    SystemButton(environment: environment, title: "Open docs", tone: .primary) {}
-                    SystemButton(environment: environment, title: "Dismiss", tone: .secondary) {}
+                    SystemButton(environment: environment, title: "Queue sample files", tone: .secondary) {
+                        uploadController.enqueue(requests: sampleUploadRequests())
+                    }
+                    SystemButton(environment: environment, title: "Start uploads", tone: .primary) {
+                        uploadController.startUploads(using: ReferenceUploadDriver())
+                    }
+                }
+                SystemButton(environment: environment, title: "Remove completed", tone: .secondary) {
+                    uploadController.removeCompleted()
                 }
             }
 
             FileUploadField(
                 environment: environment,
                 title: "Attach release notes",
-                subtitle: "Presentation belongs to the system; drop handling and item updates stay with the consumer.",
+                subtitle: "The field owns interaction wiring while the app still injects import and upload drivers.",
                 dropTitle: "Drop release notes",
                 dropDetail: "Accept Markdown, PDF, image, and archive files from Finder.",
-                items: uploadItems,
-                acceptedContentTypes: [.plainText, .pdf, .image, .archive],
-                isTargeted: $isDropTargeted,
-                onDropURLs: appendDroppedUploads,
-                onPick: simulatePickedUpload,
-                onRetry: retryUpload
-            ) { item in
-                removeUpload(item)
+                importController: importController,
+                uploadController: uploadController,
+                pickerTitle: "Browse sample files",
+                pasteActionTitle: "Paste from clipboard"
+            )
+
+            if let latestMessage = announcementCenter.latestMessage {
+                LiveRegionMessage(environment: environment, message: latestMessage)
             }
         }
-    }
-
-    private func simulatePickedUpload() {
-        uploadItems.insert(
-            .init(
-                id: "design-review-pdf",
-                title: "design-review.pdf",
-                detail: "42 KB",
-                status: .ready,
-                message: "Queued for upload.",
-                symbol: "doc.richtext"
-            ),
-            at: 0
-        )
-    }
-
-    private func appendDroppedUploads(_ urls: [URL]) {
-        uploadItems.append(contentsOf: urls.enumerated().map { index, url in
-            .init(
-                id: "\(url.lastPathComponent)-\(index)",
-                title: url.lastPathComponent,
-                detail: "Dropped from Finder",
-                status: .ready,
-                message: "Ready to upload.",
-                symbol: "doc"
-            )
-        })
-        isDropTargeted = false
-    }
-
-    private func retryUpload(_ item: FileUploadItem) {
-        updateUploadItem(id: item.id) { current in
-            .init(
-                id: current.id,
-                title: current.title,
-                detail: current.detail,
-                status: .uploading,
-                progress: 0.35,
-                message: "Retrying upload...",
-                symbol: current.symbol,
-                canRetry: false
-            )
-        }
-    }
-
-    private func removeUpload(_ item: FileUploadItem) {
-        uploadItems.removeAll { $0.id == item.id }
-    }
-
-    private func updateUploadItem(id: String, transform: (FileUploadItem) -> FileUploadItem) {
-        guard let index = uploadItems.firstIndex(where: { $0.id == id }) else { return }
-        uploadItems[index] = transform(uploadItems[index])
     }
 }
 
@@ -1608,8 +1677,22 @@ private struct UnsavedChangesPatternExample: View {
 
 private struct DataVisualizationPatternExample: View {
     let environment: DesignSystemEnvironment
-    @State private var selectedMetric: MetricSelection? = coverageSelection(label: "Navigation")
-    @State private var visibleSeriesIDs: Set<String> = ["Coverage", "Adoption"]
+    @StateObject private var announcementCenter: AnnouncementCenter
+    @StateObject private var collectionController: CollectionController<DataTable.Row>
+    @StateObject private var chartController: MetricChartController
+
+    init(environment: DesignSystemEnvironment) {
+        self.environment = environment
+
+        let announcementCenter = AnnouncementCenter()
+        _announcementCenter = StateObject(wrappedValue: announcementCenter)
+        _collectionController = StateObject(
+            wrappedValue: makeVisualizationCollectionController(announcementCenter: announcementCenter)
+        )
+        _chartController = StateObject(
+            wrappedValue: MetricChartController(announcementCenter: announcementCenter)
+        )
+    }
 
     private var coverageSeries: MetricSeries {
         .init(title: "Coverage", color: environment.theme.color(.chartBlue), points: [
@@ -1629,15 +1712,16 @@ private struct DataVisualizationPatternExample: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            PropertyFilterBar(environment: environment, controller: collectionController)
+
             MixedChartPanel(
                 environment: environment,
                 title: "Usage coverage",
-                subtitle: "Legend filtering and selection stay connected to the detail pane.",
-                state: .ready,
+                subtitle: "The chart controller stays synchronized with collection filters and table selection.",
+                state: collectionController.presentationState,
                 barSeries: [coverageSeries],
                 lineSeries: [adoptionSeries],
-                selection: $selectedMetric,
-                visibleSeriesIDs: $visibleSeriesIDs,
+                controller: chartController,
                 valueFormatter: percentMetricValue
             )
 
@@ -1645,9 +1729,9 @@ private struct DataVisualizationPatternExample: View {
                 KeyValuePairs(
                     environment: environment,
                     pairs: [
-                        .init(key: "Series", value: selectedMetric?.seriesTitle ?? "Coverage"),
-                        .init(key: "Metric", value: selectedMetric?.label ?? "Navigation"),
-                        .init(key: "Value", value: selectedMetric?.formattedValue ?? "76%")
+                        .init(key: "Series", value: chartController.activeSelection?.seriesTitle ?? "Coverage"),
+                        .init(key: "Metric", value: chartController.activeSelection?.label ?? "Navigation"),
+                        .init(key: "Value", value: chartController.activeSelection?.formattedValue ?? "76%")
                     ]
                 )
                 .frame(maxWidth: .infinity)
@@ -1669,17 +1753,33 @@ private struct DataVisualizationPatternExample: View {
             DataTable(
                 environment: environment,
                 columns: [.init(title: "Surface"), .init(title: "State"), .init(title: "Updated")],
-                rows: [
-                    .init(id: "Navigation", cells: ["Navigation shell", "Ready", "Now"]),
-                    .init(id: "Forms", cells: ["Settings form", "Review", "3h ago"]),
-                    .init(id: "Feedback", cells: ["Feedback summary", "Planned", "Tomorrow"])
-                ],
-                selectedRowID: Binding(
-                    get: { selectedMetric?.datumID },
-                    set: { selectedMetric = coverageSelection(label: $0 ?? "Navigation") }
-                )
+                controller: collectionController
             )
+
+            if let latestMessage = announcementCenter.latestMessage {
+                LiveRegionMessage(environment: environment, message: latestMessage)
+            }
         }
+        .onAppear {
+            synchronizeSelection(with: collectionController.selectedItemID)
+        }
+        .onChange(of: chartController.activeSelection?.datumID) { _, nextValue in
+            guard collectionController.selectedItemID != nextValue else { return }
+            collectionController.select(itemID: nextValue)
+        }
+        .onChange(of: collectionController.selectedItemID) { _, nextValue in
+            synchronizeSelection(with: nextValue)
+        }
+    }
+
+    private func synchronizeSelection(with itemID: String?) {
+        guard let itemID else {
+            chartController.clearPinnedSelection()
+            return
+        }
+
+        guard chartController.pinnedSelection?.datumID != itemID else { return }
+        chartController.pin(coverageSelection(label: itemID))
     }
 }
 
@@ -1725,16 +1825,39 @@ private struct StateHandlingPatternExample: View {
 
 private struct DragAndDropPatternExample: View {
     let environment: DesignSystemEnvironment
-    @State private var uploadItems = dragAndDropUploadItems
-    @State private var isDropTargeted = false
-    @State private var selectedBoardItemID: String?
-    @State private var selectedPaletteItemID: String?
+    @StateObject private var announcementCenter: AnnouncementCenter
+    @StateObject private var importController: FileImportController
+    @StateObject private var uploadController: FileUploadSessionController
+    @StateObject private var boardController: BoardController
     @State private var columns: [Board.Column]
 
     init(environment: DesignSystemEnvironment) {
         self.environment = environment
-        _selectedBoardItemID = State(initialValue: "review-docs")
-        _selectedPaletteItemID = State(initialValue: "metric-card")
+
+        let announcementCenter = AnnouncementCenter()
+        _announcementCenter = StateObject(wrappedValue: announcementCenter)
+        _importController = StateObject(
+            wrappedValue: FileImportController(
+                acceptedContentTypes: [.plainText, .pdf, .image],
+                source: ReferenceFileImportSource(urls: sampleUploadURLs().filter {
+                    matchesAcceptedContentType($0, acceptedContentTypes: [.plainText, .pdf, .image])
+                }),
+                announcementCenter: announcementCenter
+            )
+        )
+        _uploadController = StateObject(
+            wrappedValue: FileUploadSessionController(
+                items: dragAndDropUploadItems,
+                announcementCenter: announcementCenter
+            )
+        )
+        _boardController = StateObject(
+            wrappedValue: BoardController(
+                selectedItemID: "review-docs",
+                announcementCenter: announcementCenter,
+                focusCoordinator: FocusCoordinator(focusedID: "review-docs")
+            )
+        )
         _columns = State(initialValue: dragAndDropBoardColumns(environment: environment))
     }
 
@@ -1743,70 +1866,34 @@ private struct DragAndDropPatternExample: View {
             FileUploadField(
                 environment: environment,
                 title: "Drop files",
-                subtitle: "Provide a visible target, status feedback, and a keyboard alternative.",
+                subtitle: "Import, paste, queue, and upload stay coordinated through runtime controllers.",
                 dropTitle: "Drop release notes here",
                 dropDetail: "Or use Browse to upload from disk.",
-                items: uploadItems,
-                acceptedContentTypes: [.plainText, .pdf, .image],
-                isTargeted: $isDropTargeted,
-                onDropURLs: { urls in
-                    uploadItems.append(contentsOf: urls.enumerated().map { index, url in
-                        .init(
-                            id: "dropped-\(index)-\(url.lastPathComponent)",
-                            title: url.lastPathComponent,
-                            detail: "Dropped from Finder",
-                            status: .ready,
-                            message: "Ready to insert into the workflow.",
-                            symbol: "doc"
-                        )
-                    })
-                },
-                onPick: {
-                    uploadItems.insert(
-                        .init(
-                            id: "browse-release-notes",
-                            title: "release-notes.md",
-                            detail: "18 KB",
-                            status: .ready,
-                            message: "Ready to upload.",
-                            symbol: "doc.text"
-                        ),
-                        at: 0
-                    )
-                },
-                onRetry: { item in
-                    guard let index = uploadItems.firstIndex(where: { $0.id == item.id }) else { return }
-                    uploadItems[index] = .init(
-                        id: item.id,
-                        title: item.title,
-                        detail: item.detail,
-                        status: .uploading,
-                        progress: 0.25,
-                        message: "Retrying upload...",
-                        symbol: item.symbol,
-                        canRetry: false
-                    )
+                importController: importController,
+                uploadController: uploadController,
+                pickerTitle: "Browse samples",
+                pasteActionTitle: "Paste files"
+            )
+
+            HStack(spacing: 10) {
+                SystemButton(environment: environment, title: "Queue samples", tone: .secondary) {
+                    uploadController.enqueue(requests: sampleUploadRequests())
                 }
-            ) { item in
-                uploadItems.removeAll { $0.id == item.id }
+                SystemButton(environment: environment, title: "Start uploads", tone: .primary) {
+                    uploadController.startUploads(using: ReferenceUploadDriver())
+                }
             }
 
             HStack(alignment: .top, spacing: 16) {
                 Board(
                     environment: environment,
-                    columns: columns,
-                    selectedItemID: $selectedBoardItemID,
+                    columns: $columns,
+                    controller: boardController,
                     onActivateItem: { item in
-                        selectedBoardItemID = item.id
+                        boardController.activate(itemID: item.id)
                     },
-                    onMoveItem: { itemID, destinationColumnID, destinationIndex in
-                        columns = moveBoardItem(
-                            in: columns,
-                            itemID: itemID,
-                            destinationColumnID: destinationColumnID,
-                            destinationIndex: destinationIndex
-                        )
-                        selectedBoardItemID = itemID
+                    paletteItemResolver: { itemID in
+                        contentPaletteItems(environment: environment).first { $0.id == itemID }
                     }
                 )
                 .frame(maxWidth: .infinity)
@@ -1814,24 +1901,38 @@ private struct DragAndDropPatternExample: View {
                 ItemsPalette(
                     environment: environment,
                     title: "Insert items",
-                    subtitle: "Use explicit insertion targets before reaching for drag orchestration.",
+                    subtitle: "Use explicit insert commands or native drag and drop from the same board controller.",
                     items: contentPaletteItems(environment: environment),
-                    selectedItemID: $selectedPaletteItemID,
+                    controller: boardController,
                     insertDestinations: boardInsertDestinations(from: columns),
                     onActivateItem: { item in
-                        selectedPaletteItemID = item.id
+                        boardController.activate(itemID: item.id)
                     },
                     onInsertItem: { item, destinationColumnID, destinationIndex in
-                        columns = insertBoardItem(
+                        let oldColumns = columns
+                        let newColumns = insertBoardItem(
                             item,
                             into: columns,
                             destinationColumnID: destinationColumnID,
                             destinationIndex: destinationIndex
                         )
-                        selectedPaletteItemID = item.id
+                        let destinationTitle = columns.first { $0.id == destinationColumnID }?.title ?? "column"
+                        boardController.insert(
+                            itemID: item.id,
+                            itemTitle: item.title,
+                            destinationColumnTitle: destinationTitle
+                        ) {
+                            columns = newColumns
+                        } undo: {
+                            columns = oldColumns
+                        }
                     }
                 )
                 .frame(width: 320)
+            }
+
+            if let latestMessage = announcementCenter.latestMessage {
+                LiveRegionMessage(environment: environment, message: latestMessage)
             }
         }
     }
@@ -1876,37 +1977,38 @@ private struct HeroPatternExample: View {
 
 private struct SupportPatternExample: View {
     let environment: DesignSystemEnvironment
-    @State private var selectedTopicID: String? = "context"
+    @StateObject private var announcementCenter: AnnouncementCenter
+    @StateObject private var helpNavigator: HelpNavigator
 
-    var body: some View {
-        HelpPanel(
-            environment: environment,
-            title: "Guidance",
-            subtitle: "Keep help adjacent to work instead of interrupting the current task.",
-            topics: [
-                .init(id: "context", title: "Current context", detail: "Tie guidance to the active workflow.", symbol: "scope"),
-                .init(id: "recovery", title: "Recovery", detail: "Name the next safe action.", symbol: "arrow.uturn.backward"),
-                .init(id: "handoff", title: "Handoff", detail: "Explain what changes next.", symbol: "square.and.arrow.up")
-            ],
-            selectedTopicID: $selectedTopicID
-        ) {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(helpTopicMessage)
-                    .font(environment.theme.typography(.body).font)
-                    .foregroundStyle(environment.theme.color(.textSecondary))
-                ValidationMessage(environment: environment, status: .normal, message: "Use the same calm shell language as the main workspace.")
-            }
-        }
+    init(environment: DesignSystemEnvironment) {
+        self.environment = environment
+
+        let announcementCenter = AnnouncementCenter()
+        _announcementCenter = StateObject(wrappedValue: announcementCenter)
+        _helpNavigator = StateObject(
+            wrappedValue: makeHelpNavigator(announcementCenter: announcementCenter)
+        )
     }
 
-    private var helpTopicMessage: String {
-        switch selectedTopicID {
-        case "recovery":
-            "Recovery guidance should name the failed step and the safest next move without forcing the user out of the current panel."
-        case "handoff":
-            "Handoff guidance should confirm what changed, what still needs review, and who owns the next action."
-        default:
-            "Link support guidance to the active decision and preserve the user’s place in the workflow."
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HelpPanel(
+                environment: environment,
+                title: "Guidance",
+                subtitle: "Keep help adjacent to work instead of interrupting the current task.",
+                navigator: helpNavigator
+            ) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(helpMessage(for: helpNavigator.selectedTopicID))
+                        .font(environment.theme.typography(.body).font)
+                        .foregroundStyle(environment.theme.color(.textSecondary))
+                    ValidationMessage(environment: environment, status: .normal, message: "Use the same calm shell language as the main workspace.")
+                }
+            }
+
+            if let latestMessage = announcementCenter.latestMessage {
+                LiveRegionMessage(environment: environment, message: latestMessage)
+            }
         }
     }
 }
@@ -1926,50 +2028,91 @@ private struct LoadingPatternExample: View {
 
 private struct OnboardingPatternExample: View {
     let environment: DesignSystemEnvironment
-    @State private var currentStepID = "Tune"
-    @State private var completedStepIDs: Set<String> = ["Choose"]
+    @StateObject private var announcementCenter: AnnouncementCenter
+    @StateObject private var tutorialController: TutorialFlowController
+    @State private var showsCoachmark = true
+
+    init(environment: DesignSystemEnvironment) {
+        self.environment = environment
+
+        let announcementCenter = AnnouncementCenter()
+        _announcementCenter = StateObject(wrappedValue: announcementCenter)
+        _tutorialController = StateObject(
+            wrappedValue: TutorialFlowController(
+                steps: [
+                    .init(id: "Choose", title: "Choose", detail: "Pick the team and scope.", status: .complete),
+                    .init(id: "Tune", title: "Tune", detail: "Confirm density, guidance, and defaults.", status: .current),
+                    .init(id: "Validate", title: "Validate", detail: "Run the final rollout checks.", status: .warning, isOptional: true)
+                ],
+                currentStepID: "Tune",
+                completedStepIDs: ["Choose"],
+                announcementCenter: announcementCenter
+            )
+        )
+    }
 
     var body: some View {
-        WizardLayout(
+        CoachmarkHost(
             environment: environment,
-            title: "Bring a team into the system",
-            steps: [
-                .init(title: "Choose"),
-                .init(title: "Tune"),
-                .init(title: "Validate")
-            ],
-            currentStepID: "Tune"
+            step: showsCoachmark ? coachmarkStep : nil,
+            onPrimaryAction: {
+                tutorialController.advance()
+                showsCoachmark = false
+            },
+            onSecondaryAction: {
+                showsCoachmark = false
+            }
         ) {
-            TutorialPanel(
+            WizardLayout(
                 environment: environment,
-                title: "Team onboarding",
-                subtitle: "Keep progress visible and the next action obvious.",
+                title: "Bring a team into the system",
                 steps: [
-                    .init(id: "Choose", title: "Choose"),
-                    .init(id: "Tune", title: "Tune"),
-                    .init(id: "Validate", title: "Validate", status: .warning, isOptional: true)
+                    .init(title: "Choose"),
+                    .init(title: "Tune"),
+                    .init(title: "Validate")
                 ],
-                currentStepID: $currentStepID,
-                completedStepIDs: completedStepIDs
+                currentStepID: tutorialController.currentStepID
             ) {
-                Text("Guide teams into the system without changing the shell language.")
-                    .font(environment.theme.typography(.body).font)
-                    .foregroundStyle(environment.theme.color(.textSecondary))
-            } primaryActions: {
-                SystemButton(environment: environment, title: "Continue", tone: .primary) {
-                    if currentStepID == "Tune" {
-                        completedStepIDs.insert("Tune")
-                        currentStepID = "Validate"
+                TutorialPanel(
+                    environment: environment,
+                    title: "Team onboarding",
+                    subtitle: "Coachmarks can spotlight the next action without introducing product-specific runtime code.",
+                    controller: tutorialController
+                ) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Guide teams into the system without changing the shell language.")
+                            .font(environment.theme.typography(.body).font)
+                            .foregroundStyle(environment.theme.color(.textSecondary))
+
+                        AnnotationAnchor(id: "invite-team") {
+                            SystemButton(environment: environment, title: "Invite team", tone: .primary) {}
+                        }
+
+                        if let latestMessage = announcementCenter.latestMessage {
+                            LiveRegionMessage(environment: environment, message: latestMessage)
+                        }
                     }
-                }
-            } secondaryActions: {
-                SystemButton(environment: environment, title: "Back", tone: .secondary) {
-                    if currentStepID == "Validate" {
-                        currentStepID = "Tune"
+                } primaryActions: {
+                    SystemButton(environment: environment, title: "Continue", tone: .primary) {
+                        tutorialController.advance()
+                    }
+                } secondaryActions: {
+                    SystemButton(environment: environment, title: "Back", tone: .secondary) {
+                        tutorialController.goBack()
                     }
                 }
             }
         }
+    }
+
+    private var coachmarkStep: CoachmarkStep {
+        CoachmarkStep(
+            anchorID: "invite-team",
+            title: "Invite the rollout group",
+            message: "Attach the next onboarding action to a real anchor so focus restoration and reduced motion stay consistent.",
+            primaryActionTitle: "Continue",
+            secondaryActionTitle: "Dismiss"
+        )
     }
 }
 
@@ -2083,6 +2226,220 @@ private func coverageSelection(label: String) -> MetricSelection {
         value: resolvedValue,
         formattedValue: percentMetricValue(resolvedValue)
     )
+}
+
+@MainActor
+private func makeDataCollectionController(
+    announcementCenter: AnnouncementCenter
+) -> CollectionController<DataTable.Row> {
+    CollectionController(
+        items: [
+            .init(id: "Tokens", cells: ["Tokens", "Ready", "Now"]),
+            .init(id: "Components", cells: ["Components", "Review", "2h ago"]),
+            .init(id: "Patterns", cells: ["Patterns", "Ready", "1d ago"])
+        ],
+        pageSize: 2,
+        selectedItemID: "Tokens",
+        searchableText: { row in
+            row.cells.joined(separator: " ")
+        },
+        announcementCenter: announcementCenter
+    )
+}
+
+@MainActor
+private func makeVisualizationCollectionController(
+    announcementCenter: AnnouncementCenter
+) -> CollectionController<DataTable.Row> {
+    CollectionController(
+        items: [
+            .init(id: "Navigation", cells: ["Navigation", "ready", "Now"]),
+            .init(id: "Forms", cells: ["Forms", "review", "3h ago"]),
+            .init(id: "Feedback", cells: ["Feedback", "planned", "Tomorrow"])
+        ],
+        activeFilterTokens: ["ready", "review"],
+        pageSize: 3,
+        selectedItemID: "Navigation",
+        searchableText: { row in
+            row.cells.joined(separator: " ")
+        },
+        filterMatcher: { row, tokens in
+            guard row.cells.count > 1 else { return true }
+            return tokens.contains(row.cells[1].lowercased())
+        },
+        announcementCenter: announcementCenter
+    )
+}
+
+@MainActor
+private func makeTutorialFlowController(
+    announcementCenter: AnnouncementCenter
+) -> TutorialFlowController {
+    TutorialFlowController(
+        steps: [
+            .init(id: "audit", title: "Audit", detail: "Review API shape.", status: .complete),
+            .init(id: "build", title: "Build", detail: "Add reusable surfaces.", status: .current),
+            .init(id: "verify", title: "Verify", detail: "Run validation before release.", status: .warning, isOptional: true)
+        ],
+        currentStepID: "build",
+        completedStepIDs: ["audit"],
+        announcementCenter: announcementCenter
+    )
+}
+
+@MainActor
+private func makeHelpNavigator(
+    announcementCenter: AnnouncementCenter
+) -> HelpNavigator {
+    HelpNavigator(
+        topics: [
+            .init(id: "context", title: "Current context", detail: "Tie guidance to the active workflow.", symbol: "scope"),
+            .init(id: "recovery", title: "Recovery", detail: "Name the next safe action.", symbol: "arrow.uturn.backward"),
+            .init(id: "handoff", title: "Handoff", detail: "Explain what changes next.", symbol: "square.and.arrow.up")
+        ],
+        selectedTopicID: "context",
+        relatedTopicsByID: [
+            "context": ["recovery", "handoff"],
+            "recovery": ["context", "handoff"],
+            "handoff": ["context", "recovery"]
+        ],
+        tutorialTopicMap: [
+            "audit": "context",
+            "build": "recovery",
+            "verify": "handoff"
+        ],
+        announcementCenter: announcementCenter
+    )
+}
+
+private func helpMessage(for topicID: String?) -> String {
+    switch topicID {
+    case "recovery":
+        "Recovery guidance should name the failed step and the safest next move without forcing the user out of the current panel."
+    case "handoff":
+        "Handoff guidance should confirm what changed, what still needs review, and who owns the next action."
+    default:
+        "Link support guidance to the active decision and preserve the user’s place in the workflow."
+    }
+}
+
+@MainActor
+private func makeReferenceFileImportController(
+    announcementCenter: AnnouncementCenter
+) -> FileImportController {
+    FileImportController(
+        acceptedContentTypes: [.plainText, .pdf, .image, .archive],
+        source: ReferenceFileImportSource(urls: sampleUploadURLs()),
+        announcementCenter: announcementCenter,
+        focusCoordinator: FocusCoordinator()
+    )
+}
+
+@MainActor
+private func makeReferenceFileUploadController(
+    announcementCenter: AnnouncementCenter
+) -> FileUploadSessionController {
+    let controller = FileUploadSessionController(announcementCenter: announcementCenter)
+    controller.enqueue(requests: sampleUploadRequests())
+    return controller
+}
+
+private func sampleUploadURLs() -> [URL] {
+    [
+        URL(fileURLWithPath: "/tmp/release-notes.md"),
+        URL(fileURLWithPath: "/tmp/design-review.pdf"),
+        URL(fileURLWithPath: "/tmp/preview.png"),
+        URL(fileURLWithPath: "/tmp/screenshots.zip")
+    ]
+}
+
+private func sampleUploadRequests() -> [FileUploadRequest] {
+    [
+        .init(url: URL(fileURLWithPath: "/tmp/release-notes.md"), detail: "18 KB", symbol: "doc.text"),
+        .init(url: URL(fileURLWithPath: "/tmp/design-review.pdf"), detail: "42 KB", symbol: "doc.richtext"),
+        .init(url: URL(fileURLWithPath: "/tmp/preview.png"), detail: "640 KB", symbol: "photo")
+    ]
+}
+
+private struct ReferenceFileImportSource: FileImportSource, Sendable {
+    let urls: [URL]
+
+    func selectFiles(
+        acceptedContentTypes: [UTType],
+        allowsMultipleSelection: Bool
+    ) async throws -> [URL] {
+        let accepted = urls.filter { url in
+            matchesAcceptedContentType(url, acceptedContentTypes: acceptedContentTypes)
+        }
+        return allowsMultipleSelection ? accepted : Array(accepted.prefix(1))
+    }
+}
+
+private struct ReferenceUploadDriver: FileUploadDriver, Sendable {
+    func upload(request: FileUploadRequest) -> AsyncThrowingStream<FileUploadEvent, Error> {
+        AsyncThrowingStream { continuation in
+            continuation.yield(
+                .init(
+                    requestID: request.id,
+                    status: .uploading,
+                    progress: 0.34,
+                    message: "Uploading \(request.title)...",
+                    symbol: request.symbol
+                )
+            )
+
+            if request.title.localizedCaseInsensitiveContains("preview") {
+                continuation.yield(
+                    .init(
+                        requestID: request.id,
+                        status: .error,
+                        progress: nil,
+                        message: "Preview files need review before upload.",
+                        symbol: request.symbol,
+                        canRetry: true
+                    )
+                )
+            } else {
+                continuation.yield(
+                    .init(
+                        requestID: request.id,
+                        status: .success,
+                        progress: 1,
+                        message: "Uploaded successfully.",
+                        symbol: request.symbol
+                    )
+                )
+            }
+
+            continuation.finish()
+        }
+    }
+}
+
+private struct ReferenceConversationDriver: ConversationDriver, Sendable {
+    func streamReply(
+        prompt: String,
+        history _: [ConversationMessage]
+    ) -> AsyncThrowingStream<ConversationStreamEvent, Error> {
+        AsyncThrowingStream { continuation in
+            if prompt.localizedCaseInsensitiveContains("fail") {
+                continuation.finish(throwing: NSError(domain: "BuilderReferenceExamples", code: 1))
+                return
+            }
+
+            continuation.yield(.appendText("BuilderBehaviors now centralizes reusable runtime state. "))
+            continuation.yield(.appendText("Selection, streaming, uploads, commands, and announcements all compose through injected drivers."))
+            continuation.yield(.setDetail("The runtime layer stays headless, so product services and domain persistence remain app-owned."))
+            continuation.yield(
+                .setFooterMetadata([
+                    .init(label: "Driver", value: "Reference conversation"),
+                    .init(label: "Status", value: "Complete")
+                ])
+            )
+            continuation.yield(.complete)
+            continuation.finish()
+        }
+    }
 }
 
 private func contentBoardColumns(environment: DesignSystemEnvironment) -> [Board.Column] {

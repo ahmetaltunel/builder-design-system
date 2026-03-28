@@ -438,7 +438,7 @@ struct FoundationsCatalogView: View {
                 }
             }
 
-            specimenGroup(title: "Shadow hierarchy", subtitle: "Shadow roles are now first-class tokens tied to elevation, not ad hoc visual tweaks.") {
+            specimenGroup(title: "Shadow hierarchy", subtitle: "Depth stays restrained and is reserved for genuinely lifted surfaces rather than everyday panels.") {
                 HStack(spacing: 14) {
                     ForEach(ShadowToken.allCases) { token in
                         let spec = env.theme.shadowTokenSpec(token)
@@ -470,11 +470,11 @@ struct FoundationsCatalogView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .background(
                                 RoundedRectangle(cornerRadius: env.theme.radius(.medium), style: .continuous)
-                                    .fill(active ? env.theme.color(.selectedSurface) : env.theme.color(.inputSurface))
+                                    .fill(env.theme.color(.inputSurface))
                             )
                             .overlay(
                                 RoundedRectangle(cornerRadius: env.theme.radius(.medium), style: .continuous)
-                                    .stroke(env.theme.color(.subtleBorder), lineWidth: 1)
+                                    .stroke(active ? env.theme.color(.strongBorder) : env.theme.color(.subtleBorder), lineWidth: active ? 1.5 : 1)
                             )
                         }
                         .buttonStyle(.plain)

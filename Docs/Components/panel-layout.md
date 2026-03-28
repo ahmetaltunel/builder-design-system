@@ -142,7 +142,7 @@ Canonical compiled example for Panel layout. Use Panel layout to frame workspace
 // Canonical example for Panel layout
 let environment = DesignSystemEnvironment.preview(.dark)
 
-PanelLayout(environment: environment, title: "Panel layout", subtitle: "Group related content before reaching for new chrome.") {
-    TextContentBlock(environment: environment, title: "Guidance", body: "Keep supporting detail aligned to the main task.")
+PanelLayout(environment: environment) {
+    TextContentBlock(environment: environment, title: "Guidance", bodyText: "Keep supporting detail aligned to the main task.")
 }
 ```

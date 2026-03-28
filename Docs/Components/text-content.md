@@ -142,5 +142,5 @@ Canonical compiled example for Text content. Use Text content to organize conten
 // Canonical example for Text content
 let environment = DesignSystemEnvironment.preview(.dark)
 
-TextContentBlock(environment: environment, title: "Text content", body: "Use content blocks for editorial guidance inside grouped surfaces.")
+TextContentBlock(environment: environment, title: "Text content", bodyText: "Use content blocks for editorial guidance inside grouped surfaces.")
 ```

@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct DataTable: View {
     public struct Column {
@@ -14,7 +15,7 @@ public struct DataTable: View {
         }
     }
 
-    public struct Row: Identifiable {
+    public struct Row: Identifiable, Hashable {
         public let id: String
         public let cells: [String]
 
@@ -39,6 +40,20 @@ public struct DataTable: View {
         self.columns = columns
         self.rows = rows
         self._selectedRowID = selectedRowID
+    }
+
+    public init(
+        environment: DesignSystemEnvironment,
+        columns: [Column],
+        controller: CollectionController<Row>
+    ) {
+        self.environment = environment
+        self.columns = columns
+        self.rows = controller.visibleItems
+        self._selectedRowID = Binding(
+            get: { controller.selectedItemID },
+            set: { controller.select(itemID: $0) }
+        )
     }
 
     public var body: some View {

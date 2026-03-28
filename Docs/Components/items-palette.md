@@ -142,13 +142,15 @@ Canonical compiled example for Items palette. Use Items palette to organize cont
 // Canonical example for Items palette
 let environment = DesignSystemEnvironment.preview(.dark)
 
+let boardController = BoardController(selectedItemID: "metric-card")
+
 ItemsPalette(environment: environment, title: "Insert items", items: [
     .init(id: "metric-card", title: "Metric card", detail: "Reusable dashboard tile."),
     .init(id: "status-list", title: "Status list", detail: "Dense collection summary.")
-], selectedItemID: .constant("metric-card"), insertDestinations: [
+], controller: boardController, insertDestinations: [
     .init(title: "Insert into Queued", columnID: "queued", columnTitle: "Queued", index: 2)
 ], onActivateItem: { item in
-    print(item.title)
+    boardController.activate(itemID: item.id)
 }, onInsertItem: { item, destinationColumnID, destinationIndex in
     print(item.id, destinationColumnID, destinationIndex)
 })

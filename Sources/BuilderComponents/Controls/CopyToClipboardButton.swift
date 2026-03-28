@@ -1,6 +1,6 @@
-import AppKit
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct CopyToClipboardButton: View {
     public let environment: DesignSystemEnvironment
@@ -15,9 +15,7 @@ public struct CopyToClipboardButton: View {
 
     public var body: some View {
         SystemButton(environment: environment, title: title, tone: .secondary) {
-            let pasteboard = NSPasteboard.general
-            pasteboard.clearContents()
-            pasteboard.setString(value, forType: .string)
+            PasteboardBridge.copy(value)
         }
     }
 }

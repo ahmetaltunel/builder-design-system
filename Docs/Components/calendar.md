@@ -141,5 +141,5 @@ Canonical compiled example for Calendar. Use Calendar when a guided flow needs v
 // Canonical example for Calendar
 let environment = DesignSystemEnvironment.preview(.dark)
 
-CalendarPanel(environment: environment, title: "Calendar", highlightedDates: [Date()])
+CalendarPanel(environment: environment, date: $date)
 ```

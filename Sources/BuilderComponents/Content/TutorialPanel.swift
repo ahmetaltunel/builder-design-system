@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct TutorialPanel<Content: View>: View {
     public typealias StepAnnouncement = (StepsView.Step, Int, Int) -> String
@@ -158,6 +159,74 @@ public struct TutorialPanel<Content: View>: View {
         self.currentStepIDBinding = currentStepID
     }
 
+    public init(
+        environment: DesignSystemEnvironment,
+        title: String,
+        subtitle: String? = nil,
+        state: AsyncContentState = .ready,
+        controller: TutorialFlowController,
+        emptyActionTitle: String? = nil,
+        onEmptyAction: (() -> Void)? = nil,
+        errorActionTitle: String? = nil,
+        onErrorAction: (() -> Void)? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.init(
+            environment: environment,
+            title: title,
+            subtitle: subtitle,
+            state: state,
+            emptyActionTitle: emptyActionTitle,
+            onEmptyAction: onEmptyAction,
+            errorActionTitle: errorActionTitle,
+            onErrorAction: onErrorAction,
+            steps: controller.steps.map(Self.step(for:)),
+            currentStepID: Binding(
+                get: { controller.currentStepID },
+                set: { controller.selectStep($0) }
+            ),
+            completedStepIDs: controller.completedStepIDs,
+            stepChangeAnnouncement: nil,
+            content: content
+        )
+    }
+
+    public init<PrimaryActions: View, SecondaryActions: View>(
+        environment: DesignSystemEnvironment,
+        title: String,
+        subtitle: String? = nil,
+        state: AsyncContentState = .ready,
+        controller: TutorialFlowController,
+        emptyActionTitle: String? = nil,
+        onEmptyAction: (() -> Void)? = nil,
+        errorActionTitle: String? = nil,
+        onErrorAction: (() -> Void)? = nil,
+        @ViewBuilder content: () -> Content,
+        @ViewBuilder primaryActions: () -> PrimaryActions,
+        @ViewBuilder secondaryActions: () -> SecondaryActions
+    ) {
+        self.init(
+            environment: environment,
+            title: title,
+            subtitle: subtitle,
+            state: state,
+            emptyActionTitle: emptyActionTitle,
+            onEmptyAction: onEmptyAction,
+            errorActionTitle: errorActionTitle,
+            onErrorAction: onErrorAction,
+            steps: controller.steps.map(Self.step(for:)),
+            currentStepID: Binding(
+                get: { controller.currentStepID },
+                set: { controller.selectStep($0) }
+            ),
+            completedStepIDs: controller.completedStepIDs,
+            stepChangeAnnouncement: nil,
+            content: content,
+            primaryActions: primaryActions,
+            secondaryActions: secondaryActions
+        )
+    }
+
     public var body: some View {
         PanelSurface(environment: environment, title: title, subtitle: subtitle) {
             AsyncContentRenderer(
@@ -216,6 +285,27 @@ public struct TutorialPanel<Content: View>: View {
         .onChange(of: currentStepID) { _, _ in
             announceCurrentStepChange()
         }
+    }
+
+    private static func step(for tutorialStep: TutorialStep) -> StepsView.Step {
+        StepsView.Step(
+            id: tutorialStep.id,
+            title: tutorialStep.title,
+            detail: tutorialStep.detail,
+            status: {
+                switch tutorialStep.status {
+                case .upcoming:
+                    .upcoming
+                case .current:
+                    .current
+                case .complete:
+                    .complete
+                case .warning:
+                    .warning
+                }
+            }(),
+            isOptional: tutorialStep.isOptional
+        )
     }
 
     private var presentedSteps: [StepsView.Step] {

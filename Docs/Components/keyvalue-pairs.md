@@ -142,7 +142,7 @@ Canonical compiled example for Key-value pairs. Use Key-value pairs to organize 
 // Canonical example for Key-value pairs
 let environment = DesignSystemEnvironment.preview(.dark)
 
-KeyValuePairs(environment: environment, items: [
+KeyValuePairs(environment: environment, pairs: [
     .init(id: "mode", key: "Mode", value: "Compact"),
     .init(id: "contrast", key: "Contrast", value: "Standard")
 ])

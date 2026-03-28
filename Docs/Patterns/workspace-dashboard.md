@@ -121,9 +121,12 @@ Canonical compiled pattern example for Workspace dashboard. Use Workspace dashbo
 // Canonical example for Workspace dashboard
 let environment = DesignSystemEnvironment.preview(.dark)
 
+let collectionController = CollectionController(items: rows, selectedItemID: "tokens", searchableText: { row in row.cells.joined(separator: " ") })
+let chartController = MetricChartController()
+
 VStack(spacing: 16) {
     StatusIndicator(environment: environment, label: "Release candidate", detail: "Ready for review.", tone: .success)
-    MixedChartPanel(environment: environment, title: "Coverage", state: .ready, barSeries: barSeries, lineSeries: lineSeries, selection: $selection, visibleSeriesIDs: $visibleSeriesIDs, valueFormatter: { value in "\(Int(value))%" })
-    DataTable(environment: environment, columns: columns, rows: rows, selectedRowID: $selectedRowID)
+    MixedChartPanel(environment: environment, title: "Coverage", state: collectionController.presentationState, barSeries: barSeries, lineSeries: lineSeries, controller: chartController, valueFormatter: { value in "\(Int(value))%" })
+    DataTable(environment: environment, columns: columns, controller: collectionController)
 }
 ```

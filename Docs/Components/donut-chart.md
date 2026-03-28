@@ -142,9 +142,11 @@ Canonical compiled example for Donut chart. Use Donut chart when analytical cont
 // Canonical example for Donut chart
 let environment = DesignSystemEnvironment.preview(.dark)
 
+let chartController = MetricChartController()
+
 DonutChartPanel(environment: environment, title: "Donut chart", state: .ready, slices: [
     .init(title: "Ready", value: 18, color: environment.theme.color(.chartGreen)),
     .init(title: "Review", value: 7, color: environment.theme.color(.chartAmber)),
     .init(title: "Blocked", value: 3, color: environment.theme.color(.chartRed))
-], selection: .constant(nil), visibleSeriesIDs: .constant(["Ready", "Review", "Blocked"]), valueFormatter: { value in "\(Int(value)) items" })
+], controller: chartController, valueFormatter: { value in "\(Int(value)) items" })
 ```

@@ -143,5 +143,5 @@ Canonical compiled example for Tag editor. Use Tag editor when selection state m
 // Canonical example for Tag editor
 let environment = DesignSystemEnvironment.preview(.dark)
 
-TagEditor(environment: environment, title: "Release tags", tags: $tags)
+TagEditor(environment: environment, tags: $tags)
 ```

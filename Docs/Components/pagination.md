@@ -142,5 +142,7 @@ Canonical compiled example for Pagination. Use Pagination to organize content be
 // Canonical example for Pagination
 let environment = DesignSystemEnvironment.preview(.dark)
 
-PaginationControl(environment: environment, currentPage: $page, pageCount: 12)
+let collectionController = CollectionController(items: rows, pageSize: 12, searchableText: { row in row.cells.joined(separator: " ") })
+
+PaginationControl(environment: environment, controller: collectionController)
 ```

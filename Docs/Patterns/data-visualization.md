@@ -121,9 +121,13 @@ Canonical compiled pattern example for Data visualization. Use Data visualizatio
 // Canonical example for Data visualization
 let environment = DesignSystemEnvironment.preview(.dark)
 
+let collectionController = CollectionController(items: rows, selectedItemID: "Navigation", searchableText: { row in row.cells.joined(separator: " ") })
+let chartController = MetricChartController()
+
 VStack(spacing: 16) {
-    MixedChartPanel(environment: environment, title: "Coverage and adoption", state: .ready, barSeries: coverageSeries, lineSeries: adoptionSeries, selection: $selection, visibleSeriesIDs: $visibleSeriesIDs, valueFormatter: { value in "\(Int(value))%" })
+    MixedChartPanel(environment: environment, title: "Coverage and adoption", state: collectionController.presentationState, barSeries: coverageSeries, lineSeries: adoptionSeries, controller: chartController, valueFormatter: { value in "\(Int(value))%" })
     KeyValuePairs(environment: environment, pairs: metricPairs)
-    DataTable(environment: environment, columns: columns, rows: rows, selectedRowID: $selectedRowID)
+    DataTable(environment: environment, columns: columns, controller: collectionController)
+    PaginationControl(environment: environment, controller: collectionController)
 }
 ```

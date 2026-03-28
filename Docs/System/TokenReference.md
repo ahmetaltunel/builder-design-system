@@ -104,10 +104,10 @@ This file is generated from `DesignTokens/design-token-manifest.json`.
 | `titlebar` | `bg.titlebar` | `border.subtle` | `flat` | `large` |
 | `toolbar` | `bg.toolbar` | `border.subtle` | `flat` | `medium` |
 | `workspace` | `bg.workspace` | `border.subtle` | `flat` | `large` |
-| `grouped` | `surface.grouped` | `border.subtle` | `subtle` | `large` |
-| `raised` | `surface.raised` | `border.subtle` | `raised` | `large` |
-| `panel` | `surface.grouped` | `border.subtle` | `subtle` | `large` |
-| `card` | `surface.raised` | `border.subtle` | `subtle` | `large` |
+| `grouped` | `surface.grouped` | `border.subtle` | `flat` | `large` |
+| `raised` | `surface.raised` | `border.subtle` | `subtle` | `large` |
+| `panel` | `surface.grouped` | `border.subtle` | `flat` | `large` |
+| `card` | `surface.raised` | `border.subtle` | `flat` | `large` |
 | `inset` | `surface.inset` | `border.subtle` | `flat` | `large` |
 | `input` | `surface.input` | `border.subtle` | `flat` | `medium` |
 | `code` | `surface.inset` | `border.strong` | `flat` | `large` |
@@ -115,12 +115,12 @@ This file is generated from `DesignTokens/design-token-manifest.json`.
 | `hover` | `surface.hover` | `border.subtle` | `flat` | `medium` |
 | `pressed` | `surface.pressed` | `border.subtle` | `flat` | `medium` |
 | `selected` | `surface.selected` | `border.strong` | `flat` | `medium` |
-| `notice` | `surface.raised` | `border.strong` | `subtle` | `large` |
+| `notice` | `surface.raised` | `border.strong` | `flat` | `large` |
 | `tableHeader` | `surface.inset` | `border.subtle` | `flat` | `medium` |
 | `tableRow` | `surface.grouped` | `border.subtle` | `flat` | `medium` |
 | `popover` | `surface.overlay` | `border.subtle` | `floating` | `large` |
 | `modal` | `surface.overlay` | `border.subtle` | `floating` | `extraLarge` |
-| `drawer` | `surface.overlay` | `border.subtle` | `raised` | `large` |
+| `drawer` | `surface.overlay` | `border.subtle` | `flat` | `large` |
 | `overlay` | `surface.overlay` | `border.subtle` | `floating` | `large` |
 | `scrim` | `surface.scrim` | `border.subtle` | `flat` | `small` |
 

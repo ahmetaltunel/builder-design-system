@@ -142,11 +142,13 @@ Canonical compiled example for Bar chart. Use Bar chart when analytical content 
 // Canonical example for Bar chart
 let environment = DesignSystemEnvironment.preview(.dark)
 
+let chartController = MetricChartController()
+
 BarChartPanel(environment: environment, title: "Bar chart", state: .ready, series: [
     .init(title: "Coverage", color: environment.theme.color(.chartBlue), points: [
         .init(label: "Tokens", value: 82),
         .init(label: "Components", value: 80),
         .init(label: "Patterns", value: 24)
     ])
-], selection: .constant(nil), visibleSeriesIDs: .constant(["Coverage"]), valueFormatter: { value in "\(Int(value))%" })
+], controller: chartController, valueFormatter: { value in "\(Int(value))%" })
 ```

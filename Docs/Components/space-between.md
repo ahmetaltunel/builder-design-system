@@ -142,8 +142,8 @@ Canonical compiled example for Space between. Use Space between to organize cont
 // Canonical example for Space between
 let environment = DesignSystemEnvironment.preview(.dark)
 
-SpaceBetween {
+SpaceBetween(environment: environment) {
     Text("Space between")
-    TokenBadge(environment: environment, label: "Compact")
+    TokenBadge(environment: environment, title: "Compact")
 }
 ```

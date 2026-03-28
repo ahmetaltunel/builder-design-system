@@ -77,6 +77,39 @@ final class BuilderFoundationTests: XCTestCase {
         }
     }
 
+    func testShadowHierarchyStaysRestrainedAndOverlayFocused() {
+        let light = AppTheme(mode: .light, contrast: .standard)
+        let dark = AppTheme(mode: .dark, contrast: .standard)
+
+        let lightHairline = light.shadow(.hairline)
+        let lightSubtle = light.shadow(.subtle)
+        let lightRaised = light.shadow(.raised)
+        let lightFloating = light.shadow(.floating)
+
+        XCTAssertLessThanOrEqual(lightHairline.radius, lightSubtle.radius)
+        XCTAssertLessThanOrEqual(lightSubtle.radius, lightRaised.radius)
+        XCTAssertLessThanOrEqual(lightRaised.radius, lightFloating.radius)
+
+        let darkHairline = dark.shadow(.hairline)
+        let darkSubtle = dark.shadow(.subtle)
+        let darkRaised = dark.shadow(.raised)
+        let darkFloating = dark.shadow(.floating)
+
+        XCTAssertLessThanOrEqual(darkHairline.radius, darkSubtle.radius)
+        XCTAssertLessThanOrEqual(darkSubtle.radius, darkRaised.radius)
+        XCTAssertLessThanOrEqual(darkRaised.radius, darkFloating.radius)
+
+        XCTAssertEqual(light.material(.grouped).elevation, .flat)
+        XCTAssertEqual(light.material(.panel).elevation, .flat)
+        XCTAssertEqual(light.material(.card).elevation, .flat)
+        XCTAssertEqual(light.material(.notice).elevation, .flat)
+        XCTAssertEqual(light.material(.drawer).elevation, .flat)
+        XCTAssertEqual(light.material(.menu).elevation, .raised)
+        XCTAssertEqual(light.material(.popover).elevation, .floating)
+        XCTAssertEqual(light.material(.modal).elevation, .floating)
+        XCTAssertEqual(light.material(.overlay).elevation, .floating)
+    }
+
     func testSemanticContrastPairsStayAccessible() throws {
         let export = try loadTokenExport()
 

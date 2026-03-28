@@ -142,9 +142,10 @@ Canonical compiled example for Cards. Use Cards to organize content before reach
 // Canonical example for Cards
 let environment = DesignSystemEnvironment.preview(.dark)
 
-CardGrid(environment: environment, items: cards) { card in
-    PanelSurface(environment: environment, title: card.title, subtitle: card.subtitle) {
-        Text(card.body)
+CardGrid(environment: environment, data: cards) { card in
+    VStack(alignment: .leading, spacing: 8) {
+        Text(card.title)
+        Text(card.detail)
     }
 }
 ```

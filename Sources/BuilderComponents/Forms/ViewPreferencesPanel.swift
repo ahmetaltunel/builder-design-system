@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct ViewPreferencesPanel: View {
     public let environment: DesignSystemEnvironment
@@ -10,6 +11,21 @@ public struct ViewPreferencesPanel: View {
         self.environment = environment
         self._denseMode = denseMode
         self._showsMetadata = showsMetadata
+    }
+
+    public init<Item: Identifiable & Hashable>(
+        environment: DesignSystemEnvironment,
+        controller: CollectionController<Item>
+    ) {
+        self.environment = environment
+        self._denseMode = Binding(
+            get: { controller.denseMode },
+            set: { controller.setDenseMode($0) }
+        )
+        self._showsMetadata = Binding(
+            get: { controller.showsMetadata },
+            set: { controller.setShowsMetadata($0) }
+        )
     }
 
     public var body: some View {

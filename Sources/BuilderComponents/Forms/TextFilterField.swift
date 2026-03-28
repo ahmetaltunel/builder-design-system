@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct TextFilterField: View {
     public let environment: DesignSystemEnvironment
@@ -10,6 +11,19 @@ public struct TextFilterField: View {
         self.environment = environment
         self.placeholder = placeholder
         self._text = text
+    }
+
+    public init<Item: Identifiable & Hashable>(
+        environment: DesignSystemEnvironment,
+        placeholder: String = "Filter",
+        controller: CollectionController<Item>
+    ) {
+        self.environment = environment
+        self.placeholder = placeholder
+        self._text = Binding(
+            get: { controller.query },
+            set: { controller.updateQuery($0) }
+        )
     }
 
     public var body: some View {

@@ -2,6 +2,7 @@ import Charts
 import Foundation
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 enum CartesianMetricChartStyle {
     case bar
@@ -305,6 +306,7 @@ struct CartesianMetricChartPanel: View {
     let lineSeries: [MetricSeries]
     let style: CartesianMetricChartStyle
     let showsLegend: Bool
+    let chartController: MetricChartController?
     let externalSelection: Binding<MetricSelection?>?
     let externalVisibleSeriesIDs: Binding<Set<String>>?
     let valueFormatter: (Double) -> String
@@ -341,10 +343,20 @@ struct CartesianMetricChartPanel: View {
             }
         }
         .onAppear {
+            chartController?.configure(
+                availableSelections: allSelections,
+                defaultVisibleSeriesIDs: availableSeriesIDs
+            )
             if externalVisibleSeriesIDs == nil && !hasInitializedLocalVisibleSeriesIDs {
                 localVisibleSeriesIDs = availableSeriesIDs
                 hasInitializedLocalVisibleSeriesIDs = true
             }
+        }
+        .onChange(of: allSelections) { _, newValue in
+            chartController?.configure(
+                availableSelections: newValue,
+                defaultVisibleSeriesIDs: availableSeriesIDs
+            )
         }
         .onChange(of: resolvedVisibleSeriesIDs) { _, newValue in
             sanitizeSelection(for: newValue)
@@ -356,7 +368,7 @@ struct CartesianMetricChartPanel: View {
         }
         .onExitCommand {
             guard pinnedSelection != nil else { return }
-            hoveredSelection = nil
+            setHoveredSelection(nil)
             setPinnedSelection(nil)
             updateAnnouncement("Chart selection cleared.")
         }
@@ -413,6 +425,25 @@ struct CartesianMetricChartPanel: View {
             }
         }
         .frame(height: height)
+        .focusable(chartController != nil)
+        .onMoveCommand { direction in
+            guard chartController != nil else { return }
+            switch direction {
+            case .left, .up:
+                chartController?.moveSelectionBackward()
+            case .right, .down:
+                chartController?.moveSelectionForward()
+            default:
+                break
+            }
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: environment.theme.radius(.large), style: .continuous)
+                .stroke(
+                    chartController?.focusedDatumID == nil ? .clear : environment.theme.color(.focusRing),
+                    lineWidth: chartController?.focusedDatumID == nil ? 0 : 1.5
+                )
+        )
         .accessibilityElement(children: .contain)
         .accessibilityLabel(title)
         .accessibilityHint("Hover to preview a metric. Click to pin the current metric. Press Escape to clear the pinned selection.")
@@ -491,7 +522,24 @@ struct CartesianMetricChartPanel: View {
         Set((barSeries + lineSeries).map(\.id))
     }
 
+    private var allSelections: [MetricSelection] {
+        barSeries.flatMap { series in
+            series.points.map { datumForPoint($0, in: series, style: .bar).selection(valueFormatter: valueFormatter) }
+        } + lineSeries.flatMap { series in
+            series.points.map {
+                datumForPoint(
+                    $0,
+                    in: series,
+                    style: style == .area ? .area : .line
+                ).selection(valueFormatter: valueFormatter)
+            }
+        }
+    }
+
     private var resolvedVisibleSeriesIDs: Set<String> {
+        if let chartController {
+            return chartController.visibleSeriesIDs.intersection(availableSeriesIDs)
+        }
         if let externalVisibleSeriesIDs {
             return externalVisibleSeriesIDs.wrappedValue.intersection(availableSeriesIDs)
         }
@@ -533,11 +581,17 @@ struct CartesianMetricChartPanel: View {
     }
 
     private var pinnedSelection: MetricSelection? {
-        externalSelection?.wrappedValue ?? localPinnedSelection
+        if let chartController {
+            return chartController.pinnedSelection
+        }
+        return externalSelection?.wrappedValue ?? localPinnedSelection
     }
 
     private var activeSelection: MetricSelection? {
-        pinnedSelection ?? hoveredSelection
+        if let chartController {
+            return chartController.activeSelection
+        }
+        return pinnedSelection ?? hoveredSelection
     }
 
     private var activeSelectionColor: Color? {
@@ -562,6 +616,10 @@ struct CartesianMetricChartPanel: View {
     }
 
     private func setPinnedSelection(_ selection: MetricSelection?) {
+        if let chartController {
+            chartController.pin(selection)
+            return
+        }
         if let externalSelection {
             externalSelection.wrappedValue = selection
         } else {
@@ -571,6 +629,10 @@ struct CartesianMetricChartPanel: View {
 
     private func updateVisibleSeriesIDs(_ seriesIDs: Set<String>) {
         let resolved = seriesIDs.intersection(availableSeriesIDs)
+        if let chartController {
+            chartController.setVisibleSeriesIDs(resolved)
+            return
+        }
         if let externalVisibleSeriesIDs {
             externalVisibleSeriesIDs.wrappedValue = resolved
         } else {
@@ -591,7 +653,7 @@ struct CartesianMetricChartPanel: View {
         }
 
         if let hoveredSelection, !visibleSeriesIDs.contains(hoveredSelection.seriesID) {
-            self.hoveredSelection = nil
+            setHoveredSelection(nil)
         }
     }
 
@@ -620,15 +682,15 @@ struct CartesianMetricChartPanel: View {
         frame: CGRect
     ) {
         guard state.isReady else {
-            hoveredSelection = nil
+            setHoveredSelection(nil)
             return
         }
 
         switch phase {
         case .active(let location):
-            hoveredSelection = selectionForCartesianLocation(location, frame: frame)
+            setHoveredSelection(selectionForCartesianLocation(location, frame: frame))
         case .ended:
-            hoveredSelection = nil
+            setHoveredSelection(nil)
         }
     }
 
@@ -639,13 +701,21 @@ struct CartesianMetricChartPanel: View {
         guard state.isReady else { return }
 
         if let nextSelection = selectionForCartesianLocation(location, frame: frame) {
-            hoveredSelection = nextSelection
+            setHoveredSelection(nextSelection)
             setPinnedSelection(nextSelection)
             updateAnnouncement("\(nextSelection.seriesTitle), \(nextSelection.label), \(nextSelection.formattedValue) selected.")
         } else if frame.contains(location) {
-            hoveredSelection = nil
+            setHoveredSelection(nil)
             setPinnedSelection(nil)
             updateAnnouncement("Chart selection cleared.")
+        }
+    }
+
+    private func setHoveredSelection(_ selection: MetricSelection?) {
+        if let chartController {
+            chartController.preview(selection)
+        } else {
+            hoveredSelection = selection
         }
     }
 
@@ -724,6 +794,7 @@ struct DonutMetricChartPanel: View {
     let state: AsyncContentState
     let slices: [MetricSlice]
     let showsLegend: Bool
+    let chartController: MetricChartController?
     let externalSelection: Binding<MetricSelection?>?
     let externalVisibleSeriesIDs: Binding<Set<String>>?
     let valueFormatter: (Double) -> String
@@ -760,10 +831,20 @@ struct DonutMetricChartPanel: View {
             }
         }
         .onAppear {
+            chartController?.configure(
+                availableSelections: allSelections,
+                defaultVisibleSeriesIDs: availableSliceIDs
+            )
             if externalVisibleSeriesIDs == nil && !hasInitializedLocalVisibleSeriesIDs {
                 localVisibleSeriesIDs = availableSliceIDs
                 hasInitializedLocalVisibleSeriesIDs = true
             }
+        }
+        .onChange(of: allSelections) { _, newValue in
+            chartController?.configure(
+                availableSelections: newValue,
+                defaultVisibleSeriesIDs: availableSliceIDs
+            )
         }
         .onChange(of: resolvedVisibleSeriesIDs) { _, newValue in
             sanitizeSelection(for: newValue)
@@ -775,7 +856,7 @@ struct DonutMetricChartPanel: View {
         }
         .onExitCommand {
             guard pinnedSelection != nil else { return }
-            hoveredSelection = nil
+            setHoveredSelection(nil)
             setPinnedSelection(nil)
             updateAnnouncement("Chart selection cleared.")
         }
@@ -831,6 +912,25 @@ struct DonutMetricChartPanel: View {
             }
         }
         .frame(height: height)
+        .focusable(chartController != nil)
+        .onMoveCommand { direction in
+            guard chartController != nil else { return }
+            switch direction {
+            case .left, .up:
+                chartController?.moveSelectionBackward()
+            case .right, .down:
+                chartController?.moveSelectionForward()
+            default:
+                break
+            }
+        }
+        .overlay(
+            RoundedRectangle(cornerRadius: environment.theme.radius(.large), style: .continuous)
+                .stroke(
+                    chartController?.focusedDatumID == nil ? .clear : environment.theme.color(.focusRing),
+                    lineWidth: chartController?.focusedDatumID == nil ? 0 : 1.5
+                )
+        )
         .accessibilityElement(children: .contain)
         .accessibilityLabel(title)
         .accessibilityHint("Hover to preview a segment. Click to pin the current segment. Press Escape to clear the pinned selection.")
@@ -840,7 +940,14 @@ struct DonutMetricChartPanel: View {
         Set(slices.map(\.id))
     }
 
+    private var allSelections: [MetricSelection] {
+        slices.map(selectionForSlice)
+    }
+
     private var resolvedVisibleSeriesIDs: Set<String> {
+        if let chartController {
+            return chartController.visibleSeriesIDs.intersection(availableSliceIDs)
+        }
         if let externalVisibleSeriesIDs {
             return externalVisibleSeriesIDs.wrappedValue.intersection(availableSliceIDs)
         }
@@ -870,11 +977,17 @@ struct DonutMetricChartPanel: View {
     }
 
     private var pinnedSelection: MetricSelection? {
-        externalSelection?.wrappedValue ?? localPinnedSelection
+        if let chartController {
+            return chartController.pinnedSelection
+        }
+        return externalSelection?.wrappedValue ?? localPinnedSelection
     }
 
     private var activeSelection: MetricSelection? {
-        pinnedSelection ?? hoveredSelection
+        if let chartController {
+            return chartController.activeSelection
+        }
+        return pinnedSelection ?? hoveredSelection
     }
 
     private var activeSelectionColor: Color? {
@@ -895,6 +1008,10 @@ struct DonutMetricChartPanel: View {
     }
 
     private func setPinnedSelection(_ selection: MetricSelection?) {
+        if let chartController {
+            chartController.pin(selection)
+            return
+        }
         if let externalSelection {
             externalSelection.wrappedValue = selection
         } else {
@@ -904,6 +1021,10 @@ struct DonutMetricChartPanel: View {
 
     private func updateVisibleSeriesIDs(_ seriesIDs: Set<String>) {
         let resolved = seriesIDs.intersection(availableSliceIDs)
+        if let chartController {
+            chartController.setVisibleSeriesIDs(resolved)
+            return
+        }
         if let externalVisibleSeriesIDs {
             externalVisibleSeriesIDs.wrappedValue = resolved
         } else {
@@ -924,7 +1045,7 @@ struct DonutMetricChartPanel: View {
         }
 
         if let hoveredSelection, !visibleSeriesIDs.contains(hoveredSelection.seriesID) {
-            self.hoveredSelection = nil
+            setHoveredSelection(nil)
         }
     }
 
@@ -957,15 +1078,15 @@ struct DonutMetricChartPanel: View {
         frame: CGRect
     ) {
         guard state.isReady else {
-            hoveredSelection = nil
+            setHoveredSelection(nil)
             return
         }
 
         switch phase {
         case .active(let location):
-            hoveredSelection = selectionForDonutLocation(location, frame: frame)
+            setHoveredSelection(selectionForDonutLocation(location, frame: frame))
         case .ended:
-            hoveredSelection = nil
+            setHoveredSelection(nil)
         }
     }
 
@@ -976,13 +1097,21 @@ struct DonutMetricChartPanel: View {
         guard state.isReady else { return }
 
         if let nextSelection = selectionForDonutLocation(location, frame: frame) {
-            hoveredSelection = nextSelection
+            setHoveredSelection(nextSelection)
             setPinnedSelection(nextSelection)
             updateAnnouncement("\(nextSelection.label), \(nextSelection.formattedValue) selected.")
         } else if frame.contains(location) {
-            hoveredSelection = nil
+            setHoveredSelection(nil)
             setPinnedSelection(nil)
             updateAnnouncement("Chart selection cleared.")
+        }
+    }
+
+    private func setHoveredSelection(_ selection: MetricSelection?) {
+        if let chartController {
+            chartController.preview(selection)
+        } else {
+            hoveredSelection = selection
         }
     }
 

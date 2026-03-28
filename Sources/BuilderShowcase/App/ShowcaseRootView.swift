@@ -23,18 +23,18 @@ struct ShowcaseRootView: View {
             sidebar(environment: shellEnv)
                 .frame(width: 272)
 
-            Rectangle()
-                .fill(shellEnv.theme.color(.subtleBorder))
-                .frame(width: 1)
+            titlebarExtendingDivider(color: shellEnv.theme.color(.subtleBorder))
 
-            ZStack {
+            ZStack(alignment: .topLeading) {
                 shellEnv.theme.color(.workspaceBackground)
                     .ignoresSafeArea()
 
                 detailView(environment: env)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .background(shellEnv.theme.color(.appBackground))
         .onAppear {
             isSearchFocused = false
@@ -42,6 +42,13 @@ struct ShowcaseRootView: View {
                 sidebarFocusRequest += 1
             }
         }
+    }
+
+    private func titlebarExtendingDivider(color: Color) -> some View {
+        Rectangle()
+            .fill(color)
+            .frame(width: 1)
+            .extendsIntoTitlebar()
     }
 
     private func sidebar(environment: DesignSystemEnvironment) -> some View {
@@ -125,7 +132,10 @@ struct ShowcaseRootView: View {
                 .zIndex(30)
             }
         }
-        .background(SidebarBackdrop(environment: environment))
+        .background(
+            SidebarBackdrop(environment: environment)
+                .extendsIntoTitlebar()
+        )
     }
 
     private func searchArea(environment: DesignSystemEnvironment) -> some View {

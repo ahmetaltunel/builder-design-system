@@ -124,5 +124,5 @@ let environment = DesignSystemEnvironment.preview(.dark)
 NoticeStack(environment: environment, notices: [
     .init(title: "Preview feature", message: "Enable it for testing before broad rollout.", tone: .warning)
 ])
-StatusBadge(environment: environment, label: "Preview", tone: .warning)
+StatusBadge(environment: environment, label: "Preview", color: environment.theme.color(.warning))
 ```

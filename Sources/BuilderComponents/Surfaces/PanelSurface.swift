@@ -12,7 +12,7 @@ public struct PanelSurface<Content: View>: View {
         environment: DesignSystemEnvironment,
         title: String? = nil,
         subtitle: String? = nil,
-        elevation: ElevationToken = .subtle,
+        elevation: ElevationToken = .flat,
         @ViewBuilder content: () -> Content
     ) {
         self.environment = environment

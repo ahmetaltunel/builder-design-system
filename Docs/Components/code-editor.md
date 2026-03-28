@@ -141,5 +141,5 @@ Canonical compiled example for Code editor. Use Code editor for quiet supporting
 // Canonical example for Code editor
 let environment = DesignSystemEnvironment.preview(.dark)
 
-CodeEditorSurface(environment: environment, title: "Code editor", code: sampleCode)
+CodeEditorSurface(environment: environment, code: $code)
 ```

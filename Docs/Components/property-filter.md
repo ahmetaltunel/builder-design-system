@@ -143,5 +143,9 @@ Canonical compiled example for Property filter. Use Property filter when selecti
 // Canonical example for Property filter
 let environment = DesignSystemEnvironment.preview(.dark)
 
-PropertyFilterBar(environment: environment, filters: filters, selection: $activeFilters)
+let collectionController = CollectionController(items: rows, activeFilterTokens: ["ready", "review"], searchableText: { row in row.cells.joined(separator: " ") }, filterMatcher: { row, tokens in
+    tokens.contains(row.cells[1].lowercased())
+})
+
+PropertyFilterBar(environment: environment, controller: collectionController)
 ```

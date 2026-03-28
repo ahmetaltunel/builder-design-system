@@ -142,11 +142,10 @@ Canonical compiled example for Table. Use Table when analytical content needs to
 // Canonical example for Table
 let environment = DesignSystemEnvironment.preview(.dark)
 
+let collectionController = CollectionController(items: rows, selectedItemID: "tokens", searchableText: { row in row.cells.joined(separator: " ") })
+
 DataTable(environment: environment, columns: [
     .init(title: "Area"),
     .init(title: "Status")
-], rows: [
-    .init(id: "tokens", cells: ["Tokens", "Ready"]),
-    .init(id: "docs", cells: ["Docs", "Needs review"])
-], selectedRowID: $selectedRowID)
+], controller: collectionController)
 ```

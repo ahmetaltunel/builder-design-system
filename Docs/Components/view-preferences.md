@@ -143,5 +143,7 @@ Canonical compiled example for View preferences. Use View preferences when field
 // Canonical example for View preferences
 let environment = DesignSystemEnvironment.preview(.dark)
 
-ViewPreferencesPanel(environment: environment, densitySelection: $density, sortSelection: $sort)
+let collectionController = CollectionController(items: rows, searchableText: { row in row.cells.joined(separator: " ") })
+
+ViewPreferencesPanel(environment: environment, controller: collectionController)
 ```

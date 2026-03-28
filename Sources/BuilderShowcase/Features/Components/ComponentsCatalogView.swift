@@ -127,10 +127,7 @@ struct ComponentsCatalogView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 HeaderBlock(environment: env, title: selectedEntry.name, subtitle: selectedEntry.summary) {
-                    HStack(spacing: 10) {
-                        StatusBadge(environment: env, label: selectedEntry.status.rawValue, color: statusColor(selectedEntry.status))
-                        TokenBadge(environment: env, title: selectedEntry.category.rawValue, tint: nil)
-                    }
+                    TokenBadge(environment: env, title: selectedEntry.category.rawValue, tint: nil)
                 }
 
                 HStack(spacing: 12) {
@@ -268,18 +265,6 @@ struct ComponentsCatalogView: View {
         .frame(maxHeight: .infinity, alignment: .topLeading)
         .background(env.theme.color(.groupedSurface))
     }
-
-    private func statusColor(_ status: ComponentStatus) -> Color {
-        switch status {
-        case .calibrated:
-            env.theme.color(.accentPrimary)
-        case .implemented:
-            env.theme.color(.success)
-        case .systemized:
-            env.theme.color(.info)
-        }
-    }
-
     private func syncSelection() {
         guard !filteredComponents.isEmpty else {
             selectedComponentID = CatalogContent.components[0].id

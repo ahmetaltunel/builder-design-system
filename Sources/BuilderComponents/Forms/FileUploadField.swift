@@ -1,6 +1,7 @@
 import UniformTypeIdentifiers
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct FileUploadField: View {
     public let environment: DesignSystemEnvironment
@@ -19,8 +20,15 @@ public struct FileUploadField: View {
     public let onDropURLs: (([URL]) -> Void)?
     public let pickerTitle: String
     public let onPick: () -> Void
+    public let pasteActionTitle: String?
+    public let onPaste: (() -> Void)?
+    public let validationSummary: String?
     public let onRetry: ((FileUploadItem) -> Void)?
+    public let onCancel: ((FileUploadItem) -> Void)?
     public let onRemove: ((FileUploadItem) -> Void)?
+    public let onRetryFailed: (() -> Void)?
+    public let onRemoveCompleted: (() -> Void)?
+    public let onCancelAll: (() -> Void)?
 
     @State private var liveAnnouncement: String?
 
@@ -41,8 +49,15 @@ public struct FileUploadField: View {
         onDropURLs: (([URL]) -> Void)? = nil,
         pickerTitle: String = "Browse files",
         onPick: @escaping () -> Void,
+        pasteActionTitle: String? = nil,
+        onPaste: (() -> Void)? = nil,
+        validationSummary: String? = nil,
         onRetry: ((FileUploadItem) -> Void)? = nil,
-        onRemove: ((FileUploadItem) -> Void)? = nil
+        onCancel: ((FileUploadItem) -> Void)? = nil,
+        onRemove: ((FileUploadItem) -> Void)? = nil,
+        onRetryFailed: (() -> Void)? = nil,
+        onRemoveCompleted: (() -> Void)? = nil,
+        onCancelAll: (() -> Void)? = nil
     ) {
         self.environment = environment
         self.title = title
@@ -60,8 +75,15 @@ public struct FileUploadField: View {
         self.onDropURLs = onDropURLs
         self.pickerTitle = pickerTitle
         self.onPick = onPick
+        self.pasteActionTitle = pasteActionTitle
+        self.onPaste = onPaste
+        self.validationSummary = validationSummary
         self.onRetry = onRetry
+        self.onCancel = onCancel
         self.onRemove = onRemove
+        self.onRetryFailed = onRetryFailed
+        self.onRemoveCompleted = onRemoveCompleted
+        self.onCancelAll = onCancelAll
     }
 
     public init(
@@ -93,7 +115,11 @@ public struct FileUploadField: View {
             onDropURLs: nil,
             pickerTitle: pickerTitle,
             onPick: onPick,
+            pasteActionTitle: nil,
+            onPaste: nil,
+            validationSummary: nil,
             onRetry: onRetry,
+            onCancel: nil,
             onRemove: onRemove
         )
     }
@@ -126,8 +152,69 @@ public struct FileUploadField: View {
             onDropURLs: nil,
             pickerTitle: pickerTitle,
             onPick: onPick,
+            pasteActionTitle: nil,
+            onPaste: nil,
+            validationSummary: nil,
             onRetry: nil,
+            onCancel: nil,
             onRemove: onRemove
+        )
+    }
+
+    public init(
+        environment: DesignSystemEnvironment,
+        title: String,
+        subtitle: String? = nil,
+        dropTitle: String = "Drop files",
+        dropDetail: String = "Drag files here or browse from disk.",
+        importController: FileImportController,
+        uploadController: FileUploadSessionController,
+        pickerTitle: String = "Browse files",
+        pasteActionTitle: String? = "Paste files",
+        allowsMultipleSelection: Bool = true
+    ) {
+        self.init(
+            environment: environment,
+            title: title,
+            subtitle: subtitle,
+            dropTitle: dropTitle,
+            dropDetail: dropDetail,
+            items: uploadController.items,
+            state: uploadController.state,
+            emptyActionTitle: nil,
+            onEmptyAction: nil,
+            errorActionTitle: nil,
+            onErrorAction: nil,
+            acceptedContentTypes: importController.acceptedContentTypes,
+            isTargeted: Binding(
+                get: { importController.isTargeted },
+                set: { importController.setTargeted($0) }
+            ),
+            onDropURLs: { urls in
+                let accepted = importController.handleDroppedURLs(urls)
+                uploadController.enqueue(urls: accepted)
+            },
+            pickerTitle: pickerTitle,
+            onPick: {
+                Task {
+                    let accepted = await importController.importFromPicker(
+                        allowsMultipleSelection: allowsMultipleSelection
+                    )
+                    uploadController.enqueue(urls: accepted)
+                }
+            },
+            pasteActionTitle: pasteActionTitle,
+            onPaste: {
+                let accepted = importController.importFromPasteboard()
+                uploadController.enqueue(urls: accepted)
+            },
+            validationSummary: importController.validationSummary ?? uploadController.validationSummary,
+            onRetry: nil,
+            onCancel: { item in uploadController.cancel(id: item.id) },
+            onRemove: { item in uploadController.remove(id: item.id) },
+            onRetryFailed: nil,
+            onRemoveCompleted: { uploadController.removeCompleted() },
+            onCancelAll: uploadController.isUploading ? { uploadController.cancelAll() } : nil
         )
     }
 
@@ -145,16 +232,29 @@ public struct FileUploadField: View {
                     environment: environment,
                     title: dropTitle,
                     detail: dropDetail,
+                    validationMessage: validationSummary,
                     state: .ready,
                     acceptedContentTypes: acceptedContentTypes,
                     isTargeted: isTargeted,
                     onDropURLs: handleDroppedURLs,
                     actionTitle: pickerTitle,
-                    action: onPick
+                    action: onPick,
+                    secondaryActionTitle: pasteActionTitle,
+                    secondaryAction: onPaste
                 )
 
                 if !items.isEmpty {
-                    FileTokenGroup(environment: environment, items: items, onRetry: onRetry, onRemove: onRemove)
+                    FileTokenGroup(
+                        environment: environment,
+                        items: items,
+                        summaryMessage: validationSummary,
+                        onRetry: onRetry,
+                        onCancel: onCancel,
+                        onRemove: onRemove,
+                        onRetryFailed: onRetryFailed,
+                        onRemoveCompleted: onRemoveCompleted,
+                        onCancelAll: onCancelAll
+                    )
                 }
 
                 if let liveAnnouncement, !liveAnnouncement.isEmpty {

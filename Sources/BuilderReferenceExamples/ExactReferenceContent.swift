@@ -144,10 +144,10 @@ enum ExactReferenceContent {
             ])
         case "attribute-editor":
             return code([
-                "AttributeEditor(environment: environment, attributes: [",
-                "    .init(id: \"title\", name: \"Title\", value: \"Builder surface\"),",
-                "    .init(id: \"status\", name: \"Status\", value: \"Ready\")",
-                "], selectedAttributeID: $selectedAttributeID)"
+                "AttributeEditor(environment: environment, attributes: .constant([",
+                "    .init(key: \"Title\", value: \"Builder surface\"),",
+                "    .init(key: \"Status\", value: \"Ready\")",
+                "]))"
             ])
         case "autosuggest":
             return code([
@@ -159,39 +159,37 @@ enum ExactReferenceContent {
             ])
         case "badge":
             return code([
-                "StatusBadge(environment: environment, label: \"Ready\", tone: .success)"
+                "StatusBadge(environment: environment, label: \"Ready\", color: environment.theme.color(.success))"
             ])
         case "bar-chart":
             return code([
+                "let chartController = MetricChartController()",
+                "",
                 "BarChartPanel(environment: environment, title: \"\(displayName)\", state: .ready, series: [",
                 "    .init(title: \"Coverage\", color: environment.theme.color(.chartBlue), points: [",
                 "        .init(label: \"Tokens\", value: 82),",
                 "        .init(label: \"Components\", value: 80),",
                 "        .init(label: \"Patterns\", value: 24)",
                 "    ])",
-                "], selection: .constant(nil), visibleSeriesIDs: .constant([\"Coverage\"]), valueFormatter: { value in \"\\(Int(value))%\" })"
+                "], controller: chartController, valueFormatter: { value in \"\\(Int(value))%\" })"
             ])
         case "board":
             return code([
-                "Board(environment: environment, columns: [",
-                "    .init(id: \"queued\", title: \"Queued\", items: [",
-                "        .init(id: \"review-tokens\", title: \"Review tokens\", detail: \"Validation and docs\", status: \"Review\", statusColor: environment.theme.color(.warning)),",
-                "        .init(id: \"verify-docs\", title: \"Verify docs\", detail: \"Generated references\", status: \"Ready\", statusColor: environment.theme.color(.success))",
-                "    ]),",
-                "    .init(id: \"done\", title: \"Done\", cards: [\"Ship foundations\"])",
-                "], selectedItemID: .constant(\"review-tokens\"), onActivateItem: { item in",
-                "    print(item.title)",
-                "}, onMoveItem: { itemID, destinationColumnID, destinationIndex in",
-                "    print(itemID, destinationColumnID, destinationIndex)",
-                "])"
+                "let boardController = BoardController(selectedItemID: \"review-tokens\")",
+                "",
+                "Board(environment: environment, columns: $columns, controller: boardController) { item in",
+                "    boardController.activate(itemID: item.id)",
+                "} paletteItemResolver: { itemID in",
+                "    paletteItems.first { $0.id == itemID }",
+                "}"
             ])
         case "board-item":
             return code([
-                "BoardItemView(environment: environment, item: .init(title: \"Review tokens\", detail: \"Validation and docs\", status: \"Review\", statusColor: environment.theme.color(.warning)), isSelected: true, moveDestinations: [",
+                "BoardItemView(environment: environment, item: .init(title: \"Review tokens\", detail: \"Validation and docs\", status: \"Review\", statusColor: environment.theme.color(.warning)), isSelected: true, isFocused: false, moveDestinations: [",
                 "    .init(title: \"Move to Done\", columnID: \"done\", columnTitle: \"Done\", index: 0)",
                 "], onMove: { destination in",
                 "    print(destination.columnID)",
-                "})"
+                "}, dragPayload: nil)"
             ])
         case "box":
             return code([
@@ -214,12 +212,10 @@ enum ExactReferenceContent {
         case "button-dropdown":
             return code([
                 "ButtonDropdown(environment: environment, title: \"Create\", items: [",
-                "    .init(title: \"Component\"),",
-                "    .init(title: \"Pattern\"),",
-                "    .init(title: \"Foundation note\")",
-                "]) { item in",
-                "    print(item.title)",
-                "}"
+                "    .init(title: \"Component\", action: {}),",
+                "    .init(title: \"Pattern\", action: {}),",
+                "    .init(title: \"Foundation note\", action: {})",
+                "])"
             ])
         case "button-group":
             return code([
@@ -230,22 +226,25 @@ enum ExactReferenceContent {
             ])
         case "calendar":
             return code([
-                "CalendarPanel(environment: environment, title: \"\(displayName)\", highlightedDates: [Date()])"
+                "CalendarPanel(environment: environment, date: $date)"
             ])
         case "cards":
             return code([
-                "CardGrid(environment: environment, items: cards) { card in",
-                "    PanelSurface(environment: environment, title: card.title, subtitle: card.subtitle) {",
-                "        Text(card.body)",
+                "CardGrid(environment: environment, data: cards) { card in",
+                "    VStack(alignment: .leading, spacing: 8) {",
+                "        Text(card.title)",
+                "        Text(card.detail)",
                 "    }",
                 "}"
             ])
         case "chat-bubble":
             return code([
-                "ChatBubble(environment: environment, role: .assistant, author: \"Builder assistant\", message: \"Review is ready.\", detail: \"Draft output is still streaming.\", state: .streaming, footerMetadata: [",
-                "    .init(label: \"Model\", value: \"Builder review\"),",
+                "let message = ConversationMessage(role: .assistant, author: \"Builder assistant\", message: \"Review is ready.\", detail: \"Draft output is still streaming.\", state: .streaming, footerMetadata: [",
+                "    .init(label: \"Driver\", value: \"Conversation controller\"),",
                 "    .init(label: \"Updated\", value: \"Now\")",
-                "], showsCopyAction: true)"
+                "])",
+                "",
+                "ChatBubble(environment: environment, message: message, showsCopyAction: true)"
             ])
         case "charts":
             return code([
@@ -262,7 +261,7 @@ enum ExactReferenceContent {
             ])
         case "code-editor":
             return code([
-                "CodeEditorSurface(environment: environment, title: \"\(displayName)\", code: sampleCode)"
+                "CodeEditorSurface(environment: environment, code: $code)"
             ])
         case "code-view":
             return code([
@@ -270,7 +269,9 @@ enum ExactReferenceContent {
             ])
         case "view-preferences":
             return code([
-                "ViewPreferencesPanel(environment: environment, densitySelection: $density, sortSelection: $sort)"
+                "let collectionController = CollectionController(items: rows, searchableText: { row in row.cells.joined(separator: \" \") })",
+                "",
+                "ViewPreferencesPanel(environment: environment, controller: collectionController)"
             ])
         case "filter-select", "select":
             return code([
@@ -298,7 +299,7 @@ enum ExactReferenceContent {
                 "ContentLayout(environment: environment) {",
                 "    HeaderBlock(environment: environment, title: \"\(displayName)\", subtitle: \"Header and content stay aligned.\")",
                 "} content: {",
-                "    TextContentBlock(environment: environment, title: \"Usage\", body: \"Keep layout structure explicit before styling.\")",
+                "    TextContentBlock(environment: environment, title: \"Usage\", bodyText: \"Keep layout structure explicit before styling.\")",
                 "}"
             ])
         case "copy-to-clipboard":
@@ -315,11 +316,13 @@ enum ExactReferenceContent {
             ])
         case "donut-chart":
             return code([
+                "let chartController = MetricChartController()",
+                "",
                 "DonutChartPanel(environment: environment, title: \"\(displayName)\", state: .ready, slices: [",
                 "    .init(title: \"Ready\", value: 18, color: environment.theme.color(.chartGreen)),",
                 "    .init(title: \"Review\", value: 7, color: environment.theme.color(.chartAmber)),",
                 "    .init(title: \"Blocked\", value: 3, color: environment.theme.color(.chartRed))",
-                "], selection: .constant(nil), visibleSeriesIDs: .constant([\"Ready\", \"Review\", \"Blocked\"]), valueFormatter: { value in \"\\(Int(value)) items\" })"
+                "], controller: chartController, valueFormatter: { value in \"\\(Int(value)) items\" })"
             ])
         case "drawer":
             return code([
@@ -347,28 +350,24 @@ enum ExactReferenceContent {
             ])
         case "file-token-group":
             return code([
-                "FileTokenGroup(environment: environment, items: [",
+                "let uploadController = FileUploadSessionController(items: [",
                 "    .init(title: \"release-notes.md\", detail: \"18 KB\", status: .success, message: \"Uploaded successfully.\", symbol: \"doc.text\"),",
                 "    .init(title: \"screenshots.zip\", detail: \"2 files\", status: .uploading, progress: 0.64, message: \"Uploading archive...\", symbol: \"archivebox\"),",
                 "    .init(title: \"hero.png\", detail: \"4.2 MB\", status: .error, message: \"The file exceeds the current size limit.\", symbol: \"photo\", canRetry: true)",
-                "], onRetry: { item in",
-                "    print(item.id)",
-                "}, onRemove: { item in",
-                "    print(item.id)",
-                "})"
+                "])",
+                "",
+                "FileTokenGroup(environment: environment, controller: uploadController)"
             ])
         case "file-upload-field":
             return code([
-                "FileUploadField(environment: environment, title: \"Attach release notes\", subtitle: \"Drop handling and item updates stay with the consumer.\", dropTitle: \"Drop release notes\", dropDetail: \"Accept Markdown, PDF, and image files.\", items: [",
-                "    .init(title: \"release-notes.md\", detail: \"18 KB\", status: .success, message: \"Uploaded successfully.\", symbol: \"doc.text\"),",
-                "    .init(title: \"hero.png\", detail: \"4.2 MB\", status: .error, message: \"The file exceeds the current size limit.\", symbol: \"photo\", canRetry: true)",
-                "], acceptedContentTypes: [.plainText, .pdf, .image], isTargeted: .constant(false), onDropURLs: { urls in",
-                "    print(urls.count)",
-                "}, onPick: {}, onRetry: { item in",
-                "    print(item.id)",
-                "}, onRemove: { item in",
-                "    print(item.id)",
-                "})"
+                "let importController = FileImportController(acceptedContentTypes: [.plainText, .pdf, .image], source: OpenPanelFileImportSource())",
+                "let uploadController = FileUploadSessionController()",
+                "uploadController.enqueue(requests: [",
+                "    .init(url: URL(fileURLWithPath: \"/tmp/release-notes.md\"), detail: \"18 KB\", symbol: \"doc.text\"),",
+                "    .init(url: URL(fileURLWithPath: \"/tmp/hero.png\"), detail: \"4.2 MB\", symbol: \"photo\")",
+                "])",
+                "",
+                "FileUploadField(environment: environment, title: \"Attach release notes\", subtitle: \"Import, paste, and upload wire through shared controllers.\", dropTitle: \"Drop release notes\", dropDetail: \"Accept Markdown, PDF, and image files.\", importController: importController, uploadController: uploadController, pickerTitle: \"Browse files\", pasteActionTitle: \"Paste files\")"
             ])
         case "file-uploading-components":
             return code([
@@ -436,10 +435,12 @@ enum ExactReferenceContent {
             ])
         case "help-panel":
             return code([
-                "HelpPanel(environment: environment, title: \"\(displayName)\", topics: [",
+                "let navigator = HelpNavigator(topics: [",
                 "    .init(id: \"context\", title: \"Current context\", detail: \"Tie guidance to the active workflow.\", symbol: \"scope\"),",
                 "    .init(id: \"recovery\", title: \"Recovery\", detail: \"Name the next safe action.\", symbol: \"arrow.uturn.backward\")",
-                "], selectedTopicID: .constant(\"context\")) {",
+                "], selectedTopicID: \"context\")",
+                "",
+                "HelpPanel(environment: environment, title: \"\(displayName)\", navigator: navigator) {",
                 "    BulletList(environment: environment, items: [\"Explain the current decision\", \"Keep guidance adjacent to work\"])",
                 "}"
             ])
@@ -463,20 +464,22 @@ enum ExactReferenceContent {
             ])
         case "items-palette":
             return code([
+                "let boardController = BoardController(selectedItemID: \"metric-card\")",
+                "",
                 "ItemsPalette(environment: environment, title: \"Insert items\", items: [",
                 "    .init(id: \"metric-card\", title: \"Metric card\", detail: \"Reusable dashboard tile.\"),",
                 "    .init(id: \"status-list\", title: \"Status list\", detail: \"Dense collection summary.\")",
-                "], selectedItemID: .constant(\"metric-card\"), insertDestinations: [",
+                "], controller: boardController, insertDestinations: [",
                 "    .init(title: \"Insert into Queued\", columnID: \"queued\", columnTitle: \"Queued\", index: 2)",
                 "], onActivateItem: { item in",
-                "    print(item.title)",
+                "    boardController.activate(itemID: item.id)",
                 "}, onInsertItem: { item, destinationColumnID, destinationIndex in",
                 "    print(item.id, destinationColumnID, destinationIndex)",
                 "})"
             ])
         case "keyvalue-pairs":
             return code([
-                "KeyValuePairs(environment: environment, items: [",
+                "KeyValuePairs(environment: environment, pairs: [",
                 "    .init(id: \"mode\", key: \"Mode\", value: \"Compact\"),",
                 "    .init(id: \"contrast\", key: \"Contrast\", value: \"Standard\")",
                 "])"
@@ -506,7 +509,7 @@ enum ExactReferenceContent {
             ])
         case "list":
             return code([
-                "ListSurface(environment: environment, title: \"\(displayName)\", items: [\"Tokens\", \"Patterns\", \"Accessibility\"] )"
+                "ListSurface(environment: environment, items: [\"Tokens\", \"Patterns\", \"Accessibility\"])"
             ])
         case "live-region":
             return code([
@@ -526,6 +529,8 @@ enum ExactReferenceContent {
             ])
         case "mixed-chart":
             return code([
+                "let chartController = MetricChartController()",
+                "",
                 "MixedChartPanel(environment: environment, title: \"\(displayName)\", state: .ready, barSeries: [",
                 "    .init(title: \"Coverage\", color: environment.theme.color(.chartBlue), points: [",
                 "        .init(label: \"Tokens\", value: 82),",
@@ -536,7 +541,7 @@ enum ExactReferenceContent {
                 "        .init(label: \"Tokens\", value: 90),",
                 "        .init(label: \"Docs\", value: 85)",
                 "    ])",
-                "], selection: .constant(nil), visibleSeriesIDs: .constant([\"Coverage\", \"Target\"]), valueFormatter: { value in \"\\(Int(value))%\" })"
+                "], controller: chartController, valueFormatter: { value in \"\\(Int(value))%\" })"
             ])
         case "multiselect":
             return code([
@@ -548,12 +553,14 @@ enum ExactReferenceContent {
             ])
         case "pagination":
             return code([
-                "PaginationControl(environment: environment, currentPage: $page, pageCount: 12)"
+                "let collectionController = CollectionController(items: rows, pageSize: 12, searchableText: { row in row.cells.joined(separator: \" \") })",
+                "",
+                "PaginationControl(environment: environment, controller: collectionController)"
             ])
         case "panel-layout":
             return code([
-                "PanelLayout(environment: environment, title: \"\(displayName)\", subtitle: \"Group related content before reaching for new chrome.\") {",
-                "    TextContentBlock(environment: environment, title: \"Guidance\", body: \"Keep supporting detail aligned to the main task.\")",
+                "PanelLayout(environment: environment) {",
+                "    TextContentBlock(environment: environment, title: \"Guidance\", bodyText: \"Keep supporting detail aligned to the main task.\")",
                 "}"
             ])
         case "popover":
@@ -568,19 +575,25 @@ enum ExactReferenceContent {
             ])
         case "prompt-input":
             return code([
-                "PromptInput(environment: environment, prompt: $prompt, actionTitle: \"Draft\", supportingText: \"Command-Return submits.\", isSubmitting: isSubmitting, isMultiline: true, submitShortcutBehavior: .commandReturn, secondaryActionTitle: \"Clear\", onSecondaryAction: {",
-                "    prompt = \"\"",
+                "let promptController = PromptComposerController(draft: \"Summarize the runtime rollout.\", supportingText: \"Command-Return submits.\")",
+                "",
+                "PromptInput(environment: environment, controller: promptController, actionTitle: \"Draft\", isMultiline: true, secondaryActionTitle: \"Clear\", onSecondaryAction: {",
+                "    promptController.clear()",
                 "}) {",
-                "    isSubmitting = true",
+                "    promptController.beginSubmitting()",
                 "}"
             ])
         case "property-filter":
             return code([
-                "PropertyFilterBar(environment: environment, filters: filters, selection: $activeFilters)"
+                "let collectionController = CollectionController(items: rows, activeFilterTokens: [\"ready\", \"review\"], searchableText: { row in row.cells.joined(separator: \" \") }, filterMatcher: { row, tokens in",
+                "    tokens.contains(row.cells[1].lowercased())",
+                "})",
+                "",
+                "PropertyFilterBar(environment: environment, controller: collectionController)"
             ])
         case "radio-group":
             return code([
-                "RadioGroup(environment: environment, title: \"Mode\", options: [",
+                "RadioGroup(environment: environment, options: [",
                 "    .init(label: \"Automatic\", value: \"automatic\"),",
                 "    .init(label: \"Manual\", value: \"manual\")",
                 "], selection: $selection)"
@@ -601,13 +614,13 @@ enum ExactReferenceContent {
             ])
         case "slider":
             return code([
-                "SliderField(environment: environment, title: \"Radius\", value: $radius, range: 0...24)"
+                "SliderField(environment: environment, title: \"Radius\", value: $radius, in: 0...24)"
             ])
         case "space-between":
             return code([
-                "SpaceBetween {",
+                "SpaceBetween(environment: environment) {",
                 "    Text(\"\(displayName)\")",
-                "    TokenBadge(environment: environment, label: \"Compact\")",
+                "    TokenBadge(environment: environment, title: \"Compact\")",
                 "}"
             ])
         case "spinner":
@@ -636,23 +649,22 @@ enum ExactReferenceContent {
             ])
         case "support-prompt-group":
             return code([
+                "let promptController = PromptComposerController(draft: \"Summarize the runtime rollout.\")",
+                "",
                 "SupportPromptGroup(environment: environment, prompts: [",
                 "    .init(id: \"summarize\", title: \"Summarize\", detail: \"Condense the latest changes.\", isSelected: true, isRecommended: true),",
                 "    .init(id: \"find-gaps\", title: \"Find gaps\", detail: \"Inspect missing inventory.\"),",
                 "    .init(id: \"compare\", title: \"Explain tradeoffs\", detail: \"Compare candidate APIs.\", isEnabled: false)",
-                "]) { prompt in",
-                "    print(prompt.title)",
-                "}"
+                "], controller: promptController)"
             ])
         case "table":
             return code([
+                "let collectionController = CollectionController(items: rows, selectedItemID: \"tokens\", searchableText: { row in row.cells.joined(separator: \" \") })",
+                "",
                 "DataTable(environment: environment, columns: [",
                 "    .init(title: \"Area\"),",
                 "    .init(title: \"Status\")",
-                "], rows: [",
-                "    .init(id: \"tokens\", cells: [\"Tokens\", \"Ready\"]),",
-                "    .init(id: \"docs\", cells: [\"Docs\", \"Needs review\"])",
-                "], selectedRowID: $selectedRowID)"
+                "], controller: collectionController)"
             ])
         case "tabs":
             return code([
@@ -664,15 +676,17 @@ enum ExactReferenceContent {
             ])
         case "tag-editor":
             return code([
-                "TagEditor(environment: environment, title: \"Release tags\", tags: $tags)"
+                "TagEditor(environment: environment, tags: $tags)"
             ])
         case "text-content":
             return code([
-                "TextContentBlock(environment: environment, title: \"\(displayName)\", body: \"Use content blocks for editorial guidance inside grouped surfaces.\")"
+                "TextContentBlock(environment: environment, title: \"\(displayName)\", bodyText: \"Use content blocks for editorial guidance inside grouped surfaces.\")"
             ])
         case "text-filter":
             return code([
-                "TextFilterField(environment: environment, placeholder: \"Filter components\", text: $query)"
+                "let collectionController = CollectionController(items: rows, searchableText: { row in row.cells.joined(separator: \" \") })",
+                "",
+                "TextFilterField(environment: environment, placeholder: \"Filter components\", controller: collectionController)"
             ])
         case "text-area":
             return code([
@@ -680,7 +694,7 @@ enum ExactReferenceContent {
             ])
         case "tiles":
             return code([
-                "TilePicker(environment: environment, title: \"\(displayName)\", options: [",
+                "TilePicker(environment: environment, options: [",
                 "    .init(label: \"Compact\", value: \"compact\"),",
                 "    .init(label: \"Default\", value: \"default\")",
                 "], selection: $selection)"
@@ -699,11 +713,11 @@ enum ExactReferenceContent {
             ])
         case "token":
             return code([
-                "TokenBadge(environment: environment, label: \"accentAction\")"
+                "TokenBadge(environment: environment, title: \"accentAction\")"
             ])
         case "token-group":
             return code([
-                "TokenGroup(environment: environment, tokens: [\"bg.sidebar\", \"surface.grouped\", \"text.primary\"])"
+                "TokenGroup(environment: environment, titles: [\"bg.sidebar\", \"surface.grouped\", \"text.primary\"])"
             ])
         case "top-navigation":
             return code([
@@ -734,9 +748,13 @@ enum ExactReferenceContent {
             ])
         case "tutorial-panel":
             return code([
-                "TutorialPanel(environment: environment, title: \"\(displayName)\", steps: steps, currentStepID: $currentStepID, completedStepIDs: [\"audit\"], stepChangeAnnouncement: { step, index, total in",
-                "    \"Tutorial progress updated. Step \\(index) of \\(total): \\(step.title).\"",
-                "}) {",
+                "let tutorialController = TutorialFlowController(steps: [",
+                "    .init(id: \"audit\", title: \"Audit\", detail: \"Review the API and states.\", status: .complete),",
+                "    .init(id: \"build\", title: \"Build\", detail: \"Promote shared primitives.\", status: .current),",
+                "    .init(id: \"verify\", title: \"Verify\", detail: \"Run tests and inspect the showcase.\", status: .warning, isOptional: true)",
+                "], currentStepID: \"build\", completedStepIDs: [\"audit\"])",
+                "",
+                "TutorialPanel(environment: environment, title: \"\(displayName)\", controller: tutorialController) {",
                 "    Text(\"Keep progression visible inside the current workflow.\")",
                 "} primaryActions: {",
                 "    SystemButton(environment: environment, title: \"Continue\", tone: .primary) {}",
@@ -782,7 +800,7 @@ enum ExactReferenceContent {
                 "NoticeStack(environment: environment, notices: [",
                 "    .init(title: \"Preview feature\", message: \"Enable it for testing before broad rollout.\", tone: .warning)",
                 "])",
-                "StatusBadge(environment: environment, label: \"Preview\", tone: .warning)"
+                "StatusBadge(environment: environment, label: \"Preview\", color: environment.theme.color(.warning))"
             ])
         case "communicating-unsaved-changes":
             return code([
@@ -794,10 +812,14 @@ enum ExactReferenceContent {
             ])
         case "data-visualization":
             return code([
+                "let collectionController = CollectionController(items: rows, selectedItemID: \"Navigation\", searchableText: { row in row.cells.joined(separator: \" \") })",
+                "let chartController = MetricChartController()",
+                "",
                 "VStack(spacing: 16) {",
-                "    MixedChartPanel(environment: environment, title: \"Coverage and adoption\", state: .ready, barSeries: coverageSeries, lineSeries: adoptionSeries, selection: $selection, visibleSeriesIDs: $visibleSeriesIDs, valueFormatter: { value in \"\\(Int(value))%\" })",
+                "    MixedChartPanel(environment: environment, title: \"Coverage and adoption\", state: collectionController.presentationState, barSeries: coverageSeries, lineSeries: adoptionSeries, controller: chartController, valueFormatter: { value in \"\\(Int(value))%\" })",
                 "    KeyValuePairs(environment: environment, pairs: metricPairs)",
-                "    DataTable(environment: environment, columns: columns, rows: rows, selectedRowID: $selectedRowID)",
+                "    DataTable(environment: environment, columns: columns, controller: collectionController)",
+                "    PaginationControl(environment: environment, controller: collectionController)",
                 "}"
             ])
         case "density-settings":
@@ -817,18 +839,19 @@ enum ExactReferenceContent {
             ])
         case "draganddrop":
             return code([
+                "let importController = FileImportController(acceptedContentTypes: [.plainText, .pdf, .image], source: OpenPanelFileImportSource())",
+                "let uploadController = FileUploadSessionController()",
+                "let boardController = BoardController(selectedItemID: \"review-docs\")",
+                "",
                 "VStack(alignment: .leading, spacing: 16) {",
-                "    FileUploadField(environment: environment, title: \"Drop release notes\", subtitle: \"Provide a visible target, item state, and keyboard fallback.\", items: [",
-                "        .init(title: \"release-notes.md\", detail: \"18 KB\", status: .success, message: \"Uploaded successfully.\", symbol: \"doc.text\")",
-                "    ], onPick: {})",
+                "    FileUploadField(environment: environment, title: \"Drop release notes\", subtitle: \"Provide a visible target, item state, and keyboard fallback.\", importController: importController, uploadController: uploadController)",
                 "    HStack(alignment: .top, spacing: 16) {",
-                "        Board(environment: environment, columns: [",
-                "            .init(id: \"incoming\", title: \"Incoming\", items: [.init(id: \"review-docs\", title: \"Review docs\", detail: \"Match snippets to the real API.\", status: \"Review\", statusColor: environment.theme.color(.warning))]),",
-                "            .init(id: \"ready\", title: \"Ready\", items: [.init(title: \"Publish catalog\", detail: \"Regenerate docs and examples.\", status: \"Queued\", statusColor: environment.theme.color(.info))])",
-                "        ], selectedItemID: .constant(\"review-docs\"), onMoveItem: { itemID, destinationColumnID, destinationIndex in",
-                "            print(itemID, destinationColumnID, destinationIndex)",
-                "        })",
-                "        ItemsPalette(environment: environment, items: [.init(id: \"metric-card\", title: \"Metric card\", detail: \"Reusable dashboard tile.\")], insertDestinations: [",
+                "        Board(environment: environment, columns: $columns, controller: boardController) { item in",
+                "            boardController.activate(itemID: item.id)",
+                "        } paletteItemResolver: { itemID in",
+                "            paletteItems.first { $0.id == itemID }",
+                "        }",
+                "        ItemsPalette(environment: environment, items: [.init(id: \"metric-card\", title: \"Metric card\", detail: \"Reusable dashboard tile.\")], controller: boardController, insertDestinations: [",
                 "            .init(title: \"Insert into Incoming\", columnID: \"incoming\", columnTitle: \"Incoming\", index: 1)",
                 "        ], onInsertItem: { item, destinationColumnID, destinationIndex in",
                 "            print(item.id, destinationColumnID, destinationIndex)",
@@ -857,7 +880,9 @@ enum ExactReferenceContent {
             ])
         case "filtering-patterns":
             return code([
-                "PropertyFilterBar(environment: environment, filters: filters, selection: $selection)",
+                "let collectionController = CollectionController(items: rows, activeFilterTokens: [\"component\"], searchableText: { row in row.cells.joined(separator: \" \") })",
+                "",
+                "PropertyFilterBar(environment: environment, controller: collectionController)",
                 "SearchResultsOverlay(environment: environment, sections: sections) { item in",
                 "    print(item.title)",
                 "}"
@@ -869,10 +894,12 @@ enum ExactReferenceContent {
             ])
         case "help-system":
             return code([
-                "HelpPanel(environment: environment, title: \"Help\", topics: [",
+                "let navigator = HelpNavigator(topics: [",
                 "    .init(id: \"context\", title: \"Current context\", detail: \"Tie guidance to the active workflow.\"),",
                 "    .init(id: \"recovery\", title: \"Recovery\", detail: \"Name the next safe action.\")",
-                "], selectedTopicID: .constant(\"context\")) {",
+                "], selectedTopicID: \"context\")",
+                "",
+                "HelpPanel(environment: environment, title: \"Help\", navigator: navigator) {",
                 "    BulletList(environment: environment, items: [\"Explain the current decision\", \"Keep guidance adjacent to work\"])",
                 "}"
             ])
@@ -893,13 +920,15 @@ enum ExactReferenceContent {
             ])
         case "onboarding":
             return code([
-                "WizardLayout(environment: environment, title: \"Team onboarding\", steps: steps, currentStepID: \"review\") {",
-                "    TutorialPanel(environment: environment, title: \"Rollout guidance\", steps: steps, currentStepID: $currentStepID, completedStepIDs: [\"choose\"]) {",
-                "        Text(\"Keep the next action obvious.\")",
-                "    } primaryActions: {",
-                "        SystemButton(environment: environment, title: \"Continue\", tone: .primary) {}",
-                "    } secondaryActions: {",
-                "        SystemButton(environment: environment, title: \"Back\", tone: .secondary) {}",
+                "let tutorialController = TutorialFlowController(steps: steps.map { .init(id: $0.id, title: $0.title) }, currentStepID: \"review\", completedStepIDs: [\"choose\"])",
+                "",
+                "CoachmarkHost(environment: environment, step: .init(anchorID: \"invite-team\", title: \"Invite the rollout group\", message: \"Attach onboarding help to a real anchor.\", primaryActionTitle: \"Continue\", secondaryActionTitle: \"Dismiss\")) {",
+                "    WizardLayout(environment: environment, title: \"Team onboarding\", steps: steps, currentStepID: tutorialController.currentStepID) {",
+                "        TutorialPanel(environment: environment, title: \"Rollout guidance\", controller: tutorialController) {",
+                "            AnnotationAnchor(id: \"invite-team\") {",
+                "                SystemButton(environment: environment, title: \"Invite team\", tone: .primary) {}",
+                "            }",
+                "        }",
                 "    }",
                 "}"
             ])
@@ -930,10 +959,13 @@ enum ExactReferenceContent {
             ])
         case "workspace-dashboard":
             return code([
+                "let collectionController = CollectionController(items: rows, selectedItemID: \"tokens\", searchableText: { row in row.cells.joined(separator: \" \") })",
+                "let chartController = MetricChartController()",
+                "",
                 "VStack(spacing: 16) {",
                 "    StatusIndicator(environment: environment, label: \"Release candidate\", detail: \"Ready for review.\", tone: .success)",
-                "    MixedChartPanel(environment: environment, title: \"Coverage\", state: .ready, barSeries: barSeries, lineSeries: lineSeries, selection: $selection, visibleSeriesIDs: $visibleSeriesIDs, valueFormatter: { value in \"\\(Int(value))%\" })",
-                "    DataTable(environment: environment, columns: columns, rows: rows, selectedRowID: $selectedRowID)",
+                "    MixedChartPanel(environment: environment, title: \"Coverage\", state: collectionController.presentationState, barSeries: barSeries, lineSeries: lineSeries, controller: chartController, valueFormatter: { value in \"\\(Int(value))%\" })",
+                "    DataTable(environment: environment, columns: columns, controller: collectionController)",
                 "}"
             ])
         case "secondary-panels":

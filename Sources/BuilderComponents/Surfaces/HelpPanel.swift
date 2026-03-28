@@ -1,5 +1,6 @@
 import SwiftUI
 import BuilderFoundation
+import BuilderBehaviors
 
 public struct HelpPanel<Content: View, Footer: View>: View {
     public let environment: DesignSystemEnvironment
@@ -144,6 +145,36 @@ public struct HelpPanel<Content: View, Footer: View>: View {
         self.content = content()
         self.footer = EmptyView()
         self.showsFooter = false
+    }
+
+    public init(
+        environment: DesignSystemEnvironment,
+        title: String,
+        subtitle: String? = nil,
+        state: AsyncContentState = .ready,
+        emptyActionTitle: String? = nil,
+        onEmptyAction: (() -> Void)? = nil,
+        errorActionTitle: String? = nil,
+        onErrorAction: (() -> Void)? = nil,
+        navigator: HelpNavigator,
+        @ViewBuilder content: () -> Content
+    ) where Footer == EmptyView {
+        self.init(
+            environment: environment,
+            title: title,
+            subtitle: subtitle,
+            state: state,
+            emptyActionTitle: emptyActionTitle,
+            onEmptyAction: onEmptyAction,
+            errorActionTitle: errorActionTitle,
+            onErrorAction: onErrorAction,
+            topics: navigator.topics,
+            selectedTopicID: Binding(
+                get: { navigator.selectedTopicID },
+                set: { navigator.selectTopic($0) }
+            ),
+            content: content
+        )
     }
 
     public init(

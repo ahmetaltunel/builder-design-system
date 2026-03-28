@@ -140,5 +140,5 @@ Canonical compiled example for Badge. Use Badge when status needs to be explicit
 // Canonical example for Badge
 let environment = DesignSystemEnvironment.preview(.dark)
 
-StatusBadge(environment: environment, label: "Ready", tone: .success)
+StatusBadge(environment: environment, label: "Ready", color: environment.theme.color(.success))
 ```

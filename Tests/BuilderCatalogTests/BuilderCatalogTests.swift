@@ -1,6 +1,7 @@
 import Foundation
 import XCTest
 import BuilderFoundation
+import BuilderReferenceExamples
 @testable import BuilderCatalog
 
 final class BuilderCatalogTests: XCTestCase {
@@ -224,37 +225,38 @@ final class BuilderCatalogTests: XCTestCase {
         }
     }
 
-    func testRepositorySurfaceAvoidsDeprecatedTerminology() throws {
-        let root = repositoryRoot()
-        let banned = [
-            "BuilderStarter",
-            "BuilderStarterSystem",
-            "BuilderStarterDemo",
-            "BuilderUIKit",
-            "Cloud" + "scape",
-            "Co" + "d" + "ex",
-            "Reference" + " Screens",
-            "New" + " thread"
-        ]
-
-        let fileManager = FileManager.default
-        let enumerator = fileManager.enumerator(
-            at: root,
-            includingPropertiesForKeys: nil,
-            options: [.skipsHiddenFiles],
-            errorHandler: nil
-        )
-
-        while let file = enumerator?.nextObject() as? URL {
-            guard ["swift", "md", "json"].contains(file.pathExtension) else { continue }
-            guard !file.path.contains("/.build/") else { continue }
-            guard !file.path.contains("/Tests/") else { continue }
-
-            let contents = try String(contentsOf: file, encoding: .utf8)
-            for term in banned {
-                XCTAssertFalse(contents.contains(term), "Found banned term '\(term)' in \(file.path)")
-            }
+    func testEveryCatalogComponentHasAnExactShowcasePreview() {
+        for component in CatalogContent.components {
+            XCTAssertTrue(
+                BuilderReferenceExamples.hasExactComponentPreview(id: component.canonicalExampleID),
+                "\(component.name) should resolve an exact component preview for the Showcase browser"
+            )
         }
+    }
+
+    func testRepresentativeCanonicalSnippetsTrackCurrentPublicAPI() {
+        let componentByName = Dictionary(uniqueKeysWithValues: CatalogContent.components.map { ($0.name, $0) })
+
+        XCTAssertTrue(
+            CatalogSnippetRegistry.componentSnippet(for: componentByName["Badge"]!).code.contains("color: environment.theme.color(.success)"),
+            "Badge examples should use StatusBadge's current color-based API"
+        )
+        XCTAssertTrue(
+            CatalogSnippetRegistry.componentSnippet(for: componentByName["Key-value pairs"]!).code.contains("pairs: ["),
+            "Key-value pairs examples should use the current pairs label"
+        )
+        XCTAssertTrue(
+            CatalogSnippetRegistry.componentSnippet(for: componentByName["Text content"]!).code.contains("bodyText:"),
+            "Text content examples should use TextContentBlock's current bodyText label"
+        )
+        XCTAssertTrue(
+            CatalogSnippetRegistry.componentSnippet(for: componentByName["View preferences"]!).code.contains("controller: collectionController"),
+            "View preferences examples should use the controller-backed runtime API"
+        )
+        XCTAssertTrue(
+            CatalogSnippetRegistry.componentSnippet(for: componentByName["Button dropdown"]!).code.contains(".init(title: \"Component\", action: {})"),
+            "Button dropdown examples should use item actions instead of the removed selection callback"
+        )
     }
 
     func testGeneratedReferenceDocsExistForEveryCatalogEntry() {

@@ -217,32 +217,32 @@ enum DesignTokenRegistry {
         ),
         .hairline: .init(
             token: .hairline,
-            light: .init(color: Color(hex: "#00000008"), radius: 1, x: 0, y: 0.5),
-            dark: .init(color: Color(hex: "#00000014"), radius: 1, x: 0, y: 0.5),
+            light: .init(color: Color(hex: "#00000006"), radius: 0.5, x: 0, y: 0.5),
+            dark: .init(color: Color(hex: "#00000010"), radius: 0.5, x: 0, y: 0.5),
             description: "Hairline separation for crisp low-elevation surfaces."
         ),
         .subtle: .init(
             token: .subtle,
-            light: .init(color: Color(hex: "#00000014"), radius: 3, x: 0, y: 1),
-            dark: .init(color: Color(hex: "#0000001A"), radius: 3, x: 0, y: 1),
+            light: .init(color: Color(hex: "#0000000A"), radius: 1.5, x: 0, y: 1),
+            dark: .init(color: Color(hex: "#00000014"), radius: 1.5, x: 0, y: 1),
             description: "Small grouped panels and table headers."
         ),
         .raised: .init(
             token: .raised,
-            light: .init(color: Color(hex: "#0000001F"), radius: 10, x: 0, y: 4),
-            dark: .init(color: Color(hex: "#00000029"), radius: 10, x: 0, y: 4),
+            light: .init(color: Color(hex: "#00000012"), radius: 6, x: 0, y: 2),
+            dark: .init(color: Color(hex: "#00000020"), radius: 8, x: 0, y: 3),
             description: "Raised cards, menus, and sheet-like regions."
         ),
         .floating: .init(
             token: .floating,
-            light: .init(color: Color(hex: "#00000026"), radius: 18, x: 0, y: 12),
-            dark: .init(color: Color(hex: "#00000033"), radius: 18, x: 0, y: 12),
+            light: .init(color: Color(hex: "#00000018"), radius: 10, x: 0, y: 4),
+            dark: .init(color: Color(hex: "#00000028"), radius: 12, x: 0, y: 6),
             description: "Floating overlays, popovers, and modals."
         ),
         .focus: .init(
             token: .focus,
-            light: .init(color: Color(hex: "#5AA8FF55"), radius: 0, x: 0, y: 0),
-            dark: .init(color: Color(hex: "#81C5FF55"), radius: 0, x: 0, y: 0),
+            light: .init(color: Color(hex: "#5AA8FF22"), radius: 6, x: 0, y: 0),
+            dark: .init(color: Color(hex: "#81C5FF22"), radius: 6, x: 0, y: 0),
             description: "Supplementary focus glow for highly interactive surfaces."
         )
     ]
@@ -500,7 +500,7 @@ enum DesignTokenRegistry {
         .grouped: .init(
             fill: .groupedSurface,
             border: .subtleBorder,
-            elevation: .subtle,
+            elevation: .flat,
             radius: .large,
             opacity: 1,
             translucentLight: false,
@@ -510,7 +510,7 @@ enum DesignTokenRegistry {
         .raised: .init(
             fill: .raisedSurface,
             border: .subtleBorder,
-            elevation: .raised,
+            elevation: .subtle,
             radius: .large,
             opacity: 1,
             translucentLight: false,
@@ -520,7 +520,7 @@ enum DesignTokenRegistry {
         .panel: .init(
             fill: .groupedSurface,
             border: .subtleBorder,
-            elevation: .subtle,
+            elevation: .flat,
             radius: .large,
             opacity: 1,
             translucentLight: false,
@@ -530,7 +530,7 @@ enum DesignTokenRegistry {
         .card: .init(
             fill: .raisedSurface,
             border: .subtleBorder,
-            elevation: .subtle,
+            elevation: .flat,
             radius: .large,
             opacity: 1,
             translucentLight: false,
@@ -610,7 +610,7 @@ enum DesignTokenRegistry {
         .notice: .init(
             fill: .raisedSurface,
             border: .strongBorder,
-            elevation: .subtle,
+            elevation: .flat,
             radius: .large,
             opacity: 1,
             translucentLight: false,
@@ -660,7 +660,7 @@ enum DesignTokenRegistry {
         .drawer: .init(
             fill: .overlaySurface,
             border: .subtleBorder,
-            elevation: .raised,
+            elevation: .flat,
             radius: .large,
             opacity: 0.99,
             translucentLight: false,
