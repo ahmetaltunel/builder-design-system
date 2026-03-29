@@ -269,7 +269,7 @@
   },
   "materials": {
     "shell": { "fill": "bg.app", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },
-    "sidebar": { "fill": "bg.sidebar", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 0.98, "translucent": { "light": true, "dark": false }, "interactive": false },
+    "sidebar": { "fill": "bg.sidebar", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 0.7, "translucent": { "light": true, "dark": true }, "interactive": false },
     "titlebar": { "fill": "bg.titlebar", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 0.98, "translucent": { "light": true, "dark": true }, "interactive": false },
     "toolbar": { "fill": "bg.toolbar", "border": "border.subtle", "elevation": "flat", "radius": "medium", "opacity": 0.98, "translucent": { "light": true, "dark": false }, "interactive": false },
     "workspace": { "fill": "bg.workspace", "border": "border.subtle", "elevation": "flat", "radius": "large", "opacity": 1.0, "translucent": { "light": false, "dark": false }, "interactive": false },

@@ -40,4 +40,3 @@ This repository treats design-system maturity as more than a component count.
 - Changelog is updated when maturity changes.
 - Docs clearly separate the system from the showcase app.
 - The showcase consumes shared tokens and contracts instead of redefining them locally.
-- Governance artifacts exist and are enforced in review.

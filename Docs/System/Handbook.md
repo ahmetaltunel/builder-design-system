@@ -73,7 +73,6 @@ The authoritative reference set now includes:
 - `Docs/Foundations/`
 - `Docs/Components/`
 - `Docs/Patterns/`
-- `Docs/Governance/`
 
 These pages are generated or maintained to stay aligned with the runtime package and catalog metadata.
 

@@ -462,9 +462,9 @@ enum DesignTokenRegistry {
             border: .subtleBorder,
             elevation: .flat,
             radius: .large,
-            opacity: 0.98,
+            opacity: 0.7,
             translucentLight: true,
-            translucentDark: false,
+            translucentDark: true,
             interactive: false
         ),
         .titlebar: .init(

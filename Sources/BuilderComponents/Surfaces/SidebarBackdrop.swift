@@ -11,6 +11,11 @@ public struct SidebarBackdrop: View {
     public var body: some View {
         let material = environment.theme.material(.sidebar)
         ZStack {
+            if material.isTranslucent {
+                SystemVisualEffectView(material: .sidebar, blendingMode: .behindWindow)
+                    .ignoresSafeArea()
+            }
+
             Rectangle()
                 .fill(material.fill.opacity(material.fillOpacity))
 

@@ -121,4 +121,4 @@ Additional validation guidance:
 
 - The showcase is intentionally not the source of truth. When in doubt, fix the system layer and let the showcase consume it.
 - Snapshot coverage in `Tests/BuilderIntegrationTests/BuilderSnapshotTests.swift` is part of the quality bar for visual changes.
-- Changes that affect design-system maturity should also consider updates to `CHANGELOG.md`, governance docs, or handbook content when appropriate.
+- Changes that affect design-system maturity should also consider updates to system docs, or handbook content when appropriate.

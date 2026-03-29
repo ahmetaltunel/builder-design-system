@@ -340,10 +340,10 @@
       "elevation" : "flat",
       "fill" : "bg.sidebar",
       "interactive" : false,
-      "opacity" : 0.97999999999999998,
+      "opacity" : 0.69999999999999996,
       "radius" : "large",
       "translucent" : {
-        "dark" : false,
+        "dark" : true,
         "light" : true
       }
     },
